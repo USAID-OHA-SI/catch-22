@@ -80,7 +80,7 @@
               plot.title = element_markdown(family = "Source Sans Pro Regular"),
               plot.caption=element_text(hjust = 0)) +
         scale_y_continuous(limits = c(0, 1050)) +
-        labs(x = NULL, y = NULL, title = "USAID <span style = 'color:#c43d4d;'>LOCAL PARTNER FUNDING </span> (AS OF MAY 2021)\n",
+        labs(x = NULL, y = NULL, title = "USAID/PEPFAR <span style = 'color:#c43d4d;'>LOCAL PARTNER FUNDING </span> (AS OF MAY 2021)\n",
              caption = "Includes LTS OUs only. Percentages exclude GHSC-PSM/RTK and M&O.\nSource: SBU Local Partner Strategy Datasheet derived from Local Partners Workplans.")
         
       ggsave(file.path(images, "LP_ad_hoc_lp2.png"), width = 6.22, height = 4.45, 
