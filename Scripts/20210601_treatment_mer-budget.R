@@ -3,7 +3,7 @@
 # PURPOSE:  treatment scale up since PEPFAR start
 # LICENSE:  MIT
 # DATE:     2021-06-01
-# UPDATED:  2021-06-02
+# UPDATED:  2021-06-03
 # NOTE:     adapted from USAID-OHA-SI/agitprop/04b_usaid_tx_trends
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -53,17 +53,7 @@
     return_latest("OU_IM_FY15") %>% 
     read_msd()
   
-  #buget
-  # b_names <- c("country", "program", "subprogram", "beneficiary", "sub_beneficiary", 
-  #              "planned_fy2004", "planned_fy2005", "planned_fy2006", "planned_fy2007", 
-  #              "planned_fy2008", "planned_fy2009", "planned_fy2010", "planned_fy2011", 
-  #              "planned_fy2012", "planned_fy2013", "planned_fy2014", "planned_fy2015", 
-  #              "planned_fy2016", "planned_fy2017", "planned_fy2018", "planned_fy2019", 
-  #              "planned_fy2020", "planned_fy2021")
-  # 
-  # df_budget <- read_csv("Data/PEPFAROUBudgetsbyFinancialClassificationsFY04-FY21.csv",
-  #                      skip = 3, col_names = b_names)
-  
+  #budget data from COP Matrix (NextGen)
   df_copmatrix <- read_sheet(as_sheets_id(gdrive_copmatrix),
                              skip = 4) %>% 
     clean_names()
@@ -141,9 +131,6 @@
   df_tx <- bind_rows(df_hist_clean, df_tx) %>% 
     rename(tx_curr = value)
 
-  df_tx <- df_tx %>% 
-    mutate(bar_alpha = ifelse(type == "targets", .6, 1),
-           ind_label = "Currently receiving antiretroviral therapy (ART)")
 
 # MUNGE BUDGET ------------------------------------------------------------
 
@@ -170,65 +157,62 @@
       filter(fiscal_year >= 2005,
              fiscal_year <= curr_fy) %>% 
       arrange(fundingagency, fiscal_year) %>%
-      # mutate(label_tx = glue("<span style='color:{denim}'>patients receiving antiretroviral therapy</span>"),
-      #        label_budget = glue("<span style='color:{scooter}'>annual planned funding</span>"))
-      mutate(label_tx = glue("patients receiving antiretroviral therapy"),
-             label_budget = glue("annual planned funding"))
+      mutate(type_alpha = ifelse(type == "targets", .6, 1),
+             agency_alpha = ifelse(fundingagency == "USAID", 1, .6),
+             label_tx = glue("patients receiving\n antiretroviral therapy"),
+             label_budget = "annual planned funding")
      
 # VIZ ---------------------------------------------------------------------
 
 
   v1 <- df_viz %>% 
-    filter(fundingagency == "PEPFAR",
-           fiscal_year >= 2005) %>% 
     ggplot(aes(fiscal_year, tx_curr)) +
-    geom_col(aes(alpha = bar_alpha), fill = denim) +
+    geom_col(aes(alpha = agency_alpha), fill = denim, position = "identity", na.rm = TRUE) +
     geom_hline(yintercept = 0, color = "gray40") +
-    geom_hline(yintercept = seq(3000000, 18000000, 3000000), color = "white") +
+    geom_hline(yintercept = seq(3e6, 18e6, 3e6), color = "white") +
     facet_grid(label_tx~., switch = "y") +
     scale_y_continuous(labels = unit_format(1, unit = "M", scale = 1e-6),
-                       breaks =  seq(3000000, 18000000, 3000000),
+                       breaks =  seq(3e6, 18e6, 3e6),
                        position = "right", expand = c(.005, .005)) +
     scale_x_continuous(expand = c(.005, .005))+
     scale_alpha_identity() +
-    labs(x = NULL, y = NULL, fill = NULL
-         #title = "PEPFAR HAS VASTLY SCALED UP LIFE SAVING ART IN THE LAST 15+ YEARS",
-         #subtitle = "Scale up of PEPFAR patients currently receiving antiretroviral therapy"
-         ) +
+    labs(x = NULL, y = NULL, fill = NULL) +
     si_style_nolines() +
     theme(strip.placement = "outside",
-          strip.text.y = element_markdown(family = "Source Sans Pro SemiBold", hjust = .5))
+          strip.text.y = element_markdown(family = "Source Sans Pro SemiBold", hjust = .5, 
+                                          color = denim))
 
 
   v2 <- df_viz %>% 
-    filter(fundingagency == "PEPFAR") %>%
     ggplot(aes(fiscal_year, total_planned_funding)) +
-    geom_col(fill = scooter) +
+    geom_col(aes(alpha = agency_alpha), fill = scooter, position = "identity") +
     geom_hline(yintercept = 0, color = "gray40") +
-    geom_hline(yintercept = seq(1e9, 4e9, 1e9), color = "white") +
+    geom_hline(yintercept = seq(1e9, 3e9, 1e9), color = "white") +
     facet_grid(label_budget~., switch = "y") +
     scale_x_continuous(expand = c(.005, .005))+
     scale_y_continuous(labels = unit_format(1, unit = "B", prefix = "$", scale = 1e-9),
-                       breaks = seq(1e9, 4e9, 1e9),
+                       breaks = seq(1e9, 3e9, 1e9),
                        position = "right", expand = c(.005, .005)) +
-    labs(x = NULL, y = NULL
-         #subtitle = "Annual Care and Treatment funding - all sub-program areas (billions, USD)"
-         ) +
+    scale_alpha_identity() +
+    labs(x = NULL, y = NULL) +
     si_style_nolines() +
     theme(strip.placement = "outside",
-          strip.text.y = element_markdown(family = "Source Sans Pro SemiBold", hjust = .5))
+          strip.text.y = element_markdown(family = "Source Sans Pro SemiBold", hjust = .5,
+                                          color = scooter))
   
 
   v1 / v2 +
     plot_annotation(
-      title = str_wrap("PEPFAR HAS VASTLY SCALED UP LIFE SAVING ART IN THE LAST 15+ YEARS 
-                       WITHOUT A PROPORTIONATE INCREASE IN FUNDING", 80),
+      title = glue("PEPFAR HAS VASTLY SCALED UP 
+                   <span style='color:{denim}'>LIFE SAVING ART</span> IN THE LAST 15+ <br>YEARS 
+                   WITHOUT A PROPORTIONATE INCREASE IN 
+                   <span style='color:{scooter}'>FUNDING</span>"),
       caption = glue("Planned funding exclude Management and Operations as well as supply chain
                      Source: PEPFAR MSD FY21Q2 + Spotlight FY04-14, PEPFAR COP Matrix [2021-06-02]
-                     US Agency for International Development | SI analytics: {paste(authors, collapse = '/')}
-                     ")) & 
+                     US Agency for International Development | SI analytics: {paste(authors, collapse = '/')}")) & 
     si_style_nolines() & 
-    theme(strip.placement = "outside",
+    theme(plot.title = element_markdown(size = 23),
+          strip.placement = "outside",
           strip.text.y = element_markdown(family = "Source Sans Pro SemiBold", hjust = .5))
   
   
