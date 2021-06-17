@@ -152,6 +152,7 @@
     filter(fundingagency == "USAID",
            fiscal_year >= 2020,
            indicator == "TX_CURR",
+           operatingunit != "South Africa",
            standardizeddisaggregate %in% c("Total Numerator", "Age/Sex/ARVDispense/HIVStatus")) %>% 
     mutate(months = case_when(standardizeddisaggregate == "Total Numerator" ~ "total",
                               otherdisaggregate %in% c("ARV Dispensing Quantity - 3 to 5 months",
