@@ -105,5 +105,6 @@ df_all <- map_dfr(sheet_list,
                name = save_name,
                type = "spreadsheet")
   
-  #remove local copy
+  #remove local copies
+  unlink(file.path("Data", file_name))
   unlink(file.path("Dataout", save_name))
