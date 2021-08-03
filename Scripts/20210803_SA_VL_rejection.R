@@ -12,29 +12,43 @@ library(ICPIutilities)
 library(lubridate)
 library(RColorBrewer)
 library(skimr)
-library("patchwork")
+library(patchwork)
 library(ggrepel)
 library(glitr)
 library(readxl)
 library(janitor)
+library(googledrive)
 
 
 # GLOBAL VARIABLES ---------------------------------------------------------------------
 
-file_name <- "VL_rejections_SA.xlsx" 
-sheet_list <- excel_sheets(file_name)
+gdrive_folder <- "1uYQNdzOKpNu5_EOkOfOLt-xtO-vATqNP"
+file_name <- "USAID Rejections (1).xlsx" 
+save_name <- "VL_rejections_SA.csv"
 
 #specify the age filter
 age_filter <- c("Sum", "AGE TESTED YEARS(Group)")
+
+#authenticate for GDrive
+load_secrets()
+
+# IMPORT ------------------------------------------------------------------
+
+import_drivefile(gdrive_folder,
+                 file_name, zip = "FALSE")
+
+# IDENTIFY SHEETS ---------------------------------------------------------
+
+sheet_list <- excel_sheets(file.path("Data",file_name))
 
 # CLEAN AND MAP ---------------------------------------------------------------------
 
 combine_data <- function(file, tab){
   
   # read in data and skip first 2 lines
-  df <- read_excel("VL_rejections_SA.xlsx",
-                         sheet = tab,
-                         skip = 2)
+  df <- read_excel(file,
+                   sheet = tab,
+                   skip = 2)
   # rename the columns according the file mapping file
   # add indicator and table variable
   df <- df %>% 
