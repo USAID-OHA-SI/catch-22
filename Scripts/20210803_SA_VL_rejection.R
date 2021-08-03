@@ -83,5 +83,27 @@ combine_data <- function(file, tab){
   
 }
 
+
+# PROCESS DATA ------------------------------------------------------------
+
+
 df_all <- map_dfr(sheet_list,
-                  ~combine_data(file_name, .x))
+                  ~combine_data(file.path("Data",file_name), .x))
+
+
+
+# EXPORT AND UPLOAD -------------------------------------------------------
+
+  #export locally
+  write_csv(df_all, 
+            file.path("Dataout", save_name), 
+                      na = "")
+
+  #upload to GDrive
+  drive_upload(file.path("Dataout", save_name), 
+               path = as_id(gdrive_folder),
+               name = save_name,
+               type = "spreadsheet")
+  
+  #remove local copy
+  unlink(file.path("Dataout", save_name))
