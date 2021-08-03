@@ -53,6 +53,10 @@ combine_data <- function(file, tab){
     fill(district, sub_district, facility_n) %>% 
     filter(!age %in% age_filter,
            !is.na(age)) %>% 
+    mutate(age = recode(age, 
+                        "< 1" = "<01",
+                        "1 -4" = "01-04",
+                        "5-9" = "05-09")) %>% 
     clean_names()
   
   # pivot longer over the disaggregates
