@@ -1,4 +1,4 @@
-## PROJECT: agitprop
+## PROJECT: catch22
 ## AUTHOR:  K. Srikanth | USAID
 ## PURPOSE: 95-95-95 Achievement - Africa Bureau Regional Level cleaning script
 ## LICENSE: MIT
