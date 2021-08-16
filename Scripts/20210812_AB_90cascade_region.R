@@ -118,9 +118,7 @@ df_viz <- df_tidy %>%
   group_by(country) %>% 
   filter(year == 2020) %>% 
   mutate(grouping = case_when(value == min(value, na.rm = TRUE) ~ indicator),
-         grouping = case_when(min(value, na.rm = TRUE) >= goal ~ "Achieved", #"Z_Achieved",
-                              #country == "Eswatini" ~ "Z_Achieved",
-                              #country == "Zambia" & indicator == "Virally Suppressed" ~ NA_character_,
+         grouping = case_when(min(value, na.rm = TRUE) >= goal ~ "Achieved",
                               TRUE ~ grouping),
          gap = case_when(value == min(value, na.rm = TRUE) & value < goal ~ goal- value,
                          value == min(value, na.rm = TRUE) & grouping == "Achieved" ~ 1-value,
@@ -130,7 +128,6 @@ df_viz <- df_tidy %>%
                                grouping == "On Treatment" ~ golden_sand,
                                grouping == "Virally Suppressed" ~ scooter,
                                grouping == "Achieved" ~ genoa,
-                               # grouping == "Z_Achieved" ~ genoa,
                                TRUE ~ trolley_grey)) %>% 
   fill(grouping, .direction = "downup") %>% 
   ungroup() %>% 
@@ -143,7 +140,7 @@ epi_ctrl_cnt <- df_viz %>%
   nrow()
 
 #save data as csv
-write_csv(df_viz, "Dataout/unaids_vizdata.csv")
+write_csv(df_viz, "Dataout/unaids_90cascade_region.csv")
 
 df_viz %>% 
   ggplot(aes(value, country, color = dot_color)) +
