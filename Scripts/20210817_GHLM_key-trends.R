@@ -153,7 +153,57 @@
           panel.spacing.x = unit(1, "lines"),
           panel.spacing.y = unit(.5, "lines"))
   
-  si_save("Graphics/20210803_GHLM_trends.svg",
+  si_save("Graphics/20210823_GHLM_trends.svg",
           width = 9.5,
           height = 4.25)
+  
+  
+  
+  
+  
+  
+  df_nn_agg <- df_nn %>% 
+    left_join(df_ag_map) %>% 
+    filter(flag_loneobs %in% c(NA, FALSE),
+           agency %in% c("USAID", "HHS/CDC"),
+           str_detect(period, "FY2")) %>% 
+    group_by(period, agency) %>% 
+    summarise(across(c(tx_net_new_adj_plus, tx_curr), sum, na.rm = TRUE), .groups = "drop") %>% 
+    rename(fundingagency = agency) %>% 
+    clean_agency() %>% 
+    pivot_longer(starts_with("tx"), names_to = "indicator") %>% 
+    mutate(indicator = toupper(indicator),
+           indicator = recode(indicator, "TX_NET_NEW_ADJ_PLUS" = "TX_NET_NEW - Adjusted")) %>% 
+    arrange(fundingagency, indicator, period)
+  
+  
+  df_viz2 <- df_nn_agg %>% 
+    mutate(fundingagency = fct_rev(fundingagency),
+           fill_alpha = ifelse(period == max(period), 1, .75),
+           fill_color = case_when(indicator == "TX_CURR" ~ trolley_grey,
+                                  fundingagency == "USAID" ~ denim,
+                                  TRUE ~ scooter))
+  # fill_color = ifelse(fundingagency == "USAID", denim, scooter))
+  
+  df_viz2 %>% 
+    ggplot(aes(period, value, fill = fill_color, alpha = fill_alpha)) +
+    geom_col() +
+    geom_hline(yintercept = 0, color = "#202020") +
+    facet_grid(indicator~fundingagency, scales = "free_y", switch = "y") +
+    scale_y_continuous(label = label_number_si()) +
+    scale_fill_identity() +
+    scale_alpha_identity() +
+    labs(x = NULL, y = NULL, 
+         caption = glue("Adjusted TX_NET_NEW accounts for partner site transitions and removes 'lone obserations'
+                        Source: TX_NET_NEW Adjustments calculated from DATIM extracted [2021-08-23]
+                        SI analytics: {paste(authors, collapse = '/')} | US Agency for International Development")) +
+    si_style_ygrid() +
+    theme(strip.placement = "outside",
+          strip.text.x = element_text(family = "Source Sans Pro SemiBold"),
+          strip.text.y = element_text(family = "Source Sans Pro SemiBold", hjust = .5),
+          panel.spacing.y = unit(.5, "lines"))
+  
+  si_save("Graphics/20210824_GHLM_NN_trends.svg",
+          width = 9.5,
+          height = 4.25)  
   
