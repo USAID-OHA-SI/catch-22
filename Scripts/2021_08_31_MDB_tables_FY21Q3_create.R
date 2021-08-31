@@ -22,7 +22,7 @@
     load_secrets()
     merdata <- glamr::si_path("path_msd")
     
-    legend_chunk <- gt::md("Legend: Cumulative Indicators <img src='https://user-images.githubusercontent.com/5873344/131543405-51e1c7d1-9613-4b26-97c2-b841bb423bce.png' style='height:15px;'>    &emsp; Snapshot (TX_CURR) <img src='https://user-images.githubusercontent.com/5873344/131543433-b883e54a-30ca-45e7-822e-a52933d9f655.png' style='height:15px;'>")
+    legend_chunk <- gt::md("Legend: Cumulative Indicators <img src='https://user-images.githubusercontent.com/5873344/131568557-1d2ecf02-bfb8-4f9d-8bff-844871536f92.png' style='height:15px;'>    &emsp; Snapshot (TX_CURR) <img src='https://user-images.githubusercontent.com/5873344/131568585-cef89158-ee77-41a8-9dc7-a3d83ca0ba2c.png' style='height:15px;'>")
     
   # Function to add source note
     add_legend <- function(gt_obj){
