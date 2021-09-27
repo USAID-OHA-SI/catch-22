@@ -129,7 +129,9 @@
                   bold_rowgroup() %>% 
                   embiggen() %>% 
                   tab_source_note(
-                    source_note =  "South Africa has no national MMD program and has been excluded from MMD coverage rates.") %>% 
+                    source_note =  "South Africa has no national MMD program and has been excluded from MMD coverage rates.") %>%
+                  tab_source_note(
+                    source_note =  "VLC and VLS calculations based on unadjusted TX_CURR presented in main indicator table.") %>% 
                   gtsave(., path = mdb_out, filename = glue::glue("{.x}_{pd}_MMD_VL_MD.png")))
     
 # EXPORT RAW DATA ------------------------------------------------------------------
