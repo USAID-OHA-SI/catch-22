@@ -5,6 +5,7 @@
 # DATE:     2021-08-17
 # UPDATED:  201-08-23
 
+
 # DEPENDENCIES ------------------------------------------------------------
   
   library(tidyverse)
@@ -160,7 +161,9 @@
   
   
   
-  
+  df_ag_map <- datim_dim_items("Funding Agency") %>% 
+    rename(fundingagency = id,
+           agency = item)
   
   df_nn_agg <- df_nn %>% 
     left_join(df_ag_map) %>% 
@@ -176,6 +179,18 @@
            indicator = recode(indicator, "TX_NET_NEW_ADJ_PLUS" = "TX_NET_NEW - Adjusted")) %>% 
     arrange(fundingagency, indicator, period)
   
+  
+  df_nn_agg %>% 
+    filter(indicator != "TX_CURR") %>% 
+    mutate(fy = str_sub(period, end = 4)) %>% 
+    count(fundingagency, indicator, fy, wt = value) %>% 
+    spread(fy, n)
+  
+  df_nn_agg %>% 
+    mutate(fy = str_sub(period, end = 4)) %>% 
+    filter(indicator != "TX_CURR",
+           period != "FY20Q1") %>% 
+    count(fundingagency, wt = value)
   
   df_viz2 <- df_nn_agg %>% 
     mutate(fundingagency = fct_rev(fundingagency),
