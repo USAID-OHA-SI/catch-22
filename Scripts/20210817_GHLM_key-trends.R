@@ -3,7 +3,7 @@
 # PURPOSE:  visual for GHLM depicting performace in key areas
 # LICENSE:  MIT
 # DATE:     2021-08-17
-# UPDATED:  201-08-23
+# UPDATED:  201-10-05
 
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -34,7 +34,7 @@
 
 # IMPORT ------------------------------------------------------------------
   
-  df_nn <- vroom(nn_path)
+  df_nn <- vroom(nn_path, col_types = c(.default = "c"))
   
   df <- si_path() %>% 
     return_latest("OU_IM_FY19") %>% 
@@ -79,10 +79,16 @@
                                       "o6mmd" = "MMD - 6 months or more"),
            share = tx_mmd / tx_curr,
            indicator = "TX_MMD") %>% 
-    rename(value = tx_mmd)
+    rename(value = tx_mmd) %>% 
+    filter(tx_curr > 0)
 
 # MUNGE OTHER -------------------------------------------------------------
 
+  #convert variable types
+  df_nn <- df_nn %>% 
+    mutate(across(starts_with("tx"), as.double),
+           across(c(starts_with("flag"),vlc_valid), as.logical))
+  
   df_nn_agg <- df_nn %>% 
     filter(str_detect(period, "FY2"),
            flag_loneobs %in% c(FALSE, NA),
@@ -103,7 +109,9 @@
     ungroup() %>% 
     reshape_msd() %>% 
     select(-period_type) %>% 
-    mutate(value = na_if(value, 0))
+    mutate(value = na_if(value, 0)) %>% 
+    filter(!(str_detect(period, "FY22") & value != 0))
+    
 
 
 # BIND DATA ---------------------------------------------------------------
