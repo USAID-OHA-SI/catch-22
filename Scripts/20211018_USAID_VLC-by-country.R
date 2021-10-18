@@ -74,21 +74,23 @@
            vls_alt = tx_pvls/tx_curr_lag2)
   
   #identify where 80% of TX_CURR is for viz facet
-  lst_lrg_ctry <- df_vls %>% 
+  df_ctry_grps <- df_vls %>% 
     filter(mech_code == "National") %>% 
     count(countryname, wt = tx_curr) %>% 
     arrange(desc(n)) %>% 
-    mutate(cumsum = cumsum(n)) %>% 
-    mutate(share = cumsum/sum(n)) %>% 
-    filter(share <= .83) %>% 
-    pull(countryname)
+    mutate(cumsum = cumsum(n),
+           share = cumsum/sum(n),
+           grp = case_when(share < .83 ~ "80% of USAID Treatment Portfolio",
+                           share < .95 ~ "Next 15% of Tx Portfolio",
+                           TRUE ~ "Remaining 5% of Tx Portfolio")) %>% 
+    select(countryname, grp)
   
   #viz dataframe
   df_viz <- df_vls %>% 
+    left_join(df_ctry_grps, by = "countryname") %>% 
     mutate(vls_mech = case_when(mech_code != "National" ~ vls),
            vls_nat = case_when(mech_code == "National" ~ vls),
            fill_color = ifelse(vls_mech > .9, scooter, moody_blue),
-           lrg_ctry = ifelse(countryname %in% lst_lrg_ctry, "80% of USAID Treatment Portfolio", "Remaining 20%"),
            countryname = recode(countryname, 
                                 "Democratic Republic of the Congo" = "DRC",
                                 "Papua New Guinea" = "PNG",
@@ -108,13 +110,14 @@
              xmin = -Inf, xmax = .9, ymin = 0, ymax = Inf,
              fill = trolley_grey_light, alpha = .4) +
     geom_vline(xintercept = .9, linetype = "dashed") +
-    geom_point(aes(size = tx_curr, color = fill_color), alpha = .6,
+    geom_point(aes(size = tx_curr, 
+      color = fill_color), alpha = .6,
                position = position_jitter(width = 0, height = 0.1, seed = 42), na.rm = TRUE) +
     geom_text_repel(aes(label = mech_lab), na.rm = TRUE,
                     family = "Source Sans Pro", color = "#505050", size = 9/.pt) +
     geom_errorbar(aes(xmin = vls_nat, xmax = vls_nat), size = 1.1, color = grey60k) +
     scale_x_continuous(label = percent_format(1)) +
-    facet_grid(lrg_ctry ~ ., scale = "free_y", space = "free") +
+    facet_grid(grp ~ ., scale = "free_y", space = "free") +
     scale_size(labels = number_format(.1, scale = 1e-6, suffix = "M")) +
     scale_color_identity() +
     expand_limits(x = .75) +
@@ -123,5 +126,6 @@
          caption = glue("Source: {msd_source}
                         SI Analytics: {paste0(authors, collapse = '/')}
                         US Agency for International Development")) +
-    si_style()
+    si_style() +
+    theme(legend.position = "none")
   
