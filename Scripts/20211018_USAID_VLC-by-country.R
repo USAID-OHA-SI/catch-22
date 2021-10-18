@@ -115,6 +115,8 @@
                position = position_jitter(width = 0, height = 0.1, seed = 42), na.rm = TRUE) +
     geom_text_repel(aes(label = mech_lab), na.rm = TRUE,
                     family = "Source Sans Pro", color = "#505050", size = 9/.pt) +
+    # geom_text(aes(label = mech_lab), na.rm = TRUE, vjust = -.9,
+    #                 family = "Source Sans Pro", color = "#505050", size = 9/.pt) +
     geom_errorbar(aes(xmin = vls_nat, xmax = vls_nat), size = 1.1, color = grey60k) +
     scale_x_continuous(label = percent_format(1)) +
     facet_grid(grp ~ ., scale = "free_y", space = "free") +
@@ -126,6 +128,5 @@
          caption = glue("Source: {msd_source}
                         SI Analytics: {paste0(authors, collapse = '/')}
                         US Agency for International Development")) +
-    si_style() +
-    theme(legend.position = "none")
+    si_style()
   
