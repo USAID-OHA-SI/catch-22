@@ -61,3 +61,9 @@
     filter(period == max(period),
            tx_pvls_d > 0)
   
+  #calc VLC/S
+  df_vls <- df_vls %>% 
+    mutate(vlc = tx_pvls_d/tx_curr_lag2,
+           vls = tx_pvls/tx_pvls_d,
+           vls_alt = tx_pvls/tx_curr_lag2)
+  
