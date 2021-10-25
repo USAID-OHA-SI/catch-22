@@ -158,5 +158,24 @@
             FY21Q3_results = Q3) %>% 
      arrange(operatingunit, agency, indicator) %>% 
      write_csv("Dataout/FY21Q3_tx_indicators.csv", na = "")
+   
+# VIZ For GLOBAL PLANNING MEETING ============================================================================
+   
+   # Generate base table for global results
+   create_mdb(mdb_tbl %>% filter(agency == "USAID"), ou = "Global", type = "main", pd, msd_source) %>% 
+     cols_hide(6:8) %>% 
+     embiggen %>% 
+     tab_options(
+       column_labels.font.size = 18
+       ) %>% 
+     tab_header(
+       title = "", 
+      subtitle = ""
+      ) %>% 
+   gtsave(., path = mdb_out, filename = glue::glue("GPM_KEY_INDICATORS_MD_Summary.png"))  
+   
+   
+   
+
     
     
