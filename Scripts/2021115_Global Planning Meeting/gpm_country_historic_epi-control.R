@@ -3,7 +3,7 @@
 # PURPOSE:  Epi control trend graphs
 # LICENSE:  MIT
 # DATE:     2021-10-26
-# UPDATED:  2021-10-27
+# UPDATED:  2021-10-28
 # NOTE:     derived from agitprop/24b_HIV_epi_control_country.R
 # DATA NOTE: Data id --> "1p-fN3qDJ138uSQ4e63EYgEXrop8lhbO1"
 
@@ -28,7 +28,6 @@
 
 
 # GLOBAL VARIABLES --------------------------------------------------------
-
 
   load_secrets()
 
@@ -119,7 +118,8 @@
     filter(country %in% epi_cntry) %>% 
     mutate(val_lab = case_when(year == max(year) ~ number(value, 1, scale = 1e-3, suffix = "k")),
            max_plot_pt = max(value),
-           lab_pt = case_when(year == max(year) ~ value_mod)) 
+           lab_pt = case_when(year == max(year) ~ value_mod),
+           country = factor(country, epi_cntry)) 
     
   
 
@@ -174,9 +174,9 @@
   v_p + v_c +  
     plot_annotation(title = plot_title,
                     subtitle = epi_control,
-                    caption = glue("{source} [{date_pulled}]
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development"),
+                    caption = glue("Source: {source} [{date_pulled}]",
+                        "USAID SI Analytics",
+                        "Global Planning Meeting 2021-11-15", .sep = " | "),
                     theme = si_style_ygrid()) &
     theme(axis.text.y = element_markdown(),
           panel.spacing.x = unit(20, "pt"),

@@ -3,7 +3,7 @@
 # PURPOSE:  Explore VLS aross USAID mechanisms
 # LICENSE:  MIT
 # DATE:     2021-10-18
-# UPDATED:  2021-10-20
+# UPDATED:  2021-10-28
 # NOTE:     derviced from catch-22/20211018_USAID_VLC-by-country.R
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -159,12 +159,13 @@
     coord_cartesian(clip = "off") +
     expand_limits(x = .75) +
     labs(y = NULL, x = "Viral Load Coverage Rate (TX_PVLS_D/TX_CURR [2 Qtrs Prior])",
-         # title = glue("While USAID is at {percent(df_usaid_adj$vls, 1)} Viral Load Suppression in {pd}, a number of implementating mechanism fall short of the 90% goal") %>% toupper() %>% str_wrap(),
+         title = glue("With USAID's VLC Rate at {percent(df_usaid_vlc_adj$vlc, 1)} in {pd}, the Agency has significant work to reach the goal of 90% VLC") %>% toupper(),
          size = glue("Current on Treatment ({pd})"),
          
-         caption = glue("Source: Site Adjusted DATIM Pull [2021-10-05] 
-                        Note: Adjusted site TX_CURR data account for site transitions & exclude non-eligible VLC calculations 
-                        SI Analytics: {paste0(authors, collapse = '/')} | US Agency for International Development")) +
+         caption = glue("Note: Adjusted site TX_CURR data account for site transitions & exclude non-eligible VLC calculations
+                        Source: Site Adjusted DATIM Pull [2021-10-05]",
+                        "USAID SI Analytics",
+                        "Global Planning Meeting 2021-11-15", .sep = " | ")) +
     si_style(facet_space = .5) +
     theme(legend.position = "none",
       axis.text.y = element_text(size = 9),

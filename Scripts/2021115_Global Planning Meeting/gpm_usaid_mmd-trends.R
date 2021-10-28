@@ -2,8 +2,8 @@
 # AUTHOR:   A.Chafetz | USAID
 # PURPOSE:  MMD
 # LICENSE:  MIT
-# DATE:     2021-05-14
-# UPDATED:  2021-10-12
+# DATE:     2021-10-27
+# UPDATED:  2021-10-28
 # NOTE:     Derived from agitprop/11_MMD.R
 
 # DEPENDENCIES ------------------------------------------------------------

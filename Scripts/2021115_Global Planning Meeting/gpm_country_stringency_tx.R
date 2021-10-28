@@ -3,7 +3,7 @@
 # PURPOSE:  COVID Stringency Index + MER Trends
 # LICENSE:  MIT
 # DATE:     2021-10-27
-# UPDATED:  
+# UPDATED:  2021-10-28
 # NOTES:    derived from agitprop/17b_stringency_mer.R
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -145,10 +145,21 @@
       filter(countryname %in% lst_lrg) %>% 
       mutate(countryname = factor(countryname, lst_lrg)) 
     
+    if(ind_sel == "TX_CURR"){
+      df_viz <- df_viz %>% 
+        mutate(grp = case_when(countryname == "South Africa" ~ "grp1",
+                               countryname %in% c("Nigeria", "Mozambique", "Tanzania") ~ "grp2",
+                               TRUE ~ "grp3")) %>% 
+        group_by(grp) %>% 
+        mutate(max_val = max(value, na.rm = TRUE)) %>% 
+        ungroup()
+    }
+    
+    
     v <- df_viz %>% 
       ggplot(aes(date, value), na.rm = TRUE) +
       geom_area(alpha = .4, color = genoa, fill = genoa_light, na.rm = TRUE) +
-      geom_blank(aes(y = 1.2e6)) +
+      geom_blank(aes(y = max_val)) +
       geom_vline(data = filter(df_viz, tenth_case ==1, countryname %in% lst_lrg),
                  aes(xintercept = date), color = "#909090", linetype = "dotted", na.rm = TRUE) +
       geom_vline(xintercept = df_dates$date, color = "white") +
@@ -163,9 +174,9 @@
       labs(x = NULL, y = NULL,
            title = "PEPFAR's work has remained resilient in the face of government policies to curb COVID" %>% toupper,
            subtitle = glue("{ind_sel} in the largest {n_countries} countries | {min(df_dates$fy)}-{max(df_dates$fy)}"),
-           caption = glue("Sources: PEPFAR {msd_source}, JHU COVID-19 feed, Stringency Index from Blavatnik School of Government at Oxford University
-         SI analytics: SI analytics: {paste(authors, collapse = '/')}
-         US Agency for International Development")) +
+           caption = glue("Sources: PEPFAR {msd_source}, JHU COVID-19 feed, Oxford Stringency Index",
+                          "USAID SI Analytics",
+                          "Global Planning Meeting 2021-11-15", .sep = " | ")) +
       si_style_ygrid() +
       theme(panel.spacing.x = unit(.5, "lines"),
             panel.spacing.y = unit(.5, "lines"))
@@ -179,4 +190,4 @@
     return(v)
   }
   
-  plot_mer_stringency("TX_CURR", n_countries = 8, save = FALSE)
+  plot_mer_stringency("TX_CURR", n_countries = 8, save = TRUE)

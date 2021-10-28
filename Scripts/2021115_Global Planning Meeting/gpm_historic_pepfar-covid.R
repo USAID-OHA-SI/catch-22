@@ -3,7 +3,7 @@
 # PURPOSE:  COVID cases in  PEPFAR countries
 # LICENSE:  MIT
 # DATE:     2021-10-27
-# UPDATED: 
+# UPDATED:  2021-10-28
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -76,9 +76,9 @@
     labs(x = NULL, y = NULL,
          title = "COVID HAS INTRODUCED PROGRAM AND REPORTING HURDLES FOR PEPFAR",
          subtitle = "Aggregated daily COVID Cases",
-         caption = glue("Source: Source: JHU COVID-19 feed [{today()}]
-                      SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
+         caption = glue("Source: Source: JHU COVID-19 feed [{today()}]",
+                        "USAID SI Analytics",
+                        "Global Planning Meeting 2021-11-15", .sep = " | ")) +
     si_style_nolines()
 
   si_save("Graphics/gpm_historic_pepfar-covid.svg",

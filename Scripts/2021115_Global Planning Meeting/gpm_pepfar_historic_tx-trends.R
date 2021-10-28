@@ -3,7 +3,7 @@
 # PURPOSE:  treatment scale up since PEPFAR start
 # LICENSE:  MIT
 # DATE:     2021-10-26
-# UPDATED:  
+# UPDATED:  2021-10-28
 # NOTE:     derived from agitprop/04a_long_term_tx_trends.R
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -126,9 +126,9 @@
     scale_alpha_identity() +
     labs(x = NULL, y = NULL, fill = NULL,
          title = "PEPFAR HAS VASTLY SCALED UP LIFE SAVING ART IN THE LAST 15+ YEARS",
-         caption = glue("Source: Spotlight FY04-14, {msd_source} (including FY15-18)
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
+         caption = glue("Source: Spotlight FY04-14, {msd_source} (including FY15-18)",
+                        "USAID SI Analytics",
+                        "Global Planning Meeting 2021-11-15", .sep = " | ")) +
     si_style_nolines()
 
   
