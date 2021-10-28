@@ -89,6 +89,7 @@
     ungroup() %>% 
     mutate(infections_below_deaths = infections < deaths,
            ratio = infections / deaths,
+           direction_streak = sequence(rle(declining_deaths)$lengths),
            epi_control = declining_deaths == TRUE & infections_below_deaths == TRUE) 
   
   
