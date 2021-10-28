@@ -79,7 +79,7 @@
          caption = glue("Source: Source: JHU COVID-19 feed [{today()}]",
                         "USAID SI Analytics",
                         "Global Planning Meeting 2021-11-15", .sep = " | ")) +
-    si_style_nolines()
+    si_style_ygrid()
 
   si_save("Graphics/gpm_historic_pepfar-covid.svg",
           height = 4.25)  
