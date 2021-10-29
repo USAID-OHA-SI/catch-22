@@ -3,7 +3,7 @@
 # PURPOSE:  KP successes to highlight
 # LICENSE:  MIT
 # DATE:     2021-10-28
-# UPDATED: 
+# UPDATED:  2021-10-29
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -102,6 +102,17 @@
     mutate(share = keypop/total)
 
   
+  df_prep <- df_prep %>% 
+    mutate(grp = case_when(period %in% c("FY20Q1", "FY20Q2") ~ "FY20S1",
+                           period %in% c("FY20Q3", "FY20Q4") ~ "FY20S2",
+                           TRUE ~ period)) %>% 
+    group_by(grp) %>% 
+    mutate(kp_qtr_avg = mean(keypop, na.rm = TRUE)/2) %>% 
+    ungroup() %>% 
+    mutate(kp_qtr_avg = case_when(str_detect(period, "20") ~ kp_qtr_avg,
+                            period == "FY21Q1" ~ keypop))
+  
+  
   df_tx <- df %>% 
     filter(fundingagency == "USAID",
            fiscal_year >= 2020,
@@ -117,17 +128,27 @@
     pivot_wider(names_from= "indicator") %>% 
     mutate(ret = TX_CURR / (lag(TX_CURR) + TX_NEW))
   
-  v2 <- df_prep %>% 
-    ggplot(aes(period, keypop, group = "x")) +
-    # geom_area(aes(y = total), alpha = .4) +
-    geom_area(fill = scooter, color = scooter, size = 1, alpha = .4) +
-    geom_vline(xintercept = c("FY20Q1", "FY21Q1"), color = "white", linetype = "dashed") +
-    geom_point(shape =21, color = "white", fill= scooter, size = 4) +
-    scale_y_continuous(label = label_number_si()) +
-    labs(x = NULL, y = NULL) +
-    si_style_ygrid()
+  # v2 <- df_prep %>%
+  #   ggplot(aes(period, keypop, group = "x")) +
+  #   # geom_area(aes(y = total), alpha = .4) +
+  #   geom_area(fill = scooter, color = scooter, size = 1, alpha = .4) +
+  #   geom_line(aes(y = kp_qtr_avg), size = .7, color = scooter, linetype = "dashed") +
+  #   geom_vline(xintercept = c("FY20Q1", "FY21Q1"), color = "white", linetype = "dashed") +
+  #   geom_point(shape =21, color = "white", fill= scooter, size = 4) +
+  #   geom_point(aes(y = kp_qtr_avg), #shape =21, color = "white",
+  #              color = scooter, size = 2) +
+  #   scale_y_continuous(label = label_number_si()) +
+  #   labs(x = NULL, y = NULL) +
+  #   si_style_ygrid()
 
   
+  v2 <- df_prep %>% 
+      ggplot(aes(period, keypop)) +
+      geom_col(fill = scooter,  alpha = .8) +
+      scale_y_continuous(label = label_number_si()) +
+      labs(x = NULL, y = NULL) +
+      si_style_ygrid()
+    
 
   v3 <- df_tx %>% 
     ggplot(aes(period, value, fill = fill_color)) +
