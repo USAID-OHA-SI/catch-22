@@ -3,7 +3,7 @@
 # PURPOSE:  COVID cases in  PEPFAR countries
 # LICENSE:  MIT
 # DATE:     2021-10-27
-# UPDATED:  2021-10-28
+# UPDATED:  2021-11-04
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -62,7 +62,7 @@
 
 # VIZ ---------------------------------------------------------------------
 
-  df_covid_agg %>% 
+  v1 <- df_covid_agg %>% 
     ggplot(aes(date, daily_cases)) +
     geom_col(fill = burnt_sienna, alpha = .8, na.rm = TRUE) +
     geom_hline(aes(yintercept = 0), size = 0.5, color = grey20k) +
@@ -74,19 +74,63 @@
                  # breaks = c(as.Date("2020-03-01"), today())) +
     scale_color_identity() +
     labs(x = NULL, y = NULL,
-         title = "COVID HAS INTRODUCED PROGRAM AND REPORTING HURDLES FOR PEPFAR",
+         # title = "COVID HAS INTRODUCED PROGRAM AND REPORTING HURDLES FOR PEPFAR",
          subtitle = "Aggregated daily COVID Cases",
-         caption = glue("Source: Source: JHU COVID-19 feed [{today()}]",
-                        "USAID SI Analytics",
-                        "Global Planning Meeting 2021-11-15", .sep = " | ")) +
+         # caption = glue("Source: Source: JHU COVID-19 feed [{today()}]",
+         #                "USAID SI Analytics",
+         #                "Global Planning Meeting 2021-11-15", .sep = " | ")
+         ) +
     si_style_ygrid()
-
-  si_save("Graphics/gpm_historic_pepfar-covid.svg",
-          height = 4.25)  
+# 
+#   si_save("Graphics/gpm_historic_pepfar-covid.svg",
+#           height = 4.25)  
 
   df_covid_agg %>% 
     filter(date == max(date, na.rm = TRUE))
 
   df_covid_agg %>% 
     filter(daily_cases == max(daily_cases))
+  
+  
+  
+  df_reg_agg <- df_covid %>% 
+    left_join(pepfar_country_xwalk %>% 
+                select(countryname, region)) %>% 
+    group_by(region, date) %>% 
+    summarise(daily_cases = sum(daily_cases, na.rm = TRUE),
+              .groups = "drop") %>% 
+    mutate(rollingavg_7day = rollmean(daily_cases, 7, fill = NA, align = c("right")))
+  
+  df_reg_agg <- df_reg_agg %>% 
+    group_by(date) %>% 
+    mutate(share = daily_cases/sum(daily_cases, na.rm = TRUE)) %>% 
+    ungroup()
+  
+ 
+  
+  v2 <- df_reg_agg %>% 
+    ggplot(aes(date,  share, fill = region)) +
+    geom_col() +
+    scale_y_continuous(label = percent, position = "right") +
+    scale_x_date(date_labels = "%b '%y",
+                breaks = qtrs) +
+    scale_fill_si(palette = "scooter", alpha = .8, discrete = TRUE) +
+    facet_grid(fct_reorder(region, daily_cases, max, na.rm = TRUE, .desc = TRUE) ~ .,
+               switch = "y") +
+    labs(x = NULL, y = NULL, 
+         subtitle = "Regional share of daily COVID Cases") +
+    si_style_ygrid() +
+    theme(panel.spacing.y = unit(.5, "lines"),
+          legend.position = "none")
+
+  v1 + v2 + plot_layout(widths = c(2, 1)) +
+    plot_annotation(title = "COVID HAS INTRODUCED PROGRAM AND REPORTING HURDLES FOR PEPFAR",
+                    caption = glue("Source: Source: JHU COVID-19 feed [{today()}]",
+                                   "USAID SI Analytics",
+                                   "Global Planning Meeting 2021-11-15", .sep = " | "),
+                    theme = si_style_ygrid())
+  
+  
+  si_save("Graphics/gpm_historic_pepfar-covid-regional-share.svg",
+          height = 4.25)  
   
