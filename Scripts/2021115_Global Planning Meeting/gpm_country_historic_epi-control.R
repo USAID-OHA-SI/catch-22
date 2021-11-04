@@ -3,9 +3,8 @@
 # PURPOSE:  Epi control trend graphs
 # LICENSE:  MIT
 # DATE:     2021-10-26
-# UPDATED:  2021-10-28
+# UPDATED:  2021-11-04
 # NOTE:     derived from agitprop/24b_HIV_epi_control_country.R
-# DATA NOTE: Data id --> "1p-fN3qDJ138uSQ4e63EYgEXrop8lhbO1"
 
 # DEPENDENCIES ------------------------------------------------------------
 
@@ -33,22 +32,6 @@
 
   authors <- c("Aaron Chafetz", "Tim Essam", "Karishma Srikanth")
   
-  # # Strip excel stub and grab last part of string. 
-  # remove_stub <- "Data/Epidemic transition metrics_National_"
-  # 
-  # extract_country <- function(x) {
-  #   gsub('.{5}$', '', x) %>% 
-  #   gsub(remove_stub, "", .)
-  #   
-  #   # Return everything up to "National_", then replace that with ""
-  #   # gsub("^.*National_", "", .)
-  #   # gsub("^.*_", "", .)
-  #   }
-  # 
-  # # High burden
-  # top3 <- c("Kenya", "Zimbabwe", "Ethiopia")
-  
-  
   #source info & definition of epidemic control
   source <- "UNAIDS 2021 estimates" 
   date_pulled <- "July 2021"
@@ -60,12 +43,12 @@
   
   plot_title <- "STEADY DECLINE IN THE NUMBER OF <span style= 'color:#2057a7;'> NEW HIV INFECTIONS</span> AND <span style = 'color:#c43d4d;'> AIDS-RELATED DEATHS </span> SINCE THE EARLY 2000s"
   
-  
+  #focal countries
+  sel_cntry <- c("Uganda", "Kenya", "Namibia", "Eswatini")
 
 # IMPORT ------------------------------------------------------------------
 
-  df_epi <- munge_unaids(sheet_id = googledrive::as_id('1tkwP532mPL_yy7hJuHNAHaZ1_K_wd7zo_8AjeOe7fRs'), 
-               tab = 1, skipnum = 5)
+  df_epi <- munge_unaids("HIV Estimates")
 
 
 # MUNGE -------------------------------------------------------------------
@@ -102,7 +85,8 @@
   epi_cntry <- df_epi_pepfar %>% 
     filter(year == max(year),
            indicator == "infections",
-           epi_control == TRUE) %>%
+           # epi_control == TRUE) %>%
+           country %in% sel_cntry) %>% 
     arrange(desc(value)) %>% 
     pull(country)
   
@@ -174,7 +158,7 @@
   
   v_p + v_c +  
     plot_annotation(title = plot_title,
-                    subtitle = epi_control,
+                    # subtitle = epi_control,
                     caption = glue("Source: {source} [{date_pulled}]",
                         "USAID SI Analytics",
                         "Global Planning Meeting 2021-11-15", .sep = " | "),
