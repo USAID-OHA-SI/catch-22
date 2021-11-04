@@ -55,6 +55,16 @@
 
   df_epi <- df_epi$`Integer Indicators`
   
+  #change since PEPFAR start years
+  df_epi %>% 
+    filter(stat == "est",
+           age == "all",
+           country == "Global", 
+           indicator %in% c("AIDS Related Deaths", "New HIV Infections", "PLHIV")) %>% 
+    filter(year %in% c("2003", max(year))) %>% 
+    select(year, indicator, value) %>% 
+    spread(year, value) %>% 
+    mutate(diff = `2020` - `2003`)
   
   df_epi_pepfar <- df_epi %>% 
     filter(stat == "est",
