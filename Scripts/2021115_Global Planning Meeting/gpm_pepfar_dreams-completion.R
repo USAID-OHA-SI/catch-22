@@ -160,14 +160,13 @@
   
   
   
-  # df_viz_comp %>% 
-  #   select(operatingunit, ou_lab, agyw_prev_d, share_comp) %>% 
-  #   left_join(df_viz %>% 
-  #               select(operatingunit, share_u6mo)) %>% 
-  #   filter(operatingunit != "All PEPFAR") %>% 
-  #   ggplot(aes(share_comp, 
-  #              share_u6mo)) +
-  #   geom_point(aes(size = agyw_prev_d)) +
-  #   ggrepel::geom_text_repel(aes(label = operatingunit)) +
-  #   si_style()
+  df_viz_comp %>%
+    select(operatingunit, ou_lab, agyw_prev_d, share_comp) %>%
+    left_join(df_viz %>%
+                select(operatingunit, share_u6mo)) %>%
+    filter(operatingunit != "All PEPFAR") %>%
+    ggplot(aes(share_u6mo, share_comp)) +
+    geom_point(aes(size = agyw_prev_d)) +
+    ggrepel::geom_text_repel(aes(label = operatingunit)) +
+    si_style()
   
