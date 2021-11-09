@@ -80,7 +80,7 @@
     si_style_ygrid()
   
   
-  si_save("Graphics/gpm_historic_vmmc.svg",
+  si_save("Graphics/<.svg",
           height = 4.25)  
   
   # 
