@@ -30,6 +30,7 @@ df <- read_sheet(google_id)
 
 plot_project <- function(var){
   df %>%
+    filter(!is.na({{var}})) %>% 
     mutate(project = str_wrap(project, width = 30)) %>%
     group_by({{var}}) %>%
     mutate(tot_proj = n()) %>%
@@ -39,13 +40,14 @@ plot_project <- function(var){
     geom_tile(size = 0.5, color = "white") +
     facet_wrap(~person_order, scales = "free") +
     si_style_nolines(facet_space = 0.25) +
-    theme(axis.text.y = element_text(size = 8),
+    theme(axis.text.y = element_text(size = 7),
           axis.text.x = element_blank()) +
     scale_fill_manual(values = c("lead" = genoa, "support" = trolley_grey_light)) +
-    scale_y_discrete(lim = rev)
+    scale_y_discrete(lim = rev) +
+    coord_cartesian(clip = "off", expand = F)
 }
 
-plot_project(team_proposed)
+plot_project(team_proposed) + labs(title = "PROPSED SI ROLES", x = NULL, y = NULL)
 
 
 plot_project_grid <- function(var){
