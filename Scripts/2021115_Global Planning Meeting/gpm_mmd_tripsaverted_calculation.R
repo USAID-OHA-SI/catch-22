@@ -3,6 +3,7 @@
 # PURPOSE:  MMD Trips Averted Calculation
 # LICENSE:  MIT
 # DATE:     2021-11-05
+# UPDATED:  2021-11-22 (with FY21Q4 and covid analysis)
 # Note: MMD numbers adapted from "agitprop/Scripts/11_MMD.R"
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -76,56 +77,82 @@ df_mmd_agency <- df_mmd %>%
 
 #CALCULATION ----------------------------------------------------------------
 
-#6 month MMD in FY21Q3
-mmd_6 <- df_mmd_agency %>% 
-  filter(period == "FY21Q3",
-         otherdisaggregate == "MMD - 6 months or more") %>% 
-  select(-c(tx_curr, share))
+#FY21Q4
 
-#3 month MMD in FY21Q3
-mmd_3 <- df_mmd_agency %>% 
-  filter(period == "FY21Q3",
-         otherdisaggregate == "MMD - 3 months or more") %>% 
-  select(-c(tx_curr, share))
-
-#Trips Averted Calculation
-#In FY21, at least [(TX_MMD_3mo + TX_MMD_6mo)*12 - (TX_MMD_3mo*4 + TX_MMD_6mo*2)] trips were averted with having [(TX_MMD_3mo + TX_MMD_6mo)] on MMD
-trips_averted <- ((mmd_3$tx_mmd + mmd_6$tx_mmd)*12) - ((mmd_3$tx_mmd*4) +(mmd_6$tx_mmd*2))
-
-# Number of people on 3 or 6 month MMD
-on_mmd <- mmd_3$tx_mmd + mmd_6$tx_mmd
-
-#What about in FY20Q4?
-
-#6 month MMD FY20Q4
-mmd_6_fy20 <- df_mmd_agency %>% 
-  filter(period == "FY20Q4",
-         otherdisaggregate == "MMD - 6 months or more") %>% 
-  select(-c(tx_curr, share))
-
-#3 month MMD FY20Q4
-mmd_3_fy20 <- df_mmd_agency %>% 
-  filter(period == "FY20Q4",
-         otherdisaggregate == "MMD - 3 months or more") %>% 
-  select(-c(tx_curr, share))
-
-
-trips_averted_fy20 <- ((mmd_3_fy20$tx_mmd + mmd_6_fy20$tx_mmd)*12) - ((mmd_3_fy20$tx_mmd*4) +(mmd_6_fy20$tx_mmd*2))
+  #6 month MMD in FY21Q4
+  mmd_6 <- df_mmd_agency %>% 
+    filter(period == "FY21Q4",
+           otherdisaggregate == "MMD - 6 months or more") %>% 
+    select(-c(tx_curr, share))
   
+  #3 month MMD in FY21Q4
+  mmd_3 <- df_mmd_agency %>% 
+    filter(period == "FY21Q4",
+           otherdisaggregate == "MMD - 3 months or more") %>% 
+    select(-c(tx_curr, share))
+  
+  #Trips Averted Calculation
+  #In FY21, at least [(TX_MMD_3mo + TX_MMD_6mo)*12 - (TX_MMD_3mo*4 + TX_MMD_6mo*2)] trips were averted with having [(TX_MMD_3mo + TX_MMD_6mo)] on MMD
+  trips_averted_fy21q4 <- ((mmd_3$tx_mmd + mmd_6$tx_mmd)*12) - ((mmd_3$tx_mmd*4) +(mmd_6$tx_mmd*2))
+  
+  # Number of people on 3 or 6 month MMD in FY21Q4
+  on_mmd <- mmd_3$tx_mmd + mmd_6$tx_mmd
+
+#FY20Q4?
+
+  #6 month MMD FY20Q4
+  mmd_6_fy20 <- df_mmd_agency %>% 
+    filter(period == "FY20Q4",
+           otherdisaggregate == "MMD - 6 months or more") %>% 
+    select(-c(tx_curr, share))
+  
+  #3 month MMD FY20Q4
+  mmd_3_fy20 <- df_mmd_agency %>% 
+    filter(period == "FY20Q4",
+           otherdisaggregate == "MMD - 3 months or more") %>% 
+    select(-c(tx_curr, share))
+
+
+  trips_averted_fy20q4 <- ((mmd_3_fy20$tx_mmd + mmd_6_fy20$tx_mmd)*12) - ((mmd_3_fy20$tx_mmd*4) +(mmd_6_fy20$tx_mmd*2))
+
+#FY20Q2? (MMD ramped up in Fy20Q3 due to covid)
+
+  #6 month MMD FY20Q1
+  mmd_6_fy20q2 <- df_mmd_agency %>% 
+    filter(period == "FY20Q2",
+           otherdisaggregate == "MMD - 6 months or more") %>% 
+    select(-c(tx_curr, share))
+  
+  #3 month MMD FY20Q4
+  mmd_3_fy20q2 <- df_mmd_agency %>% 
+    filter(period == "FY20Q2",
+           otherdisaggregate == "MMD - 3 months or more") %>% 
+    select(-c(tx_curr, share))
+  
+  
+  trips_averted_fy20q2 <- ((mmd_3_fy20q2$tx_mmd + mmd_6_fy20q2$tx_mmd)*12) - ((mmd_3_fy20q2$tx_mmd*4) +(mmd_6_fy20q2$tx_mmd*2))
+  
+#Calculation to get trips averted estimate since the start of COVID (FY20Q3 because of MMD ramp up)  
+  # (FY21Q4 Trips averted) + (FY20Q4 Trips Averted - FY20Q2 Trips Averted)
+  
+ covid_trips_averted <- trips_averted_fy21q4 + (trips_averted_fy20q4 - trips_averted_fy20q2)
+  
+    
 #test dataframe for a waffle plot
-fy21_trips <- df_mmd %>% 
-  mutate(otherdisaggregate = recode(otherdisaggregate,
-                                    "o3mmd" = "mmd3",
-                                    "o6mmd" = "mmd6")) %>% 
-  group_by(period, otherdisaggregate) %>% 
-  summarise(across(c(tx_curr, tx_mmd), sum,na.rm = TRUE)) %>% 
-  ungroup() %>% 
-  filter(period == "FY21Q3") %>% 
-  mutate(total_trip = sum(tx_mmd)*12) %>% 
-  pivot_wider(names_from = otherdisaggregate, values_from = tx_mmd) %>% 
-  mutate(mmd3_trips = mmd3*4,
-         mmd6_trips = mmd6*2) %>% 
-  select(-c(tx_curr, mmd3, mmd6)) %>% 
-  pivot_longer(total_trip:mmd6_trips, names_to = "type", values_to = "value") %>% 
-  mutate(share = (value /56296116)*100)
+  
+# fy21_trips <- df_mmd %>% 
+#   mutate(otherdisaggregate = recode(otherdisaggregate,
+#                                     "o3mmd" = "mmd3",
+#                                     "o6mmd" = "mmd6")) %>% 
+#   group_by(period, otherdisaggregate) %>% 
+#   summarise(across(c(tx_curr, tx_mmd), sum,na.rm = TRUE)) %>% 
+#   ungroup() %>% 
+#   filter(period == "FY21Q3") %>% 
+#   mutate(total_trip = sum(tx_mmd)*12) %>% 
+#   pivot_wider(names_from = otherdisaggregate, values_from = tx_mmd) %>% 
+#   mutate(mmd3_trips = mmd3*4,
+#          mmd6_trips = mmd6*2) %>% 
+#   select(-c(tx_curr, mmd3, mmd6)) %>% 
+#   pivot_longer(total_trip:mmd6_trips, names_to = "type", values_to = "value") %>% 
+#   mutate(share = (value /56296116)*100)
   
