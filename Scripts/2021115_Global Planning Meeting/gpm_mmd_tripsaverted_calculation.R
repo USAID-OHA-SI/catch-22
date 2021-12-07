@@ -29,6 +29,14 @@ df <- si_path() %>%
 
 # MUNGE MMD ---------------------------------------------------------------
 
+df %>% 
+  filter(fundingagency == "USAID") %>%
+  count(countryname) %>% 
+  unique() %>% 
+  view()
+  
+        
+
 #keep just TX_CURR/MMD and reshape
 df_mmd <- df %>% 
   filter(fundingagency == "USAID",
