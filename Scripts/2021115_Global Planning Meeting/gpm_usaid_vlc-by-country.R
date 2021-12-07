@@ -2,9 +2,9 @@
 # AUTHOR:   A.Chafetz, T.Essam, K.Srikanth | USAID
 # PURPOSE:  Explore VLS aross USAID mechanisms
 # LICENSE:  MIT
-# DATE:     2021-10-18
-# UPDATED:  2021-10-28
-# NOTE:     derviced from catch-22/20211018_USAID_VLC-by-country.R
+# DATE:     2021-12-02
+# UPDATED:  
+# NOTE:     adapted from catch-22/20211018_USAID_VLC-by-country.R
 
 # DEPENDENCIES ------------------------------------------------------------
   
