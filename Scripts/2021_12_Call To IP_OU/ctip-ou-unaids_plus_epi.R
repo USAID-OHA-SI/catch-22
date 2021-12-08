@@ -137,9 +137,13 @@
                                   TRUE ~ "white"),
            border_color = ifelse(indicator == "Epi\nControl", denim, scooter),
            shp = ifelse(indicator == "Epi\nControl", 21, 22),
-           arrow = ifelse(declining_deaths == TRUE, 25, 24),
-           # country_grp = reorder_within(country, gap, grouping, max, na.rm = TRUE))
-           country_grp = reorder_within(country, gap, grouping))
+           arrow = ifelse(declining_deaths == TRUE, 25, 24))
+  
+  df_viz <- df_viz %>% 
+    group_by(country) %>% 
+    mutate(gap = max(gap, na.rm = TRUE)) %>% 
+    ungroup() %>% 
+    mutate(country_grp = reorder_within(country, -gap, grouping, max, na.rm = TRUE))
 
 
 # VIZ ---------------------------------------------------------------------
@@ -165,7 +169,7 @@
               aes(label = value), color = "white", family = "Source Sans Pro SemiBold", size = 2.5) +
     geom_text(size = 3, nudge_x = 1, na.rm = TRUE,
               aes(label = lab_epi), color = matterhorn, family = "Source Sans Pro") +
-    facet_grid(grouping~indicator, scales = "free_y", space = "free_y") +
+    facet_grid(grouping~., scales = "free_y", space = "free_y") +
     scale_fill_identity(aesthetics = c("fill", "color")) +
     scale_shape_identity() +
     scale_x_discrete(position = "top", expand = c(.05, .05)) +
@@ -177,9 +181,6 @@
           strip.text.y = element_blank(),
           panel.spacing.y = unit(.5, "lines"))
   
-  # si_save("Images/ctip-ou-unaids_plus_epi.png", 
-  #         width = 3.2, height = 12)
-    
   si_save("Graphics/ctip-ou-unaids_plus_epi.svg", 
           width = 3.2, height = 12)
   
