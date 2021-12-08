@@ -50,7 +50,7 @@
   # #aggregate to country x mech x fy x ind level
   # df_vls <- df_vls %>%
   #   bind_rows(df_vls %>% mutate(mech_code = "National")) %>% 
-  #   group_by(countryname, mech_code, fiscal_year, indicator) %>% 
+  #   group_by(operatingunit, mech_code, fiscal_year, indicator) %>% 
   #   summarise(across(starts_with("qtr"), sum, na.rm = TRUE), .groups = "drop") %>% 
   #   mutate(type = ifelse(mech_code == "National", "national", "mech"), .before = mech_code)
   # 
@@ -63,7 +63,7 @@
   # 
   # #create alternate denom for VLC
   # df_vls <- df_vls %>% 
-  #   group_by(countryname, mech_code) %>% 
+  #   group_by(operatingunit, mech_code) %>% 
   #   mutate(tx_curr_lag2 = lag(tx_curr, n = 2, by = "period")) %>% 
   #   ungroup()
   # 
@@ -92,14 +92,14 @@
   # #identify where 80% of TX_CURR is for viz facet
   # df_ctry_grps <- df_vls %>% 
   #   filter(mech_code == "National") %>% 
-  #   count(countryname, wt = tx_curr) %>% 
+  #   count(operatingunit, wt = tx_curr) %>% 
   #   arrange(desc(n)) %>% 
   #   mutate(cumsum = cumsum(n),
   #          share = cumsum/sum(n),
   #          grp = case_when(share < .83 ~ "Top 80%",
   #                          share < .95 ~ "Next 15%",
   #                          TRUE ~ "Remaining 5%")) %>% 
-  #   select(countryname, grp)
+  #   select(operatingunit, grp)
   # 
   # df_vls <- rename_official(df_vls)
   
@@ -107,11 +107,11 @@
   
   # #viz dataframe
   # df_viz <- df_vls %>% 
-  #   left_join(df_ctry_grps, by = "countryname") %>% 
+  #   left_join(df_ctry_grps, by = "operatingunit") %>% 
   #   mutate(vls_mech = case_when(mech_code != "National" ~ vls),
   #          vls_nat = case_when(mech_code == "National" ~ vls),
   #          fill_color = ifelse(vls_mech > .9, scooter, moody_blue),
-  #          countryname = recode(countryname, 
+  #          operatingunit = recode(operatingunit, 
   #                               "Democratic Republic of the Congo" = "DRC",
   #                               "Papua New Guinea" = "PNG",
   #                               "Dominican Republic" = "DR"),
@@ -139,7 +139,7 @@
   #          vls_goal_gap = ifelse(vls_goal_gap < 0, 0, vls_goal_gap))
   # 
   # df_viz %>% 
-  #   ggplot(aes(vls_mech, fct_reorder(countryname, vls_nat, na.rm = TRUE))) +
+  #   ggplot(aes(vls_mech, fct_reorder(operatingunit, vls_nat, na.rm = TRUE))) +
   #   geom_blank() +
   #   annotate("rect",
   #            xmin = -Inf, xmax = .9, ymin = 0, ymax = Inf,
@@ -187,7 +187,7 @@
     bind_rows(df_vls_adj %>% 
                 mutate(across(c(mech_code, mech_name, primepartner), ~ "National"))) %>% 
     mutate(type = ifelse(mech_code == "National", "national", "mech")) %>% 
-    group_by(countryname, type, mech_code, mech_name, primepartner) %>% 
+    group_by(operatingunit, type, mech_code, mech_name, primepartner) %>% 
     summarise(across(c(tx_curr, tx_curr_lag2 = tx_curr_lag2_site, tx_pvls, tx_pvls_d), 
                      sum, na.rm = TRUE), .groups = "drop") %>% 
     filter(tx_pvls_d > 0)
@@ -205,14 +205,14 @@
   #identify where 80% of TX_CURR is for viz facet
   df_ctry_grps_adj <- df_vls_adj %>% 
     filter(mech_code == "National") %>% 
-    count(countryname, wt = tx_curr) %>% 
+    count(operatingunit, wt = tx_curr) %>% 
     arrange(desc(n)) %>% 
     mutate(cumsum = cumsum(n),
            share = cumsum/sum(n),
            grp = case_when(share < .83 ~ "Top 80%",
                            share < .95 ~ "Next 15%",
                            TRUE ~ "Remaining 5%")) %>% 
-    select(countryname, grp)
+    select(operatingunit, grp)
   
   
 
@@ -221,11 +221,11 @@
 
   #viz dataframe
   df_viz_adj <- df_vls_adj %>% 
-    left_join(df_ctry_grps_adj, by = "countryname") %>% 
+    left_join(df_ctry_grps_adj, by = "operatingunit") %>% 
     mutate(vls_mech = case_when(type != "national" ~ vls),
            vls_nat = case_when(type == "national" ~ vls),
            fill_color = ifelse(vls_mech > .9, scooter, moody_blue),
-           countryname = recode(countryname, 
+           operatingunit = recode(operatingunit, 
                                 "Democratic Republic of the Congo" = "DRC",
                                 "Papua New Guinea" = "PNG",
                                 "Dominican Republic" = "DR"),
@@ -253,7 +253,7 @@
            vls_goal_gap = ifelse(vls_goal_gap < 0, 0, vls_goal_gap))
   
   df_viz_adj %>% 
-    ggplot(aes(vls_mech, fct_reorder(countryname, vls_nat, na.rm = TRUE))) +
+    ggplot(aes(vls_mech, fct_reorder(operatingunit, vls_nat, na.rm = TRUE))) +
     geom_blank() +
     annotate("rect",
              xmin = -Inf, xmax = .9, ymin = 0, ymax = Inf,
@@ -305,7 +305,7 @@
     bind_rows(df_vlc_adj %>% 
                 mutate(across(c(mech_code, mech_name, primepartner), ~ "National"))) %>% 
     mutate(type = ifelse(mech_code == "National", "national", "mech")) %>% 
-    group_by(countryname, type, mech_code, mech_name, primepartner) %>% 
+    group_by(operatingunit, type, mech_code, mech_name, primepartner) %>% 
     summarise(across(c(tx_curr, tx_curr_lag2 = tx_curr_lag2_site, tx_pvls, tx_pvls_d), 
                      sum, na.rm = TRUE), .groups = "drop") %>% 
     filter(tx_pvls_d > 0)
@@ -330,7 +330,7 @@
   
   #viz dataframe
   df_viz_vlc <- df_vlc_adj %>% 
-    left_join(df_ctry_grps_adj, by = "countryname") %>% 
+    left_join(df_ctry_grps_adj, by = "operatingunit") %>% 
     mutate(vls_mech = case_when(mech_code != "National" ~ vls_alt),
            vls_mech = ifelse(vls_mech > 1.01, 1.01, vls_mech),
            vls_nat = case_when(mech_code == "National" ~ vls_alt),
@@ -338,7 +338,8 @@
            vlc_mech = ifelse(vlc_mech > 1.1, 1.1, vlc_mech),
            vlc_nat = case_when(mech_code == "National" ~ vlc),
            fill_color = ifelse(vlc_mech > .9, scooter, moody_blue),
-           countryname = recode(countryname, 
+           fill_color_vls = ifelse(vls_mech > .9, scooter, moody_blue),
+           operatingunit = recode(operatingunit, 
                                 "Democratic Republic of the Congo" = "DRC",
                                 "Papua New Guinea" = "PNG",
                                 "Dominican Republic" = "DR"),
@@ -357,7 +358,7 @@
            mech_lab = case_when(vlc_mech < .9 ~ glue("{clean_name})")))
   
   df_viz_vlc %>% 
-    ggplot(aes(vlc_mech, fct_reorder(countryname, vlc_nat, na.rm = TRUE))) +
+    ggplot(aes(vlc_mech, fct_reorder(operatingunit, vlc_nat, na.rm = TRUE))) +
     geom_blank() +
     annotate("rect",
              xmin = -Inf, xmax = .9, ymin = 0, ymax = Inf,
@@ -394,15 +395,18 @@
   
   
   
+  
+
+  
   df_viz_vlc %>% 
-    ggplot(aes(vls_mech, fct_reorder(countryname, vls_nat, na.rm = TRUE))) +
+    ggplot(aes(vls_mech, fct_reorder(operatingunit, vls_nat, na.rm = TRUE))) +
     geom_blank() +
     annotate("rect",
              xmin = -Inf, xmax = .9, ymin = 0, ymax = Inf,
              fill = trolley_grey_light, alpha = .4) +
     geom_vline(xintercept = .9, linetype = "dashed") +
     geom_point(aes(size = tx_curr, 
-                   color = fill_color), alpha = .6,
+                   color = fill_color_vls), alpha = .6,
                position = position_jitter(width = 0, height = 0.1, seed = 42), na.rm = TRUE) +
     # geom_text_repel(aes(label = mech_lab), na.rm = TRUE, max.overlaps = 30,
     #                 family = "Source Sans Pro", color = "#505050", size = 9/.pt) +
@@ -415,17 +419,17 @@
     coord_cartesian(clip = "off") +
     expand_limits(x = .75) +
     labs(y = NULL, x = "Viral Load Suppression Rate (TX_PVLS_N/TX_CURR [2 Qtrs Prior])",
-         # title = glue("While USAID is at {percent(df_usaid_adj$vls, 1)} Viral Load Suppression in {pd}, a number of implementating mechanism fall short of the 90% goal") %>% toupper() %>% str_wrap(),
+         # title = glue("WHILE THE CONVENTIONAL VIRAL LOAD SUPPRESSION (VLS) RATE WAS {percent(df_usaid_adj$vls, 1)} IN {pd},
+         #              USAID ONLY HAD {percent(df_usaid_adj$vls_alt, 1)} OF TREATMENT PATIENTS VIRALLY SUPPRESSED"),
          size = glue("Current on Treatment ({pd})"),
          
-         caption = glue("Source: Site Adjusted DATIM Pull [2021-10-05] 
-                        Note: Adjusted site TX_CURR data account for site transitions & exclude non-eligible VLC calculations 
-                        SI Analytics: {paste0(authors, collapse = '/')} | US Agency for International Development")) +
+         caption = glue("Note: Adjusted site TX_CURR data account for site transitions & exclude non-eligible VLC calculations 
+                        Source: Site Adjusted DATIM Pull [2021-12-15] | USAID SI Analytics | Calls with IPs/OUs Dec 2021")) +
     si_style(facet_space = .5) +
     theme(legend.position = "none",
           axis.text.y = element_text(size = 9),
           strip.text.y = element_text(hjust = .5, family = "Source Sans Pro SemiBold"))
   
   
-  si_save("Graphics/FY21Q3_USAID_VLS-partners_adj.svg")
+  si_save("Graphics/FY21Q4_USAID_VLS-partners_adj.svg", height = 4.25)
   
