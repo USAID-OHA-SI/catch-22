@@ -3,7 +3,7 @@
 # PURPOSE:  compare 90s and epi control
 # LICENSE:  MIT
 # DATE:     2021-12-07
-# UPDATED:  2021-12-08
+# UPDATED:  2021-12-15
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -30,6 +30,9 @@
   lts <- pepfar_country_list %>% 
     filter(operatingunit == countryname) %>% 
     pull(countryname)
+  
+  #rows of countries per column in viz
+  row_max <- 17
   
 # IMPORT ------------------------------------------------------------------
   
@@ -88,7 +91,7 @@
   #limit Test and Treat data
   df_tt_lim <- df_tt %>% 
     filter(year == max(year),
-           indicator %in% c("KNOWN_STATUS", "KNOWN_STATUS_ON_ART", "ON_ART_VLS"),
+           indicator %in% c("KNOWN_STATUS", "PLHIV_ON_ART", "VLS"),
            age == "all",
            sex == "all",
            stat == "est") %>% 
@@ -97,17 +100,18 @@
   df_tt_lim <- df_tt_lim %>% 
     filter(!is.na(value)) %>% 
     mutate(indicator = recode(indicator, "KNOWN_STATUS" = "Known\nStatus",
-                              "KNOWN_STATUS_ON_ART" = "On\nART",
-                              "ON_ART_VLS" = "VLS"),
-           achv = value >= goal) %>% 
+                              "PLHIV_ON_ART" = "On\nART"),
+           set = recode(indicator, "Known\nStatus" = 1,
+                        "On\nART" = 2,
+                        "VLS" = 3),
+           goal_rate = round((goal/100)^set*100),
+           achv = value > goal_rate) %>% 
     group_by(country) %>% 
-    mutate(n = n(),
-           grouping = case_when(n == 1 ~ "B_Limited",
-                                min(value, na.rm = TRUE) >= goal ~ "Achieved",
-                                value == min(value, na.rm = TRUE) ~ str_replace(indicator, "\\n", " ")), 
-           gap = case_when(value == min(value, na.rm = TRUE) & value < goal ~ goal-value,
-                           value == min(value, na.rm = TRUE) & grouping == "Achieved" ~ 100-value,
-                           TRUE ~ 0),
+    mutate(gap = goal_rate - value,
+           grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
+                                max(gap, na.rm = TRUE) <= 0 ~ "Achieved",
+                                gap == max(gap, na.rm = TRUE) ~ str_replace(indicator, "\\n", " "),
+                                TRUE ~ NA_character_), 
            gap = max(gap)) %>%
     ungroup() 
   
@@ -137,15 +141,22 @@
                                   TRUE ~ "white"),
            border_color = ifelse(indicator == "Epi\nControl", denim, scooter),
            shp = ifelse(indicator == "Epi\nControl", 21, 22),
-           arrow = ifelse(declining_deaths == TRUE, 25, 24))
+           arrow = ifelse(declining_deaths == TRUE, 25, 24),
+           fill_color_arrow = ifelse(declining_deaths == TRUE, suva_grey, burnt_sienna))
   
   df_viz <- df_viz %>% 
     group_by(country) %>% 
     mutate(gap = max(gap, na.rm = TRUE)) %>% 
     ungroup() %>% 
-    mutate(country_grp = reorder_within(country, -gap, grouping, max, na.rm = TRUE))
+    mutate(country_grp = reorder_within(country, -gap, grouping, max, na.rm = TRUE)) %>% 
+    arrange(desc(country_grp))
 
+  df_viz <- df_viz %>% 
+    left_join(df_viz %>% 
+                distinct(country, country_grp) %>% 
+                mutate(column_order = ceiling(row_number()/row_max)))
 
+  
 # VIZ ---------------------------------------------------------------------
 
   df_viz %>%
@@ -153,7 +164,7 @@
                fill = fill_color, color = border_color, shape = shp)) +
     geom_point(size = 6.5) +
     geom_point(data = . %>%  filter(indicator == "Epi\nControl"),
-               aes(shape = arrow), color = suva_grey, fill = suva_grey, size = 2, na.rm = TRUE) +
+               aes(shape = arrow, fill = fill_color_arrow, color = fill_color_arrow), size = 2, na.rm = TRUE) +
     geom_vline(xintercept = 3.5) +
     geom_text(data = . %>% filter(achv != TRUE & indicator != "Epi\nControl"), 
               vjust = .5, hjust = .5,
