@@ -167,9 +167,9 @@ df_viz %>%
   labs(x = NULL, y = NULL, color = NULL,
        title = glue("AS OF 2020, {epi_ctrl_cnt} PEPFAR COUNTRIES HAVE ACHIEVED POPULATION VIRAL LOAD SUPPRESSION"),
        subtitle = "Population Viral Load Suppression defined as the number of PLHIV virally suppressed over total number of PLHIV",
-       caption = glue("Source: UNAIDS 90-90-90 15+ Percent Indicators",
+       caption = glue("Source: UNAIDS 90-90-90 Percent Indicators",
                       "USAID SI Analytics",
-                      "Global Planning Meeting 2021-11-15", .sep = " | ")) +
+                      "OHA Briefing with Dr. Gawande, January 2022", .sep = " | ")) +
   si_style_xgrid() +
   theme(strip.text.y = element_blank(),
         panel.spacing = unit(.5, "lines"))
