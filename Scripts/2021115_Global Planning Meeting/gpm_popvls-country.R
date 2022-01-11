@@ -2,7 +2,9 @@
 # AUTHOR: K Srikanth | SI
 # LICENSE: MIT
 # DATE: 2021-11-12
-# NOTES: 
+# UPDATED: 2022-01-05
+# NOTES: changed to all age groups and update to pull_unaids
+
 
 # LOCALS & SETUP ============================================================================
 
@@ -52,9 +54,9 @@ clean_number <- function(x, digits = 0){
 #Read in data with munge_unaids
 
 #UNAIDS data
-df_unaids_int <- munge_unaids("Test & Treat", "Integer") # num  VLS
-df_unaids_pct <- munge_unaids("Test & Treat", "Percent") # % VLS
-df_est <- munge_unaids("HIV Estimates", "Integer") # num PLHIV
+df_unaids_int <- pull_unaids("Test & Treat - Integer", pepfar_only = TRUE) # num  VLS
+df_unaids_pct <- pull_unaids("Test & Treat - Percent", pepfar_only = TRUE) # % VLS
+df_est <- pull_unaids("HIV Estimates - Integer", pepfar_only = TRUE) # num PLHIV
 
 
 # GLOBALS -----------------------------------------------------------------
@@ -79,7 +81,7 @@ df_est <- df_est %>%
          indicator == "PLHIV",
          year == 2020,
          stat == "est",
-         age == "15+",
+         age == "all",
          sex == "all") %>%
   select(country, indicator, value) %>% 
   pivot_wider(names_from = indicator, values_from = value)
@@ -88,7 +90,7 @@ df_est <- df_est %>%
 df_unaids_pct <- df_unaids_pct %>% 
   filter(year == max(year),
          sex == "all",
-         age == "15+",
+         age == "all",
          stat == "est",
          country %in% pepfar_cntry,
          indicator %in% ind_sel)
@@ -97,7 +99,7 @@ df_unaids_pct <- df_unaids_pct %>%
 vls_num <- df_unaids_int %>% 
   filter(year == max(year),
          sex == "all",
-         age == "15+",
+         age == "all",
          stat == "est",
          country %in% pepfar_cntry,
          indicator == "VLS")
@@ -165,9 +167,9 @@ df_viz %>%
   labs(x = NULL, y = NULL, color = NULL,
        title = glue("AS OF 2020, {epi_ctrl_cnt} PEPFAR COUNTRIES HAVE ACHIEVED POPULATION VIRAL LOAD SUPPRESSION"),
        subtitle = "Population Viral Load Suppression defined as the number of PLHIV virally suppressed over total number of PLHIV",
-       caption = glue("Source: UNAIDS 90-90-90 15+ Percent Indicators",
+       caption = glue("Source: UNAIDS 90-90-90 Percent Indicators",
                       "USAID SI Analytics",
-                      "Global Planning Meeting 2021-11-15", .sep = " | ")) +
+                      "OHA Briefing with Dr. Gawande, January 2022", .sep = " | ")) +
   si_style_xgrid() +
   theme(strip.text.y = element_blank(),
         panel.spacing = unit(.5, "lines"))
