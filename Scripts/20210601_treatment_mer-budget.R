@@ -3,7 +3,7 @@
 # PURPOSE:  treatment scale up since PEPFAR start
 # LICENSE:  MIT
 # DATE:     2021-06-01
-# UPDATED:  2021-06-03
+# UPDATED:  2022-01-11
 # NOTE:     adapted from USAID-OHA-SI/agitprop/04b_usaid_tx_trends
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -11,7 +11,7 @@
   library(tidyverse)
   library(glitr)
   library(glamr)
-  library(ICPIutilities)
+  library(gophr)
   library(extrafont)
   library(scales)
   library(tidytext)
@@ -64,17 +64,12 @@
   #remove footnote line
   df_copmatrix <- df_copmatrix %>% 
     filter(planning_cycle != "Office of U.S. Foreign Assistance Resources")
-  
-  #identify supply chain mechanism to remove
-  df_sch_mechs <- df_copmatrix %>% 
-    filter(str_detect(mechanism_name, "GHSC|Supply Chain")) %>% 
-    distinct(mechanism_id, mechanism_name) %>% 
-    filter(str_detect(mechanism_name, "Kenya Supply Chain System Strengthening|TA|QA", negate = TRUE))
-  
+
   #filter out M&O & supply chain
   df_copmatrix <- df_copmatrix %>%
-    filter(record_type != "Management and Operations",
-           !mechanism_id %in% unique(df_sch_mechs$mechanism_id))
+    rename(mech_code = mechanism_id) %>% 
+    remove_mo() %>%
+    remove_sch()
   
   #convert to values
   df_copmatrix <- df_copmatrix %>% 
@@ -100,7 +95,8 @@
   
   #treatment dataset
   df_tx <- df %>% 
-    bind_rows(df_arch) %>% 
+    bind_rows(df_arch %>% 
+                filter(fiscal_year %ni% unique(df$fiscal_year))) %>% 
     filter(indicator == "TX_CURR",
            standardizeddisaggregate == "Total Numerator") 
   
@@ -208,7 +204,7 @@
                    WITHOUT A PROPORTIONATE INCREASE IN 
                    <span style='color:{scooter}'>FUNDING</span>"),
       caption = glue("Planned funding exclude Management and Operations as well as supply chain
-                     Source: PEPFAR MSD FY21Q2 + Spotlight FY04-14, PEPFAR COP Matrix [2021-06-02]
+                     Source: PEPFAR MSD FY21Q4c + Spotlight FY04-14, PEPFAR COP Matrix [2021-06-02]
                      US Agency for International Development | SI analytics: {paste(authors, collapse = '/')}")) & 
     si_style_nolines() & 
     theme(plot.title = element_markdown(size = 23),
