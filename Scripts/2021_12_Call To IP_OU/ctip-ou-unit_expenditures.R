@@ -3,6 +3,7 @@
 # PURPOSE:  Call to IP/OU - Unit Expenditure Slope Graph
 # LICENSE:  MIT
 # DATE:     2021-12-09
+# UPDATED:  2022-01-14
 # NOTE: used numbers from groundhog_day/Scripts/FY21Q1_GLOBAL_UEs-Agency.R
 #       and existing EU viz that pulled from Financial dashboard
 
@@ -23,8 +24,12 @@ library(readxl)
 # IMPORT ------------------------------------------------------------------
 
 ue_df <- si_path() %>% 
-  return_latest("expenditure") %>% 
+  return_latest("CTIP-CWOU-unit_expenditure-slope") %>% 
   read_excel() 
+
+#GLOBALS ---------------------------------------------------------------
+
+msd_source <- source_info()
 
 # VIZ -----------------------------------------------------------
 
@@ -59,4 +64,4 @@ ue_df %>%
                                 "USAID SI Analytics",
                                 "Call with IPs/OU - Dec 2021", .sep = " | "))
 
-si_save("Graphics/CTIP-OU-unit_expenditures1.svg")
+si_save("Graphics/CTIP-OU-unit_expenditures1.svg", width = 6.5)
