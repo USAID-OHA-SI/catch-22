@@ -32,10 +32,10 @@ plot_title <- ""
 
 hrh_fp <- data.frame(
   name = c("USAID", "PEPFAR"),
-  value = c(79, 86)
+  value = c(101, 88)
 )
 
-waffle(hrh_fp, rows = 11, flip = T, colors = c("#5bb5d5", "#d67288")) 
+waffle(hrh_fp, rows = 9, flip = T, colors = c("#5bb5d5", "#d67288")) 
 
 si_save("Graphics/HRH_waffle.svg")
 
