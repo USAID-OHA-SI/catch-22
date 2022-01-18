@@ -62,6 +62,8 @@ clean_number <- function(x, digits = 0){
 
 ind_list <-  c("HTS_TST_POS", "TX_CURR", "TB_PREV", "TX_NEW") #TX_MMD separate
 
+
+#get results (indicator_type == "clinical" or "prevention")
 agency_result <- function(indicator_type, usaid_param) {
   
   #define the indicators
@@ -128,6 +130,7 @@ return(df_pepfar_all)
   
 }
 
+#RESHAPE (indicator_type == "clinical" or "prevention")
 reshape_agency_result <- function(indicator_type) {
   df_pepfar_all <- agency_result(indicator_type, FALSE)
   df_usaid_all <- agency_result(indicator_type, TRUE)
@@ -158,74 +161,28 @@ reshape_agency_result <- function(indicator_type) {
                                    indicator == "OVC_SERV" ~ "Orphans and vulnerable children (OVC) & their caregivers provided with care and support",
                                    indicator == "VMMC_CIRC" ~ "Males circumcised as part of the voluntary medical male circumcision for HIV prevention program",
                                    indicator == "PrEP_NEW" ~ "People received pre-exposure prophylaxis to prevent HIV"))
-  
-  df_viz %>% 
-    filter(fiscal_year == 2021) %>% 
-    ggplot() +
-    geom_text(aes(x, 0.65, label = share_lab),
-              family = "Source Sans Pro Light", color = moody_blue,
-              size = 60/.pt) +
-    geom_text(aes(x_label, 0.4, label = paste(str_wrap(val_lab, width = 30), "\n")),
-              family = "Source Sans Pro Light", color = trolley_grey, 
-              size = 15/.pt) +
-    geom_text(aes(0.5, 0.15, label = paste(str_wrap(ind_display, width = 30), "\n")),
-              family = "Source Sans Pro Light", color = trolley_grey, 
-              size = 12/.pt) +
-    geom_text(aes(x, y_ind, label = indicator),
-              family = "Source Sans Pro SemiBold", color = trolley_grey, 
-              size = 15/.pt) +
-    expand_limits(x = c(0, 1), y = c(0,1)) +
-    facet_grid(~indicator) +
-    labs(x = NULL, y = NULL,
-         title = "USAID CONTRIBUTIONS TO PEPFAR RESULTS FY21",
-         caption = glue("Source: {msd_source}
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
-    si_style_nolines() +
-    theme(axis.text.x = element_blank(),
-          axis.text.y = element_blank(),
-          strip.text = element_blank(),
-          panel.background = element_rect(fill = "#e6e7e84f"),
-          panel.border = element_rect(color = trolley_grey, fill = NA))
+return(df_viz)
 }
 
+#VIZ ----------------------------------------------------------------
 
+df_viz <- reshape_agency_result("clinical") #or prevention
 
-
-#Play around with viz --------------------------------------
-
-df_viz <- df_long %>% 
-  mutate(x = .5,
-         y = x,
-         x_label = ifelse(fundingagency == "USAID", 0.25, 0.75),
-         y_label = .25,
-         x_ind = .72,
-         y_ind = 0.95,
-         share_lab = percent(share, accuracy = 1),
-         value = round(value, 2),
-         val_lab = value %>%  clean_number(1),
-         ind_display = case_when(indicator == "TX_CURR" ~ "Antiretroviral  treatment (ART) for women, men, and children",
-                                 indicator == "TX_MMD3" ~ "Dispensed multi-month (3+ month) ART for women, men, and children",
-                                 indicator == "TX_NEW" ~ "People newly enrolled on ARV treatment",
-                                 indicator == "HTS_TST_POS" ~ "People who received HIV Testing Services (HTS) & received positive test results",
-                                 indicator == "TB_PREV" ~ "Total number of ART who completed course of TB preventive therapy"))
-
-  
 df_viz %>% 
   filter(fiscal_year == 2021) %>% 
   ggplot() +
   geom_text(aes(x, 0.65, label = share_lab),
             family = "Source Sans Pro Light", color = moody_blue,
             size = 60/.pt) +
-   geom_text(aes(x_label, 0.4, label = paste(str_wrap(val_lab, width = 30), "\n")),
-             family = "Source Sans Pro Light", color = trolley_grey, 
-             size = 15/.pt) +
+  geom_text(aes(x_label, 0.4, label = paste(str_wrap(val_lab, width = 30), "\n")),
+            family = "Source Sans Pro Light", color = trolley_grey, 
+            size = 15/.pt) +
   geom_text(aes(0.5, 0.15, label = paste(str_wrap(ind_display, width = 30), "\n")),
             family = "Source Sans Pro Light", color = trolley_grey, 
             size = 12/.pt) +
-   geom_text(aes(x, y_ind, label = indicator),
-             family = "Source Sans Pro SemiBold", color = trolley_grey, 
-             size = 15/.pt) +
+  geom_text(aes(x, y_ind, label = indicator),
+            family = "Source Sans Pro SemiBold", color = trolley_grey, 
+            size = 15/.pt) +
   expand_limits(x = c(0, 1), y = c(0,1)) +
   facet_grid(~indicator) +
   labs(x = NULL, y = NULL,
