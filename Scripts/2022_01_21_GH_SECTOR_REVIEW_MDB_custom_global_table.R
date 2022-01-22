@@ -18,12 +18,12 @@
     library(fontawesome)
   
   # Set paths  
-    mdb_out <- "Graphics" 
+    mdb_out <- "Images/MDB" 
     load_secrets()
     merdata <- glamr::si_path("path_msd")
     
   # Creates a markdown chunk to be inserted as a subtitle with legend pngs
-    legend_chunk <- gt::md(glue::glue("Legend: Cumulative Indicators <img src= '{legend_q3}' style='height:15px;'>    &emsp; Snapshot (TX_CURR) <img src= '{legend_snapshot}' style='height:15px;'> "))
+    legend_chunk <- gt::md(glue::glue("Legend: <img src= '{legend_snapshot}' style='height:15px;'> "))
     
   # Bold Q3 data in the VLS/VLC table
     bold_column <- function(gt_obj, col){
@@ -91,22 +91,32 @@
 # VIZ ============================================================================
     
     # Generate base table for global results
-    create_mdb(mdb_tbl, ou = "Global", type = "main", pd, msd_source, legend = legend_chunk) %>% 
-      embiggen
-    
+    create_mdb(mdb_tbl %>% filter(agency == "USAID"), ou = "Global", type = "main", pd, msd_source, legend = legend_chunk) %>% 
+      embiggen() %>% 
+      cols_hide(c(past_results_cumulative, past_targets, past_targets_achievement, present_z_aresults, 
+                  present_z_change, present_z_direction)) %>% 
+      gtsave(., path = mdb_out, filename = glue::glue("GLOBAL_{pd}_KEY_INDICATORS_MD.png"))
+      
     # Try a specific country now
-    create_mdb(mdb_tbl, ou = "Zambia", type = "main", pd, msd_source, legend = legend_chunk) %>% embiggen
-
+    create_mdb(mdb_tbl, ou = "Lesotho", type = "main", pd, msd_source, legend = legend_chunk) %>% 
+      embiggen() %>% 
+      gtsave(., path = mdb_out, filename = glue::glue("LESOTHO_{pd}_KEY_INDICATORS_MD.png"))
+    
     # Create the treatment data frame needed for derived indicators
     mdb_df_tx    <- make_mdb_tx_df(ou_im)
     mdb_tbl_tx   <- reshape_mdb_tx_df(mdb_df_tx, pd)
     
-    create_mdb(mdb_tbl_tx, ou = "Zambia", type = "treatment", pd, msd_source) %>% 
-      bold_column(., Q3) %>% 
+    create_mdb(mdb_tbl_tx, ou = "Lesotho", type = "treatment", pd, msd_source) %>% 
+      bold_column(., Q4) %>% 
       bold_rowgroup(.) %>% 
-      embiggen()
+      embiggen() %>% 
+      gtsave(., path = mdb_out, filename = glue::glue("LESOTHO_{pd}_MMD_VL_MD.png"))
+    
+    
+
 
 # BATCH ------------------------------------------------------------------
+    # BATCH ------------------------------------------------------------------
     
     # Write the different types to character objects
     all_ous <- map(c("OU", "Agency", "Region-Country"), ~distinct_agg_type(mdb_tbl, .x)) %>% 
@@ -114,18 +124,18 @@
     
     # Use purr to map across the list and create tables for all entries in each object
     purrr::walk(all_ous, 
-               ~create_mdb(mdb_tbl, ou = .x, type = "main", pd, msd_source, legend = legend_chunk) %>% 
-                 bold_rowgroup() %>% 
-                 embiggen() %>% 
-                 gtsave(., path = mdb_out, filename = glue::glue("{.x}_{pd}_KEY_INDICATORS_MD.png")))    
+                ~create_mdb(mdb_tbl, ou = .x, type = "main", pd, msd_source, legend = legend_chunk) %>% 
+                  bold_rowgroup() %>% 
+                  embiggen() %>% 
+                  gtsave(., path = mdb_out, filename = glue::glue("{.x}_{pd}_KEY_INDICATORS_MD.png")))    
     
-        # TREATMENT - generally same as above, but being safe just in case
+    # TREATMENT - generally same as above, but being safe just in case
     all_tx_ous <- map(c("OU", "Agency", "Region-Country"), ~distinct_agg_type(mdb_tbl_tx, .x)) %>% 
       flatten_chr()
     
-    purrr::walk(all_tx_ous[29], 
+    purrr::walk(all_tx_ous, 
                 ~create_mdb(mdb_tbl_tx, ou = .x, type = "treatment", pd, msd_source) %>%
-                  bold_column(., Q3) %>% 
+                  bold_column(., Q4) %>% 
                   bold_rowgroup() %>% 
                   embiggen() %>% 
                   tab_source_note(
@@ -134,30 +144,14 @@
                     source_note =  "VLC and VLS calculations based on unadjusted TX_CURR presented in main indicator table.") %>% 
                   gtsave(., path = mdb_out, filename = glue::glue("{.x}_{pd}_MMD_VL_MD.png")))
     
+ 
+    
 # EXPORT RAW DATA ------------------------------------------------------------------
 
   #Export main table and VLC table and migrate to google drive
    mdb_tbl %>% 
-     select(-c(present_z_direction, present_tint_achv, indicator2)) %>% 
-     rename(FY20_cumulative = past_results_cumulative,
-            FY20_targest = past_targets,
-            FY20_achv = past_targets_achievement,
-            FY21_cumulative = present_results_cumulative,
-            FY21_targets = present_targets,
-            FY21_achv = present_targets_achievement,
-            FY21_results_Q3 = present_z_aresults,
-            FY21_change = present_z_change) %>% 
      arrange(operatingunit, agency, indicator) %>% 
-     write_csv("Dataout/FY21Q3_core_indicators.csv", na = "")
-   
-   mdb_tbl_tx %>% 
-     select(-c(indicator2, change_dir)) %>% 
-     rename(FY20_results = results,
-            FY21Q1_results = Q1,
-            FY21Q2_results = Q2,
-            FY21Q3_results = Q3) %>% 
-     arrange(operatingunit, agency, indicator) %>% 
-     write_csv("Dataout/FY21Q3_tx_indicators.csv", na = "")
+     write_csv("Dataout/FY21Q4_select_indicators.csv", na = "")
    
 # VIZ For GLOBAL PLANNING MEETING ============================================================================
    
