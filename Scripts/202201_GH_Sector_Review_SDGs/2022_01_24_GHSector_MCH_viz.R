@@ -1,4 +1,4 @@
-gi# PROJECT:  catch-22
+# PROJECT:  catch-22
 # AUTHOR:   K. Srikanth | N. Petrovic | USAID
 # PURPOSE:  GH Sector Review - MCH visuals
 # LICENSE:  MIT
@@ -40,7 +40,7 @@ df_mmr <- si_path() %>%
   read_csv()   
 
 df_contra <- si_path() %>% 
-  return_latest("contraceptive") %>% 
+  return_latest("unmet-need-for-contraception") %>% 
   read_csv()   
 
 #https://www.usaid.gov/global-health/health-areas/maternal-and-child-health/priority-countries
@@ -162,7 +162,7 @@ df_contra_viz <- df_contra %>%
   group_by(country) %>% 
   filter(year == max(year)) %>% 
   mutate(country_year=paste(country,"(",year, ")", sep="")) %>% 
-  rename(contraceptive_prevalence =contraceptive_prevalence_any_methods_percent_of_women_ages_15_49)
+  rename(unmet_need =unmet_need_for_contraception_percent_of_married_women_ages_15_49)
 
 # VIZ ---------------------------------------------
 
@@ -174,25 +174,51 @@ df_viz <- df_viz %>%
 
 #Contraceptive Viz
 df_contra_viz <- df_contra_viz %>% 
-  group_by(country_year, contraceptive_prevalence) %>% 
-  mutate(gap = 0 - contraceptive_prevalence,
-         gap_bar = case_when(contraceptive_prevalence > 0 ~ contraceptive_prevalence),
+  group_by(country_year, unmet_need) %>% 
+  mutate(gap = 0 - unmet_need,
+         gap_bar = case_when(unmet_need > 0 ~ unmet_need),
          dot_color = if_else(gap >= 0, scooter, old_rose)) 
 
 contraceptive <- df_contra_viz %>%   
   #filter(indicator == "under5_mortality") %>% 
-  ggplot(aes(contraceptive_prevalence, reorder(country_year, contraceptive_prevalence), color = genoa)) + 
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_linerange(aes(xmax = gap_bar, xmin = 0), color = "gray90",
-                 size = 2.5, na.rm = TRUE) +
+  ggplot(aes(unmet_need, reorder(country_year, unmet_need), color = genoa)) + 
+ # geom_vline(xintercept = 0, linetype = "dashed") +
+ # geom_linerange(aes(xmax = gap_bar, xmin = 0), color = "gray90",
+          #       size = 2.5, na.rm = TRUE) +
   geom_point(size = 5, alpha = .8, na.rm = TRUE) +
   scale_y_reordered(limits = rev) +
   scale_color_identity() +
   # facet_wrap(~indicator, scales = "free_y") +
   si_style_xgrid() +
   labs(x = NULL, y = NULL, color = NULL,
-       title = "Percent of Unmet Need for Contraception Among Women 15-49")
+       title = "Percent of Unmet Need for Contraception Among Women 15-49 (most recent available data)")
  
+#Maternal Mortality
+maternal <- df_viz %>%   
+  filter(indicator == "maternal_mortality") %>% 
+  ggplot(aes(value, reorder(country, value), color = dot_color)) + 
+  geom_vline(xintercept = 140, linetype = "dashed") +
+  geom_linerange(aes(xmax = gap_bar, xmin = goal), color = "gray90",
+                 size = 2.5, na.rm = TRUE) +
+  geom_point(size = 5, alpha = .8, na.rm = TRUE) +
+  scale_y_reordered(limits = rev) +
+  scale_x_continuous(limit = c(0, 1200)) +
+  scale_color_identity() +
+  # facet_wrap(~indicator, scales = "free_y") +
+  si_style_xgrid() +
+  labs(x = NULL, y = NULL, color = NULL,
+       title = "Maternal Mortality Ratio per 100k live births (2017)")
+
+maternal + contraceptive + plot_annotation(
+  caption = glue("Source: {maternal_source}
+                      USAID SI Analytics | GH Sector Review"),
+  title = "Only 1 USAID Priority Country has reached the SDG Maternal Mortality goal of 140 or fewer deaths per 100,000 live births")
+
+si_save("Graphics/maternal-sdg-progress.svg")
+
+# ------------------
+
+
 #Under 5 Mortality 
 under5viz <- df_viz %>%   
   filter(indicator == "under5_mortality") %>% 
@@ -207,7 +233,7 @@ under5viz <- df_viz %>%
  # facet_wrap(~indicator, scales = "free_y") +
   si_style_xgrid() +
   labs(x = NULL, y = NULL, color = NULL,
-       title = "Under 5 Mortality Rate per 1,000 live births")
+       title = "Under 5 Mortality Rate per 1,000 live births (2019)")
 
 #Neonatal Mortality  
 neonatal <- df_viz %>%   
@@ -223,36 +249,15 @@ neonatal <- df_viz %>%
   # facet_wrap(~indicator, scales = "free_y") +
   si_style_xgrid() +
   labs(x = NULL, y = NULL, color = NULL,
-       title = "Neonatal Mortality Rate per 1,000 live births")
-
-#Maternal Mortality
-maternal <- df_viz %>%   
-  filter(indicator == "maternal_mortality") %>% 
-  ggplot(aes(value, reorder(country, value), color = dot_color)) + 
-  geom_vline(xintercept = 140, linetype = "dashed") +
-  geom_linerange(aes(xmax = gap_bar, xmin = goal), color = "gray90",
-                 size = 2.5, na.rm = TRUE) +
-  geom_point(size = 5, alpha = .8, na.rm = TRUE) +
-  scale_y_reordered(limits = rev) +
-  scale_x_continuous(limit = c(0, 1200)) +
-  scale_color_identity() +
-  # facet_wrap(~indicator, scales = "free_y") +
-  si_style_xgrid() +
-  labs(x = NULL, y = NULL, color = NULL,
-       title = "Maternal Mortality Ratio per 100k live births")
+       title = "Neonatal Mortality Rate per 1,000 live births (2019)")
 
 viz_child <- under5viz + neonatal + plot_annotation(
-  caption = glue("Source: {maternal_source}
-                      SI analytics: Nada Petrovic/Karishma Srikanth}
-                     US Agency for International Development"),
-  title = "Only 1 USAID Priority Country has received the Under 5 Mortality goal of 25 or fewer deaths per 1,000 live births")
+  caption = glue("Source: {child_source}
+                      USAID SI analytics | GH Sector Review"),
+  title = "Only 1 USAID MCHN-priority country has reached the SDG 3.2 Target to reduce under-5 child mortality to less than 25 deaths per 1,000 live births by 2030")
 
 si_save("Graphics/child-sdg-progress.svg")
 
-
-maternal + contraceptive
-
-si_save("Graphics/maternal-sdg-progress.svg")
 
 
 
