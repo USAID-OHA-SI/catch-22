@@ -33,3 +33,4 @@ Dataout/*
 *.twbx
 *.pptx
 
+.DS_Store
