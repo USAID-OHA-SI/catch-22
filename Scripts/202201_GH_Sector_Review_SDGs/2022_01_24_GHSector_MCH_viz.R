@@ -43,11 +43,19 @@ df_contra <- si_path() %>%
   return_latest("unmet-need-for-contraception") %>% 
   read_csv()   
 
+
+df_ds <- si_path() %>% 
+  return_latest("FP2020_2020_FullEstimate_Tables_ONLINE") %>% 
+  read_xlsx(sheet = "Indicator 4_demand satisfied", skip = 8) %>% 
+  select(2:11) %>% 
+  rename(country = ...2) %>% 
+  pivot_longer(-c(country), names_to = "year", values_to = "demand_satisfied")
+
 #https://www.usaid.gov/global-health/health-areas/maternal-and-child-health/priority-countries
 usaid_mch <- c("Afghanistan",
                "Bangladesh",
                "Myanmar",
-               "Democratic Republic of the Congo",
+               "Democratic Republic of Congo",
                "Ethiopia",
                "Ghana",
                "Haiti",
@@ -65,7 +73,7 @@ usaid_mch <- c("Afghanistan",
                "Rwanda",
                "Senegal",
                "South Sudan",
-               "United Republic of Tanzania",
+               "Tanzania",
                "Uganda",
                "Yemen",
                "Zambia")
@@ -164,6 +172,16 @@ df_contra_viz <- df_contra %>%
   mutate(country_year=paste(country,"(",year, ")", sep="")) %>% 
   rename(unmet_need =unmet_need_for_contraception_percent_of_married_women_ages_15_49)
 
+#Munge Demand met data
+df_ds_viz <- df_ds %>% 
+  mutate(year = recode(year, "2020.5" = 2020),
+         country = recode(country, "DR Congo" = "Democratic Republic of Congo"),
+         goal = 0.75) %>% 
+  filter(year == 2020,
+         country %in% usaid_mch)
+
+setdiff(usaid_mch, df_ds1$country)
+
 # VIZ ---------------------------------------------
 
 df_viz <- df_viz %>% 
@@ -179,19 +197,50 @@ df_contra_viz <- df_contra_viz %>%
          gap_bar = case_when(unmet_need > 0 ~ unmet_need),
          dot_color = if_else(gap >= 0, scooter, old_rose)) 
 
-contraceptive <- df_contra_viz %>%   
+#Demand met Viz
+df_ds_viz <- df_ds_viz %>% 
+  group_by(country, demand_satisfied) %>% 
+  mutate(gap = goal - demand_satisfied,
+         gap_bar = case_when(demand_satisfied < goal ~ demand_satisfied),
+         dot_color = if_else(gap >= 0, old_rose, scooter)) 
+
+# contraceptive <- df_contra_viz %>%   
+#   #filter(indicator == "under5_mortality") %>% 
+#   ggplot(aes(unmet_need, reorder(country_year, unmet_need), color = genoa)) + 
+#  # geom_vline(xintercept = 0, linetype = "dashed") +
+#  # geom_linerange(aes(xmax = gap_bar, xmin = 0), color = "gray90",
+#           #       size = 2.5, na.rm = TRUE) +
+#   geom_point(size = 5, alpha = .8, na.rm = TRUE) +
+#   scale_y_reordered(limits = rev) +
+#   scale_color_identity() +
+#   # facet_wrap(~indicator, scales = "free_y") +
+#   si_style_xgrid() +
+#   labs(x = NULL, y = NULL, color = NULL,
+#        title = "Percent of Unmet Need for Contraception Among Women 15-49 (most recent available data)")
+
+#Order demand satisfied by maternal mortality
+df_mmr_join <- df_mmr_clean %>% 
+  select(country, indicator, value)
+
+#Demand Satisfied Viz
+df_ds_viz <- df_ds_viz %>% 
+  left_join(df_mmr_join, by = c('country')) %>% 
+  pivot_wider(names_from = indicator, values_from = value)
+
+demand_satisfied <- df_ds_viz %>%   
   #filter(indicator == "under5_mortality") %>% 
-  ggplot(aes(unmet_need, reorder(country_year, unmet_need), color = genoa)) + 
- # geom_vline(xintercept = 0, linetype = "dashed") +
- # geom_linerange(aes(xmax = gap_bar, xmin = 0), color = "gray90",
-          #       size = 2.5, na.rm = TRUE) +
+  ggplot(aes(demand_satisfied, reorder(country, maternal_mortality), color = dot_color)) + 
+   geom_vline(xintercept = 0.75, linetype = "dashed") +
+   geom_linerange(aes(xmax = goal, xmin = gap_bar), color = "gray90",
+         size = 2.5, na.rm = TRUE) +
   geom_point(size = 5, alpha = .8, na.rm = TRUE) +
   scale_y_reordered(limits = rev) +
+  scale_x_continuous(label = percent) +
   scale_color_identity() +
   # facet_wrap(~indicator, scales = "free_y") +
   si_style_xgrid() +
   labs(x = NULL, y = NULL, color = NULL,
-       title = "Percent of Unmet Need for Contraception Among Women 15-49 (most recent available data)")
+       title = "Percentange of women whose demand is satisfied by a modern contraceptive method in 2020")
  
 #Maternal Mortality
 maternal <- df_viz %>%   
@@ -209,12 +258,12 @@ maternal <- df_viz %>%
   labs(x = NULL, y = NULL, color = NULL,
        title = "Maternal Mortality Ratio per 100k live births (2017)")
 
-maternal + contraceptive + plot_annotation(
+maternal + demand_satisfied + plot_annotation(
   caption = glue("Source: {maternal_source}
                       USAID SI Analytics | GH Sector Review"),
   title = "Only 1 USAID Priority Country has reached the SDG Maternal Mortality goal of 140 or fewer deaths per 100,000 live births")
 
-si_save("Graphics/maternal-sdg-progress.svg")
+si_save("Graphics/maternal-sdg-progress-contraceptive-demand.svg")
 
 # ------------------
 
