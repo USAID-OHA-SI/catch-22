@@ -202,7 +202,8 @@ df_ds_viz <- df_ds_viz %>%
   group_by(country, demand_satisfied) %>% 
   mutate(gap = goal - demand_satisfied,
          gap_bar = case_when(demand_satisfied < goal ~ demand_satisfied),
-         dot_color = if_else(gap >= 0, old_rose, scooter)) 
+         dot_color = if_else(gap >= 0, genoa, scooter),
+         dot_color = if_else(demand_satisfied <= 0.5, old_rose, dot_color)) 
 
 # contraceptive <- df_contra_viz %>%   
 #   #filter(indicator == "under5_mortality") %>% 
@@ -231,6 +232,7 @@ demand_satisfied <- df_ds_viz %>%
   #filter(indicator == "under5_mortality") %>% 
   ggplot(aes(demand_satisfied, reorder(country, maternal_mortality), color = dot_color)) + 
    geom_vline(xintercept = 0.75, linetype = "dashed") +
+  geom_vline(xintercept = 0.5, linetype = "dashed") +
    geom_linerange(aes(xmax = goal, xmin = gap_bar), color = "gray90",
          size = 2.5, na.rm = TRUE) +
   geom_point(size = 5, alpha = .8, na.rm = TRUE) +
