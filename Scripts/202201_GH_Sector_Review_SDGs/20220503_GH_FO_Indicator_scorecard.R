@@ -27,6 +27,15 @@ usaid_tb <- c("Afghanistan", "India", "Nigeria", "Ukraine",
               "Democratic Republic of Congo", "Malawi", "Tanzania",	"Zimbabwe",
               "Ethiopia",	"Mozambique", "Uganda")
 
+#USAID Malaria priority countries: https://www.pmi.gov/where-we-work/
+usaid_mal <- c("Angola", "Benin", "Burkina Faso", "Burma", 
+               "Cambodia", "Cameroon", "Cote d'Ivoire", 
+               "Democratic Republic of Congo", "Ethiopia", "Ghana",
+               "Guinea", "Kenya", "Liberia", "Madagascar",
+               "Malawi", "Mali", "Mozambique",
+               "Niger", "Nigeria","Rwanda","Senegal","Sierra Leone",
+               "Tanzania", "Thailand", "Uganda", "Zambia",
+               "Zimbabwe") 
 
 #https://www.usaid.gov/global-health/health-areas/maternal-and-child-health/priority-countries
 usaid_mch <- c("Afghanistan",
@@ -95,7 +104,7 @@ df_under5 <- si_path() %>%
 #HIV
 df_tt <- pull_unaids("Test & Treat - Percent", FALSE)
 
-#TB
+#TB ---
 
 ## Incidence TB per 100,000 population
 df_tb_inc <- si_path() %>% 
@@ -106,6 +115,18 @@ df_tb_inc <- si_path() %>%
 df_tb_deaths<- si_path() %>% 
   return_latest("tuberculosis-death-rates.csv") %>% 
   read_csv()  
+
+## Incidence of malaria per 1,000 population
+df_mal_inc <- si_path() %>% 
+  return_latest("incidence-of-malaria-sdgs.csv") %>% 
+  read_csv()  
+
+## Malaria deaths per 100,000 population (all ages)
+df_mal_deaths <- si_path() %>% 
+  return_latest("malaria-death-rates.csv") %>% 
+  read_csv()  
+
+
 
 
 
@@ -141,19 +162,22 @@ sdg_reshape <- function(data) {
                               "mortality_rate_neonatal_per_1_000_live_births" = "neonatal_mortality",
                               "mortality_rate_under_5_per_1_000_live_births" = "under5_mortality",
                               "incidence_of_tuberculosis_per_100_000_people" = "tb_incidence",
-                              "deaths_tuberculosis_sex_both_age_age_standardized_rate" = "tb_deaths"),
+                              "deaths_tuberculosis_sex_both_age_age_standardized_rate" = "tb_deaths",
+                              "incidence_of_malaria_per_1_000_population_at_risk" = "malaria_incidence",
+                              "deaths_malaria_sex_both_age_age_standardized_rate" = "malaria_deaths"),
            usaid = ifelse(country %in% usaid_mch & indicator %in% c("maternal_mortality", "neonatal_mortality",
                                                                     "under5_mortality"), "USAID MCHN", "Non-USAID MCHN"))
   
-  most_recent_data <- ifelse(data_clean$indicator == "maternal_mortality", 2017, 2019)
+  #most_recent_data <- ifelse(data_clean$indicator == "maternal_mortality", 2017, 2019)
   
   data_clean <- data_clean %>% 
-    filter(year == most_recent_data,
+    filter(year == max(year),
            !is.na(iso)) %>% 
     mutate(goal = case_when(indicator == "maternal_mortality" ~ 140,
                             indicator == "neonatal_mortality" ~ 12,
                             indicator == "under5_mortality" ~ 25,
-                            indicator == "tb_incidence" ~ 20)) 
+                            indicator == "tb_incidence" ~ 20,
+                            indicator == "malaria_incidence" ~ 9)) 
   
   
   names(data_clean)[4] <- 'value'
@@ -199,6 +223,15 @@ df_tb_clean <- sdg_reshape(df_tb_inc) %>%
     ref_link = "https://sdg-tracker.org/good-health",
          date_data_pulled = lubridate::today())
 
+#malaria
+df_mal_clean <- sdg_reshape(df_mal_inc) %>%
+  # select(-c(goal)) %>% 
+  bind_rows(sdg_reshape(df_mal_deaths)) %>% 
+  mutate(usaid = ifelse(country %in% usaid_mal & indicator %in% c("malaria_incidence", "malaria_deaths"), "USAID Malaria", "Non-USAID Malaria"),
+         ref_link = "https://sdg-tracker.org/good-health",
+         date_data_pulled = lubridate::today()) 
+
+
 #HIV
 df_vls <- df_tt %>% 
   filter(year == max(year),
@@ -219,6 +252,7 @@ df_vls <- df_tt %>%
 df_gh_final <- df_uhc_final %>% 
   bind_rows(df_under5_clean) %>% 
   bind_rows(df_tb_clean) %>% 
+  bind_rows(df_mal_clean) %>% 
   rename(cntry_group = usaid) %>% 
   bind_rows(df_vls) %>% 
   arrange(country)
