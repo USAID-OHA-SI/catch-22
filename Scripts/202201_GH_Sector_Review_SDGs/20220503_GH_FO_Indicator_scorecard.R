@@ -135,7 +135,14 @@ region_meta <- read_sheet(google_id, sheet = 2, skip = 2) %>%
   clean_names() %>% 
   rename(iso = iso_alpha_3)
 
-
+#WHO Region
+who_region <- df_uhc %>% 
+  rename(iso = spatial_dim_value_code,
+         country = location,
+         year = period, 
+         who_region = parent_location) %>% 
+  select(country, iso, who_region) %>% 
+  distinct() 
 
 
 # FUNCTIONS -------------------------------------------------------------------
@@ -267,6 +274,11 @@ df_gh_final <- df_uhc_final %>%
   arrange(country) %>% 
   left_join(region_meta
             %>% dplyr::select(iso, usaid_supported, usaid_region, idea_region, income_group)
+            , by = "iso")
+
+df_gh_final <- df_gh_final %>% 
+  left_join(who_region
+            %>% dplyr::select(iso, who_region)
             , by = "iso") 
 
 date <- lubridate::today()
@@ -274,4 +286,4 @@ date <- lubridate::today()
 write_csv(df_gh_final, glue::glue("Dataout/GH_scorecard_indicators_{date}.csv"))
   
     
-  today
+  
