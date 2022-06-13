@@ -147,7 +147,7 @@
                                  "Leave/Holiday/TDY" = moody_blue),
                       na.value = "white") +
     labs(x = NULL, y = NULL, fill = NULL,
-         title = "How are desks being used by SIEI in the USAID Annex?",
+         title = "How are desks being used by SIEI in the USAID Annex?" %>% toupper,
          subtitle = "Brighter color designates branch day in office",
          caption = glue("^ = remote worker | * = PA and Branch/Division Chiefs who have their own desks
                         Updated {Sys.Date()}")) +
