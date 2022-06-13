@@ -28,8 +28,8 @@
 
   #non regional country list
   lts <- pepfar_country_list %>% 
-    filter(operatingunit == countryname) %>% 
-    pull(countryname)
+    filter(operatingunit == country) %>% 
+    pull(country)
   
   #rows of countries per column in viz
   row_max <- 17
@@ -43,12 +43,31 @@
   df_tt <- pull_unaids("Test & Treat - Percent", TRUE)
   
 
+  df_deaths <- readxl::read_excel(file.path(si_path("path_downloads"), "Reshma request 7Jun2022.xlsx"),
+                                  na = c("", "..."))
+    
+# MUNGE ALL DEATHS --------------------------------------------------------
+  
+  df_deaths_lim <- df_deaths %>% 
+    rename("indicator" = ...1,
+           "country" = ...3,
+           "iso" = ISO3) %>% 
+    filter(iso %in% pepfar_country_list$country_iso) %>%
+    pivot_longer(-c(iso, indicator, country),
+                 names_to = "year") %>% 
+    mutate(indicator = "Non-AIDS Related Deaths to HIV Population",
+           year = as.double(year)) %>%
+    select(year, country, #indicator, 
+           deaths_non_aids = value)
+
+
 # MUNGE HIV ESTIMATES -----------------------------------------------------
 
   #limit HIV estimates data
   df_est_lim <- df_est %>% 
     filter(indicator %in% c("PLHIV", "AIDS Related Deaths", "New HIV Infections"),
-           age == "all",
+           # age == "all",
+           age == "15+",
            sex == "all",
            stat == "est") %>% 
     select(year, country, indicator, value)
@@ -57,6 +76,13 @@
   df_est_lim <- df_est_lim %>% 
     pivot_wider(names_from = indicator,
                 names_glue = "{indicator %>% str_extract_all('Deaths|Infections|PLHIV') %>% tolower}")
+  
+  #join with total deaths
+  df_est_lim <- df_est_lim %>% 
+    tidylog::left_join(df_deaths_lim) %>% 
+    rowwise() %>% 
+    mutate(deaths_all = sum(deaths, deaths_non_aids)) %>% 
+    ungroup()
   
   #plhiv for plot
   df_plhiv <- df_est_lim %>%
@@ -67,10 +93,10 @@
   df_est_lim <- df_est_lim %>%
     arrange(country, year) %>% 
     group_by(country) %>% 
-    mutate(declining_deaths = deaths - lag(deaths, order_by = year) <= 0) %>% 
+    mutate(declining_deaths = deaths_all - lag(deaths_all, order_by = year) <= 0) %>% 
     ungroup() %>% 
-    mutate(infections_below_deaths = infections < deaths,
-           ratio = infections / deaths,
+    mutate(infections_below_deaths = infections < deaths_all,
+           ratio = infections / deaths_all,
            direction_streak = sequence(rle(declining_deaths)$lengths),
            epi_control = declining_deaths == TRUE & infections_below_deaths == TRUE)
   
@@ -105,7 +131,7 @@
                         "On\nART" = 2,
                         "VLS" = 3),
            goal_rate = round((goal/100)^set*100),
-           achv = value > goal_rate) %>% 
+           achv = value >= goal_rate) %>% 
     group_by(country) %>% 
     mutate(gap = goal_rate - value,
            grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
