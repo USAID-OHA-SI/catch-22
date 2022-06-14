@@ -4,6 +4,7 @@
 # LICENSE:  MIT
 # DATE:     2022-05-03
 # UPDATED:  
+# test - 2.0 (gitkraken)
 
 # DEPENDENCIES ------------------------------------------------------------
 
@@ -15,7 +16,7 @@ library(extrafont)
 library(scales)
 library(janitor)
 library(mindthegap)
-
+library(googlesheets4)
 
 # GLOBAL VARIABLES --------------------------------------------------------
 
@@ -124,10 +125,24 @@ df_mal_inc <- si_path() %>%
 ## Malaria deaths per 100,000 population (all ages)
 df_mal_deaths <- si_path() %>% 
   return_latest("malaria-death-rates.csv") %>% 
-  read_csv()  
+  read_csv()
 
 
+#MASTER LIST - region meta data
+google_id <- "14sBgteFOvPfQi5lB29334zNO_6aP4VPsVinhNTYUFa8"
 
+region_meta <- read_sheet(google_id, sheet = 2, skip = 2) %>% 
+  clean_names() %>% 
+  rename(iso = iso_alpha_3)
+
+#WHO Region
+who_region <- df_uhc %>% 
+  rename(iso = spatial_dim_value_code,
+         country = location,
+         year = period, 
+         who_region = parent_location) %>% 
+  select(country, iso, who_region) %>% 
+  distinct() 
 
 
 # FUNCTIONS -------------------------------------------------------------------
@@ -139,7 +154,7 @@ munge_uhc <- function(df) {
     rename(iso = spatial_dim_value_code,
            country = location,
            year = period) %>% 
-    filter(year == max(year)) %>% 
+   # filter(year == max(year)) %>% 
     mutate(country = recode(country, "United Republic of Tanzania" = "Tanzania",
                             "Democratic Republic of the Congo" = "Democratic Republic of Congo"),
       usaid = ifelse(country %in% usaid_mch, "USAID MCHN", "Non-USAID MCHN"))
@@ -171,7 +186,8 @@ sdg_reshape <- function(data) {
   #most_recent_data <- ifelse(data_clean$indicator == "maternal_mortality", 2017, 2019)
   
   data_clean <- data_clean %>% 
-    filter(year == max(year),
+    filter(
+     # year == max(year),
            !is.na(iso)) %>% 
     mutate(goal = case_when(indicator == "maternal_mortality" ~ 140,
                             indicator == "neonatal_mortality" ~ 12,
@@ -207,8 +223,7 @@ df_uhc_final <- df_uhc %>%
   mutate(goal = NA,
         ref_link = "https://www.who.int/data/gho/indicator-metadata-registry/imr-details/4834",
          date_data_pulled = lubridate::today())
-
-
+  
 #Apply reshaping function for SDG
 df_under5_clean <- sdg_reshape(df_under5) %>% 
  # select(-c(goal)) %>% 
@@ -234,16 +249,17 @@ df_mal_clean <- sdg_reshape(df_mal_inc) %>%
 
 #HIV
 df_vls <- df_tt %>% 
-  filter(year == max(year),
+  filter(
          age == "all",
          sex == "all",
          stat == "est",
          indicator == "VLS",
-         !is.na(iso),
-         pepfar == 'PEPFAR') %>% 
+         !is.na(iso)
+         ) %>% 
   select(indicator, iso, country, year, value, pepfar) %>% 
   rename(cntry_group = pepfar) %>% 
   mutate(goal = 95,
+         indicator = recode(indicator, "VLS"  = "VLS among PLHIV"),
     ref_link = "https://aidsinfo.unaids.org/",
          date_data_pulled = lubridate::today())
 
@@ -255,9 +271,19 @@ df_gh_final <- df_uhc_final %>%
   bind_rows(df_mal_clean) %>% 
   rename(cntry_group = usaid) %>% 
   bind_rows(df_vls) %>% 
-  arrange(country)
+  arrange(country) %>% 
+  left_join(region_meta
+            %>% dplyr::select(iso, usaid_supported, usaid_region, idea_region, income_group)
+            , by = "iso")
+
+df_gh_final <- df_gh_final %>% 
+  left_join(who_region
+            %>% dplyr::select(iso, who_region)
+            , by = "iso") 
+
+date <- lubridate::today()
   
-write_csv(df_gh_final, "Dataout/GH_scorecard_indicators_20220504.csv")
+write_csv(df_gh_final, glue::glue("Dataout/GH_scorecard_indicators_{date}.csv"))
   
     
   
