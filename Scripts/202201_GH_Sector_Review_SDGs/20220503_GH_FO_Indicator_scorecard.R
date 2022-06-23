@@ -3,8 +3,8 @@
 # PURPOSE:  GH scorecard data pull on common indicators
 # LICENSE:  MIT
 # DATE:     2022-05-03
-# UPDATED:  
-# test - 2.0 (gitkraken)
+# UPDATED:  2022-06-23
+
 
 # DEPENDENCIES ------------------------------------------------------------
 
