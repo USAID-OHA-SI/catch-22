@@ -17,6 +17,7 @@ library(scales)
 library(janitor)
 library(mindthegap)
 library(googlesheets4)
+library(readxl)
 
 # GLOBAL VARIABLES --------------------------------------------------------
 
@@ -171,7 +172,8 @@ munge_uhc <- function(df) {
                             "Côte d’Ivoire" = "Cote d'Ivoire",
                             "Czechia" = "Czech Republic",
                            "United Kingdom of Great Britain and Northern Ireland" = "United Kingdom",
-                           "Brunei Darussalam" = "Brunei"
+                           "Brunei Darussalam" = "Brunei",
+                           "Micronesia (Federated States of)" = 'Micronesia (country)'
                             ),
       usaid = ifelse(country %in% usaid_mch, "USAID MCHN", "Non-USAID MCHN"))
   
@@ -316,6 +318,7 @@ df_wpp <- df_wpp %>%
                           "Lao People's Democratic Republic" = "Laos",
                           "China, Macao SAR" = "Macao",
                           "Micronesia (Fed. States of)" = "Micronesia (country)",
+                          #"Micronesia (Fed. States of)" = 
                           "State of Palestine" = "Palestine",
                           "China, Taiwan Province of China" = "Taiwan",
                           "United Republic of Tanzania" = "Tanzania",
