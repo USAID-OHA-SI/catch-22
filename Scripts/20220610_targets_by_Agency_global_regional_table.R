@@ -58,9 +58,9 @@
            standardizeddisaggregate %in% disagg_sel)
   
   # Used to check disaggregates
-  # df_filt %>%
-  #  group_by(indicator, standardizeddisaggregate) %>%
-  #  tally() 
+  df %>%
+  group_by(indicator, standardizeddisaggregate) %>%
+  tally() %>% View()
   
   
   df_full <- df_filt %>% 
