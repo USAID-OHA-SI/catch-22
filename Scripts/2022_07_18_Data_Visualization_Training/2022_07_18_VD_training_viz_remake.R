@@ -55,13 +55,14 @@
       ou_long == "Total" ~ "",
       goal == 1 ~ "> 70%",
       TRUE ~ "< 70%"),
-      facet_order = fct_relevel(facet_order, c("> 70%", "< 70%", ""))) %>% 
+      facet_order = fct_relevel(facet_order, c("", "> 70%", "< 70%"))) %>% 
     mutate(recolor = case_when(
-      facet_order == "" & type == "Local" ~ old_rose,
-      goal == 1 & type == "Local" ~ "#7f001c",
-      goal == 0 & type == "Local" ~ "#ff989f",
+      facet_order == "" & type == "Local" ~ "#34344A",
+      goal == 1 & type == "Local" ~ "#80475E",
+      goal == 0 & type == "Local" ~ "#CC5A71",
       TRUE ~ grey20k
     ))
+  
   
 # VIZ ============================================================================
     
@@ -75,14 +76,18 @@
   
 # Plot extras
   plot_statics <- function(...){
-    ggplot2::theme_minimal() %+replace%
+    ggplot2::theme_gray() %+replace%
       theme(legend.position = "bottom", 
             axis.ticks = element_blank(), 
             panel.grid.major = element_line(color = grey30k), 
-            panel.background = element_rect(fill = "white")) 
+            panel.background = element_rect(fill = "white"), 
+            axis.line = element_blank()) 
   }
   
-# Original plot  
+
+# original ----------------------------------------------------------------
+
+  # Original plot  
   df_long %>% 
     ggplot(aes(y = orig, x = share)) +
     geom_col(aes(fill = type), width = 0.5)+
@@ -99,7 +104,10 @@
 
   si_save("Images/lp_remake_base.png")
 
-# Sort the data
+
+# sorted ------------------------------------------------------------------
+
+  # Sort the data
   df_long %>% 
     ggplot(aes(y = ou_long, x = share)) +
     geom_col(aes(fill = type), width = 0.5)+
@@ -113,10 +121,12 @@
     coord_cartesian(clip = "off", expand = F) +
     plot_statics()
     
-  si_save("Images/lp_remake_base_sorted.png")
+  si_save("Images/lp_remake_base_sorted_1.png")
   
-# Add better colors
-  # Sort the data
+
+# color tinkering ---------------------------------------------------------
+
+  # Add better colors
   df_long %>% 
     ggplot(aes(y = ou_long, x = share)) +
     geom_col(aes(fill = type), width = 0.5)+
@@ -130,18 +140,14 @@
     scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
     coord_cartesian(clip = "off", expand = F) +
     plot_statics()
+  
 
-  si_save("Images/lp_remake_base_recolor.png")
+  si_save("Images/lp_remake_base_recolor_2.png")
   
 
 # declutter ---------------------------------------------------------------
 
   df_long %>% 
-    mutate(facet_order = case_when(
-      ou_long == "Total" ~ "",
-      goal == 1 ~ "> 70%",
-      TRUE ~ "< 70%"),
-    facet_order = fct_relevel(facet_order, c("> 70%", "< 70%", "")))%>% 
     ggplot(aes(y = ou_long, x = share)) +
     geom_col(aes(fill = type), width = 0.75) +
     facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
@@ -158,16 +164,11 @@
     plot_statics() +
     theme(legend.position = "none")
   
-  si_save("Images/lp_remake_base_declutter1.png")
+  si_save("Images/lp_remake_base_declutter_3.png")
   
   
   df_long %>% 
-    mutate(facet_order = case_when(
-      ou_long == "Total" ~ "",
-      goal == 1 ~ "> 70%",
-      TRUE ~ "< 70%"),
-      facet_order = fct_relevel(facet_order, c("> 70%", "< 70%", "")))%>% 
-    ggplot(aes(y = ou_long, x = share)) +
+    ggplot(aes(y = ou, x = share)) +
     geom_col(aes(fill = type), width = 0.75) +
     geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
     facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
@@ -182,12 +183,14 @@
     scale_x_continuous(labels = percent, breaks = seq(0, 1, .25)) +
     coord_cartesian(clip = "off", expand = F) +
     plot_statics() +
-    theme(legend.position = "none")
+    si_style(facet_space = 0.5) +
+    theme(legend.position = "none") 
+
   
-  si_save("Images/lp_remake_base_declutter2.png")
+  si_save("Images/lp_remake_base_declutter_4.png")
   
 
-# RECOLOR -----------------------------------------------------------------
+# recolor  -----------------------------------------------------------------
   
   # Some major work here. First, let's drop the stacked data b/c it makes things a PITA.
   # We will put a bar running 0 - 1 in the background then use color splashed to emphasize things
@@ -196,31 +199,74 @@
   df_long_flt <- 
     df_long %>% 
     filter(type != "International") 
-    
-    
+
+  
     df_long_flt %>% 
       ggplot(aes(y = ou_long, x = share)) +
+    annotate("rect", xmin = 0.7, xmax = 0.71, fill = grey10k, alpha = 0.55, ymin = -Inf, ymax = Inf) +
     geom_col(aes(fill = recolor), width = 0.75) +
     geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
     geom_vline(xintercept = 0, size = 0.5, color = grey70k) +
-    geom_vline(xintercept = 0.7, size = 0.25, color = grey70k, linetype = "dotted") +  
+    geom_vline(xintercept = 1, size = 0.25, color = grey70k) +  
     facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
     #scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
     scale_fill_identity( )+
-    geom_text(aes(label = percent(share, 1)), size = 8/.pt, 
-              hjust = 0, 
+    geom_text(aes(label = percent(share, 1)), size = 9/.pt, 
+              hjust = -0.1, 
               family = "Source Sans Pro") +
     labs(x = NULL, y = NULL, 
          title = "FY 21 Local vs. International Budget - All Agencies",
          fill = NULL) +
-    scale_x_continuous(labels = percent, breaks = seq(0, 1, .25)) +
+    scale_x_continuous(labels = percent, position = "top", breaks = seq(.25, 1, 0.25)) +
     coord_cartesian(clip = "off", expand = F) +
     plot_statics() +
-    si_style_nolines()+
-    theme(legend.position = "none")
+    si_style_nolines(facet_space = 0.5)+
+    theme(legend.position = "none", 
+          strip.text = element_blank()) 
+
   
-  si_save("Images/lp_remake_base_declutter2.png")
+  si_save("Images/lp_remake_base_recolor_5.png")
   
+
+# Retitle -----------------------------------------------------------------
+
+  achv_goal <- df_long_flt %>% 
+    filter(share >= 0.7) %>% 
+    tally() %>% 
+    pull()
+  
+  achv_goal <- df_long_flt %>% 
+    filter(share < 0.7) %>% 
+    tally() %>% 
+    pull() - 1
+   
+  
+  df_long_flt %>% 
+    ggplot(aes(y = ou_long, x = share)) +
+    annotate("rect", xmin = 0.7, xmax = 0.71, fill = grey10k, alpha = 0.55, ymin = -Inf, ymax = Inf) +
+    geom_col(aes(fill = recolor), width = 0.75) +
+    geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
+    geom_vline(xintercept = 0, size = 0.5, color = grey70k) +
+    geom_vline(xintercept = 1, size = 0.25, color = grey70k) +  
+    facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
+    #scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
+    scale_fill_identity( )+
+    geom_text(aes(label = percent(share, 1)), size = 9/.pt, 
+              hjust = -0.1, 
+              family = "Source Sans Pro") +
+    labs(x = NULL, y = NULL, 
+         title = "IN FY21, FOUR OPERATING UNITS HAD ACHIEVED THE LOCAL PARTNER BUDGET SHARE GOAL OF 70%",
+         subtitle = "Twenty four operating units are still short of the goal.",
+         fill = NULL,
+         caption = "Source: Local Partner Team") +
+    scale_x_continuous(labels = percent, position = "top", breaks = seq(.25, 1, 0.25)) +
+    coord_cartesian(clip = "off", expand = F) +
+    plot_statics() +
+    si_style_nolines(facet_space = 0.5)+
+    theme(legend.position = "none", 
+          strip.text = element_blank()) 
+  
+  si_save("Images/lp_remake_base_title_6.png")
   
 # SPINDOWN ============================================================================
 
