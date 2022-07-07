@@ -17,9 +17,20 @@
     library(extrafont)
     library(tidytext)
     library(googlesheets4)
+    library(ggedit)
     
-    
-  # Functions  
+  # Functions 
+# Plot extras
+  plot_statics <- function(...){
+    ggplot2::theme_gray() %+replace%
+      theme(legend.position = "bottom", 
+            axis.ticks = element_blank(), 
+            panel.grid.major = element_line(color = grey30k), 
+            panel.background = element_rect(fill = "white"),
+            panel.border = element_blank(),
+            axis.line = element_blank()) 
+  }
+
   
 
 # LOAD DATA ============================================================================  
@@ -33,6 +44,7 @@
 
 # MUNGE ============================================================================
   
+  # Rerrange the country order, move Total to the top (0) or bottom (Inf)
   df1 <- 
     df %>% 
     mutate(orig = ou_long,
@@ -42,6 +54,8 @@
            ou_long = fct_relevel(ou_long, "Total", after = Inf),
            orig = fct_relevel(orig, "Total", after = Inf)) 
   
+  # Pivoting it long for stacking/arranging, eventually drop this in favor
+  # of a simple long dataset.
   df_long <- 
     df1 %>% 
     pivot_longer(cols = Local:International, 
@@ -74,33 +88,27 @@
   #   labs(x = NULL, y = NULL, 
   #        title = "FY 21 Local vs. International Budget - All Agencies")
   
-# Plot extras
-  plot_statics <- function(...){
-    ggplot2::theme_gray() %+replace%
-      theme(legend.position = "bottom", 
-            axis.ticks = element_blank(), 
-            panel.grid.major = element_line(color = grey30k), 
-            panel.background = element_rect(fill = "white"), 
-            axis.line = element_blank()) 
-  }
-  
+
 
 # original ----------------------------------------------------------------
 
-  # Original plot  
-  df_long %>% 
-    ggplot(aes(y = orig, x = share)) +
-    geom_col(aes(fill = type), width = 0.5)+
-    scale_fill_manual(values = c("Local" = blue, "International" = orange)) +
-    geom_label(aes(label = percent(share)), size = 8/.pt, 
-               position = position_stack(vjust = 0.5)) +
-    labs(x = NULL, y = NULL, 
-         title = "FY 21 Local vs. International Budget - All Agencies",
-         fill = NULL) +
-    scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
-    coord_cartesian(clip = "off", expand = F) +
-    plot_statics()
+  # Original plot
+  lp_plot <- function(df, yvar, ...){
+    df %>% 
+      ggplot(aes(y = {{yvar}}, x = share)) +
+      geom_col(aes(fill = type), width = 0.5) +
+      scale_fill_manual(values = c("Local" = blue, "International" = orange)) +
+      geom_label(aes(label = percent(share)), size = 8/.pt, 
+                 position = position_stack(vjust = 0.5)) +
+      labs(x = NULL, y = NULL, 
+           title = "FY 21 Local vs. International Budget - All Agencies",
+           fill = NULL) +
+      scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
+      coord_cartesian(clip = "off", expand = F) +
+      plot_statics()
+  }
   
+  lp_plot(df_long, orig)  
 
   si_save("Images/lp_remake_base.png")
 
@@ -108,85 +116,53 @@
 # sorted ------------------------------------------------------------------
 
   # Sort the data
-  df_long %>% 
-    ggplot(aes(y = ou_long, x = share)) +
-    geom_col(aes(fill = type), width = 0.5)+
-    scale_fill_manual(values = c("Local" = blue, "International" = orange)) +
-    geom_label(aes(label = percent(share)), size = 8/.pt, 
-               position = position_stack(vjust = 0.5)) +
-    labs(x = NULL, y = NULL, 
-         title = "FY 21 Local vs. International Budget - All Agencies",
-         fill = NULL) +
-    scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
-    coord_cartesian(clip = "off", expand = F) +
-    plot_statics()
-    
+  lp_plot(df_long, ou_long)
+  
   si_save("Images/lp_remake_base_sorted_1.png")
   
 
 # color tinkering ---------------------------------------------------------
 
-  # Add better colors
-  df_long %>% 
-    ggplot(aes(y = ou_long, x = share)) +
-    geom_col(aes(fill = type), width = 0.5)+
-    scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
-    geom_label(aes(label = percent(share)), size = 8/.pt, 
-               position = position_stack(vjust = 0.5), 
-               family = "Source Sans Pro") +
-    labs(x = NULL, y = NULL, 
-         title = "FY 21 Local vs. International Budget - All Agencies",
-         fill = NULL) +
-    scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
-    coord_cartesian(clip = "off", expand = F) +
-    plot_statics()
+  # Try it in black and white
+  lp_plot(df_long, ou_long) +
+    scale_fill_manual(values = c("Local" = grey80k, "International" = grey20k))
+  si_save("Images/lp_remake_base_recolor_2bw.png")
   
+  # Add color
+  lp_plot(df_long, ou_long) +
+    scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k))
 
   si_save("Images/lp_remake_base_recolor_2.png")
   
 
 # declutter ---------------------------------------------------------------
 
-  df_long %>% 
-    ggplot(aes(y = ou_long, x = share)) +
-    geom_col(aes(fill = type), width = 0.75) +
-    facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
-    scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
-    geom_text(data = . %>% filter(type == "Local"), 
-               aes(label = percent(share, 1)), size = 8/.pt, 
-               hjust = 0, 
-              family = "Source Sans Pro") +
-    labs(x = NULL, y = NULL, 
-         title = "FY 21 Local vs. International Budget - All Agencies",
-         fill = NULL) +
-    scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
-    coord_cartesian(clip = "off", expand = F) +
-    plot_statics() +
-    theme(legend.position = "none")
-  
+  lp_plot_dc <- function(df, yvar){
+    df_long %>% 
+      ggplot(aes(y = {{yvar}}, x = share)) +
+      geom_col(aes(fill = type), width = 0.85) +
+      facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
+      scale_fill_manual(values = c("Local" = old_rose, "International" = grey10k)) +
+      geom_text(data = . %>% filter(type == "Local"), 
+                aes(label = percent(share, 1)), size = 8/.pt, 
+                hjust = 0, 
+                family = "Source Sans Pro") +
+      labs(x = NULL, y = NULL, 
+           title = "FY 21 Local vs. International Budget - All Agencies",
+           fill = NULL) +
+      scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
+      coord_cartesian(clip = "off", expand = F) +
+      plot_statics() +
+      theme(legend.position = "none")
+  }
+
+  lp_plot_dc(df_long, ou_long)
   si_save("Images/lp_remake_base_declutter_3.png")
   
   
-  df_long %>% 
-    ggplot(aes(y = ou, x = share)) +
-    geom_col(aes(fill = type), width = 0.75) +
-    geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
-    facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
-    scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
-    geom_text(data = . %>% filter(type == "Local"), 
-              aes(label = percent(share, 1)), size = 8/.pt, 
-              hjust = 0, 
-              family = "Source Sans Pro") +
-    labs(x = NULL, y = NULL, 
-         title = "FY 21 Local vs. International Budget - All Agencies",
-         fill = NULL) +
-    scale_x_continuous(labels = percent, breaks = seq(0, 1, .25)) +
-    coord_cartesian(clip = "off", expand = F) +
-    plot_statics() +
+  lp_plot_dc(df_long, ou)+
     si_style(facet_space = 0.5) +
-    theme(legend.position = "none") 
-
-  
+    theme(legend.position = "none")
   si_save("Images/lp_remake_base_declutter_4.png")
   
 
@@ -194,20 +170,18 @@
   
   # Some major work here. First, let's drop the stacked data b/c it makes things a PITA.
   # We will put a bar running 0 - 1 in the background then use color splashed to emphasize things
-  
-  
   df_long_flt <- 
     df_long %>% 
     filter(type != "International") 
 
   
     df_long_flt %>% 
-      ggplot(aes(y = ou_long, x = share)) +
+      ggplot(aes(y = ou, x = share)) +
     annotate("rect", xmin = 0.7, xmax = 0.71, fill = grey10k, alpha = 0.55, ymin = -Inf, ymax = Inf) +
-    geom_col(aes(fill = recolor), width = 0.75) +
+    geom_col(aes(fill = recolor), width = 0.85) +
     geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
     geom_vline(xintercept = 0, size = 0.5, color = grey70k) +
-    geom_vline(xintercept = 1, size = 0.25, color = grey70k) +  
+    geom_vline(xintercept = 1, size = 0.25, color = grey70k, linetype = "dotted") +  
     facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
     #scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
     scale_fill_identity( )+
@@ -217,7 +191,8 @@
     labs(x = NULL, y = NULL, 
          title = "FY 21 Local vs. International Budget - All Agencies",
          fill = NULL) +
-    scale_x_continuous(labels = percent, position = "top", breaks = seq(.25, 1, 0.25)) +
+    scale_x_continuous(labels = percent, position = "top", breaks = seq(.25, 1, 0.25),
+                      limits = c(0, 1.15)) +
     coord_cartesian(clip = "off", expand = F) +
     plot_statics() +
     si_style_nolines(facet_space = 0.5)+
@@ -242,12 +217,12 @@
    
   
   df_long_flt %>% 
-    ggplot(aes(y = ou_long, x = share)) +
+    ggplot(aes(y = ou, x = share)) +
     annotate("rect", xmin = 0.7, xmax = 0.71, fill = grey10k, alpha = 0.55, ymin = -Inf, ymax = Inf) +
-    geom_col(aes(fill = recolor), width = 0.75) +
+    geom_col(aes(fill = recolor), width = 0.85) +
     geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
     geom_vline(xintercept = 0, size = 0.5, color = grey70k) +
-    geom_vline(xintercept = 1, size = 0.25, color = grey70k) +  
+    geom_vline(xintercept = 1, size = 0.25, color = grey70k, linetype = "dotted") +  
     facet_grid(facet_order~., scales = "free_y", drop = T, space = "free") +
     #scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k)) +
     scale_fill_identity( )+
@@ -259,7 +234,8 @@
          subtitle = "Twenty four operating units are still short of the goal.",
          fill = NULL,
          caption = "Source: Local Partner Team") +
-    scale_x_continuous(labels = percent, position = "top", breaks = seq(.25, 1, 0.25)) +
+    scale_x_continuous(labels = percent, position = "top", breaks = seq(.25, 1, 0.25),
+                       limits = c(0, 1.15)) +
     coord_cartesian(clip = "off", expand = F) +
     plot_statics() +
     si_style_nolines(facet_space = 0.5)+
