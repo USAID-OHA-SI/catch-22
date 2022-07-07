@@ -112,17 +112,19 @@
   #arrange names by time in office
   df_viz <- df_viz %>% 
     group_by(name) %>% 
-    mutate(time_in_office = sum(location == "In office", na.rm = TRUE)) %>% 
+    mutate(time_in_office = sum(location == "In office", na.rm = TRUE),
+           observations = sum(!is.na(timestamp))) %>% 
     ungroup() %>% 
     mutate(shortname_days = ifelse(branch == "AAA", shortname,
                                    glue("{shortname} ({comma(time_in_office, 1)})"))) %>% 
-    arrange(time_in_office, desc(lastname)) %>% 
-    mutate(shortname_days = fct_inorder(shortname_days))
+    arrange(time_in_office, observations, desc(lastname)) %>% 
+    mutate(shortname_days = fct_inorder(shortname_days),
+           branch = factor(branch, c("AAA","HI", "SI", "EA", "Eval", "SIEI")))
     
   #remove future dates and identify branch's scheduled day in office
   df_viz <- df_viz %>% 
     filter(reporting_week <= max_week) %>% 
-    mutate(branch_sch_day = case_when(chief == TRUE | pa == TRUE ~ NA,
+    mutate(branch_sch_day = case_when(chief == TRUE | pa == TRUE ~ TRUE,
                                       branch == "HI" & weekday == "Tuesday" ~ TRUE,
                                       branch == "SI" & weekday == "Wednesday" ~ TRUE,
                                       branch %in% c("EA", "Eval") & weekday == "Thursday" ~ TRUE
@@ -139,7 +141,8 @@
               aes(fill = location), color = "white") +
     geom_text(aes(label = seats), na.rm = TRUE,
               family = "Source Sans Pro", size = 7/.pt, color = matterhorn) + 
-    facet_grid(branch~fct_reorder(format(reporting_week, "Week of %B %d"), reporting_week, max), scales = "free_y", space = "free", switch = "y") +
+    # facet_grid(branch~fct_reorder(format(reporting_week, "Week of %B %d"), reporting_week, max), scales = "free_y", space = "free", switch = "y") +
+    facet_grid(branch~fct_reorder(format(reporting_week, "%B %d"), reporting_week, max), scales = "free_y", space = "free", switch = "y") +
     scale_x_discrete(position = "top") +
     scale_color_identity(na.value = NA) +
     scale_fill_manual(values = c("In office" = scooter,
