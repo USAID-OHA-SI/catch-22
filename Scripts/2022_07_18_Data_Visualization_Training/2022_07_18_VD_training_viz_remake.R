@@ -185,7 +185,11 @@ si_save("Images/lp_remake_base_declutter_3.png")
 
 lp_plot_dc(df_long, ou) +
   si_style(facet_space = 0.5) +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  scale_x_continuous(
+    labels = percent, position = "bottom", breaks = seq(.25, 1, 0.25),
+    limits = c(0, 1.15)
+  )
 si_save("Images/lp_remake_base_declutter_4.png")
 
 
