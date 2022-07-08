@@ -18,21 +18,25 @@
   library(patchwork)
   library(ggtext)
   library(glue)
-  library(readxl)
+  library(googlesheets4)
   
 
 # GLOBAL VARIABLES --------------------------------------------------------
   
   ref_id <- "9e751bb2"
   
-  sic_cntry <- c("Eswatini", "Kenya", "Uganda", "Malawi", "Lesotho",
+  sic_cntry <- c("Eswatini", "Kenya", "Uganda", "Rwanda", "Lesotho",
                  "Botswana", "Namibia", "Vietnam")
+  
+  gs_id <- as_sheets_id("1eD5PNKUkCSsPkJcK_JgxLd5gl2-Rhq7bEeUd83QCoWY")
 
 # IMPORT ------------------------------------------------------------------
  
-  df_sid <- read_excel("../Downloads/sid_data.xlsx") %>% 
+  df_sid <- read_sheet(gs_id) %>% 
     fill(country)
-  
+
+# MUNGE -------------------------------------------------------------------
+
   df_sid %>% 
     group_by(country) %>% 
     mutate(lower = min(avg_sid_score_weighted),
@@ -52,7 +56,6 @@
     geom_point(aes(x = avg, fill = fill_color), color = matterhorn, shape = 21, size = 6) +
     geom_text(aes(x = avg, label = number(lab, .1)), na.rm = TRUE,
               family = "Source Sans Pro", size = 8/.pt, color = "white") +
-    # scale_fill_viridis_c() +
     expand_limits(x = c(0, 10)) +
     scale_x_continuous(expand = c(.005, .005)) +
     coord_cartesian(clip = "off") +
@@ -63,11 +66,10 @@
          subtitle = "2021 SID Average Scores | large points represent country average across question areas (smaller points)",
          caption = glue("Data sourced from USAID SID Global Analysis Tableau Workbook | Ref id: {ref_id}")) +
     si_style_xgrid() +
-    # si_style_nolines() +
     theme(axis.text.y = element_markdown(),
           axis.text.x = element_blank())
 
-  si_save("../Downloads/sid.png")  
+  si_save("Images/sid.png")  
   
   
   
@@ -104,10 +106,10 @@
          title = toupper("Countries identified as 'Sustained Impact' did not have higher SID scores"),
          subtitle = "2021 SID Average Scores | large points represent group average for countries  (smaller points)",
          caption = glue("Sustained Impact Countries: {paste0(sic_cntry, collapse = ', ')}
-                        Data sourced from USAID SID Global Analysis Tableau Workbook")) +
+                        Data sourced from USAID SID Global Analysis Tableau Workbook | Ref id: {ref_id}")) +
     si_style_xgrid() +
     theme(axis.text.x = element_blank())
   
   
-  si_save("../Downloads/sid_areas.png")  
+  si_save("Images/sid_areas.png")  
   
