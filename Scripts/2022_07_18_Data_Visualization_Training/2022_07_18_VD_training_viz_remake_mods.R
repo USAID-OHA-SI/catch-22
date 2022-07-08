@@ -71,7 +71,7 @@
                        breaks = c(0, .2)) +
     scale_fill_identity() +
     labs(x = NULL, y = NULL,
-         title = "WHAT ARE THE LARGEST AGE GROUPS BY MODALITY?",
+         title = "MOST 25-34 YEAR OLDS IDENTIFIED IN THE COMMUNITY",
          subtitle = "Bar represent age band's share of HTS_TST_POS by modality \nHighlighted where over 20%",
          caption = glue("Source: {source_info()} | Ref ID: {ref_id}")) +
     si_style_nolines() +
@@ -139,7 +139,7 @@
                        breaks = c(0, .2)) +
     scale_fill_identity() +
     labs(x = NULL, y = NULL,
-         title = "WHAT ARE THE LARGEST AGE GROUPS BY MODALITY?",
+         title = "MOST 25-34 YEAR OLDS IDENTIFIED IN THE COMMUNITY",
          subtitle = "Bar represent age band's share of HTS_TST_POS by modality \nHighlighted where over 20%",
          caption = glue("Source: {source_info()} | Ref ID: {ref_id}")) +
     si_style_nolines() +
