@@ -25,8 +25,8 @@
   
   ref_id <- "9e751bb2"
   
-  sic_cntry <- c("Eswatini", "Kenya", "Uganda", "Rwanda", "Lesotho",
-                 "Botswana", "Namibia", "Vietnam")
+  sic_cntry <- c("Eswatini", "Kenya", "Uganda",  "Malawi", #"Rwanda",
+                 "Lesotho", "Botswana", "Namibia", "Vietnam")
   
   gs_id <- as_sheets_id("1eD5PNKUkCSsPkJcK_JgxLd5gl2-Rhq7bEeUd83QCoWY")
 
@@ -85,7 +85,9 @@
            lab = case_when(avg_sid_score_weighted == lower ~ avg)) %>% 
     ungroup() %>% 
     group_by(sid_area) %>% 
-    mutate(fill_color = ifelse(lab == max(lab, na.rm = TRUE), genoa, trolley_grey_light),
+    mutate(fill_color = case_when(lab == max(lab, na.rm = TRUE) & is_sic == "Identified Sustained Impact Country" ~ genoa,
+                                  lab == max(lab, na.rm = TRUE) ~ moody_blue,
+                                  !is.na(lab) ~ trolley_grey_light),
            font_color = ifelse(lab == max(lab, na.rm = TRUE), "white", matterhorn)) %>% 
     ungroup() %>% 
     ggplot(aes(avg_sid_score_weighted, fct_reorder(sid_area, avg_sid_score_weighted, mean))) +
