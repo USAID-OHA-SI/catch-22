@@ -30,7 +30,6 @@ outputs <- list(
   lifeexp_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.png"))
 
 # munge ------------------------------------------------------------------------
-# do we use Burma or Myanmar?
 
 # read in country names from all sources for consistency
 names <- read_csv(inputs$country_names,
@@ -61,8 +60,6 @@ selected_data <- read_csv(inputs$unweighted_data,
     # provided by Karishma, otherwise keep the country name
     country = as.character(if_else(is.na(country_ghlist) == FALSE,
       country_ghlist, country))) %>%
-  # is GH list of countries Ground Truth as far as names to use?
-  # Assuming yes
   select(country, iso, indicator, usaid_supported, year, value) %>%
   distinct()
 
@@ -90,7 +87,6 @@ pop_data <- world_pop %>%
     by = c("country" = "country_worldpop")) %>%
   mutate(
     year = as.numeric(str_remove(year, "year_")),
-    # year = parse_date(year, "%Y"),
     population = as.numeric(population),
     # replace country names from world pop with names from GH list
     # provided by Karishma, otherwise keep the country name
@@ -158,7 +154,7 @@ ggplot(hsc, aes(
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "Yes" = "#002a6c", # USAID Blue
+      "Yes" = usaid_blue,
       "No" = "#cfcdc9"), # Light Grey
     labels = NULL) +
   theme(axis.text.x = element_text(angle = 90,
@@ -166,19 +162,16 @@ ggplot(hsc, aes(
                                    color = "#505050"),
         axis.text.y = element_text(size = 10,
                                    color = "#505050"),
-        plot.title = element_markdown(hjust = 0.5,
-                                      face = "bold",
-                                      size = 14,
+        plot.title = element_markdown(size = 14,
                                       color = "#202020"),
         legend.position = "none") +
   labs(
     x = NULL,
     y = NULL,
     color = NULL,
-    title = glue(
-      "GAINS IN <b> POPULATION WEIGHTED HSC INDEX</b> IN <br>
-      <span style='color: #002a6c;'>USAID</span> AND
-      <span style='color: #cfcdc9;'>NON-USAID</span> LOWER-INCOME COUNTRIES"))
+    title = "GAINS IN <b>POPULATION WEIGHTED HSC INDEX</b> IN <br>
+            <span style='color: #002a6c;'>USAID</span> AND
+            <span style='color: #cfcdc9;'>NON-USAID</span> LOWER-INCOME COUNTRIES")
 
 si_save(outputs$hsc_fig)
 
@@ -206,7 +199,7 @@ ggplot(life_exp, aes(
     minor_breaks = c(15, 25, 35, 45, 55, 65, 75)) +
   scale_color_manual(
     values = c(
-      "Yes" = "#002a6c", # USAID Blue
+      "Yes" = usaid_blue,
       "No" = "#cfcdc9"), # Light Grey
     labels = NULL) +
   theme(axis.text.x = element_text(angle = 90,
@@ -214,19 +207,16 @@ ggplot(life_exp, aes(
                                    color = "#505050"),
         axis.text.y = element_text(size = 10,
                                    color = "#505050"),
-        plot.title = element_markdown(hjust = 0.5,
-                                      face = "bold",
-                                      size = 14,
+        plot.title = element_markdown(size = 14,
                                       color = "#202020"),
         legend.position = "none") +
   labs(
     x = NULL,
     y = NULL,
     color = NULL,
-    title = glue(
-      "INCREASES IN <b>POPULATION WEIGHTED LIFE EXPECTANCY AT BIRTH</b> IN <br>
-      <span style='color: #002a6c;'>USAID</span> AND
-      <span style='color: #cfcdc9;'>NON-USAID</span> LOWER-INCOME COUNTRIES"))
+    title = "INCREASES IN <b>POPULATION WEIGHTED LIFE EXPECTANCY AT BIRTH</b> IN <br>
+            <span style='color: #002a6c;'>USAID</span> AND
+            <span style='color: #cfcdc9;'>NON-USAID</span> LOWER-INCOME COUNTRIES")
 
 si_save(outputs$lifeexp_fig)
 
