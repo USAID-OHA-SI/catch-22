@@ -1,11 +1,12 @@
-# PROJECT:  catch-22
-# AUTHOR:   J. Hoehner | USAID
-# PURPOSE:  GH weighting "value" by most recent population
+# PROJECT:  Population weighting for GH Sector Review SDGs
+# AUTHOR:   J.Hoehner | USAID/PHI
+# PURPOSE:  To adjust estimates by population for comparison
+# REF ID:   ae3887aa
 # LICENSE:  MIT
-# DATE:     2022-07-18
-# UPDATED:  2022-07-18
+# DATE CREATED: 2022-07-15
+# DATE UPDATED: 2022-07-19
 
-# load libraries ---------------------------------------------------------------
+# dependencies -----------------------------------------------------------------
 
 pacman::p_load(
   "tidyverse", "glue", "lubridate",
@@ -14,6 +15,10 @@ pacman::p_load(
   "assertthat", "glamr", "glitr", "ggtext")
 
 extrafont::loadfonts(device = "win")
+
+# global variables -------------------------------------------------------------
+
+ref_id <- "ae3887aa"
 
 # set inputs and outputs -------------------------------------------------------
 
@@ -39,7 +44,6 @@ names <- read_csv(inputs$country_names,
     across(.cols = country_ghlist:country_worldpop, ~ as.character(.)))
 
 # unweighted data
-
 selected_data <- read_csv(inputs$unweighted_data,
   show_col_types = FALSE) %>%
   clean_names() %>%
