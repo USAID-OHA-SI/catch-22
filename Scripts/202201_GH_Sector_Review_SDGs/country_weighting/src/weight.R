@@ -1,4 +1,4 @@
-# PROJECT:  Population weighting for GH Sector Review SDGs
+# PROJECT:  catch-22
 # AUTHOR:   J.Hoehner | USAID/PHI
 # PURPOSE:  To adjust estimates by population for comparison
 # REF ID:   ae3887aa
@@ -8,13 +8,26 @@
 
 # dependencies -----------------------------------------------------------------
 
-pacman::p_load(
-  "tidyverse", "glue", "lubridate",
-  "here", "janitor", "readr", "ggplot2",
-  "openintro", "forcats", "stringr", "readxl",
-  "assertthat", "glamr", "glitr", "ggtext")
+  library(glamr)
+  library(glitr)
+  library(gophr)
+  library(tidyverse)
+  library(janitor)
+  library(assertthat)
+  library(ggplot2)
+  library(readr)
+  library(extrafont)
+  library(here)
+  library(glue)
+  library(lubridate)
+  library(openintro)
+  library(forcats)
+  library(stringr)
+  library(readxl)
+  library(assertthat)
+  library(ggtext)
 
-extrafont::loadfonts(device = "win")
+  extrafont::loadfonts(device = "win")
 
 # global variables -------------------------------------------------------------
 
@@ -30,9 +43,9 @@ inputs <- list(
 
 outputs <- list(
   hsc_data = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgdata.csv"),
-  hsc_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.png"),
+  hsc_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg"),
   lifeexp_data = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgdata.csv"),
-  lifeexp_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.png"))
+  lifeexp_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.svg"))
 
 # munge ------------------------------------------------------------------------
 
@@ -159,10 +172,9 @@ ggplot(hsc, aes(
   scale_color_manual(
     values = c(
       "Yes" = usaid_blue,
-      "No" = "#cfcdc9"), # Light Grey
+      "No" = usaid_darkgrey),
     labels = NULL) +
-  theme(axis.text.x = element_text(angle = 90,
-                                   size = 10,
+  theme(axis.text.x = element_text(size = 10,
                                    color = "#505050"),
         axis.text.y = element_text(size = 10,
                                    color = "#505050"),
@@ -173,9 +185,8 @@ ggplot(hsc, aes(
     x = NULL,
     y = NULL,
     color = NULL,
-    title = "GAINS IN <b>POPULATION WEIGHTED HSC INDEX</b> IN <br>
-            <span style='color: #002a6c;'>USAID</span> AND
-            <span style='color: #cfcdc9;'>NON-USAID</span> LOWER-INCOME COUNTRIES")
+    title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX SINCE 2020
+            <span style='color: #002a6c;'>USAID</span> AND <span style='color: #6c6463;'>NON-USAID</span> LOWER-INCOME COUNTRIES")
 
 si_save(outputs$hsc_fig)
 
@@ -190,13 +201,7 @@ ggplot(life_exp, aes(
   si_style_ygrid() +
   scale_x_continuous(
     limits = c(1960, 2020),
-    breaks = c(
-      1960, 1962, 1964, 1966, 1968,
-      1970, 1972, 1974, 1976, 1978,
-      1980, 1982, 1984, 1986, 1988,
-      1990, 1992, 1994, 1996, 1998,
-      2000, 2002, 2004, 2006, 2008,
-      2010, 2012, 2014, 2016, 2018, 2020)) +
+    breaks = c(1960, 1970, 1980,1990, 2000, 2010,2020)) +
   scale_y_continuous(
     limits = c(0, 80),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80),
@@ -204,10 +209,9 @@ ggplot(life_exp, aes(
   scale_color_manual(
     values = c(
       "Yes" = usaid_blue,
-      "No" = "#cfcdc9"), # Light Grey
+      "No" = usaid_darkgrey),
     labels = NULL) +
-  theme(axis.text.x = element_text(angle = 90,
-                                   size = 10,
+  theme(axis.text.x = element_text(size = 10,
                                    color = "#505050"),
         axis.text.y = element_text(size = 10,
                                    color = "#505050"),
@@ -218,9 +222,8 @@ ggplot(life_exp, aes(
     x = NULL,
     y = NULL,
     color = NULL,
-    title = "INCREASES IN <b>POPULATION WEIGHTED LIFE EXPECTANCY AT BIRTH</b> IN <br>
-            <span style='color: #002a6c;'>USAID</span> AND
-            <span style='color: #cfcdc9;'>NON-USAID</span> LOWER-INCOME COUNTRIES")
+    title = "INCREASES IN <b>POPULATION WEIGHTED LIFE EXPECTANCY AT BIRTH SINCE 1960
+             <span style='color: #002a6c;'>USAID</span> AND <span style='color: #6c6463;'>NON-USAID</span> LOWER-INCOME COUNTRIES")
 
 si_save(outputs$lifeexp_fig)
 
