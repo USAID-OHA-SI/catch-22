@@ -175,8 +175,8 @@ ggplot(uhc_low_support, aes(
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "Yes" = usaid_blue,
-      "No" = usaid_darkgrey),
+      "PEPFAR" = usaid_blue,
+      "Non-PEPFAR" = usaid_darkgrey),
     labels = NULL) +
   theme( axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
