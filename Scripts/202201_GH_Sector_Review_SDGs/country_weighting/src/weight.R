@@ -136,7 +136,7 @@ full_data <- selected_data %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator, year, value, goal,
          population, date_data_pulled, ref_link) %>%
-  group_by(country, indicator, income_group, year) %>%
+  group_by(country, year) %>%
   mutate(
     value = as.numeric(value),
     population = as.numeric(population),
@@ -155,7 +155,6 @@ uhc_low_support <- full_data %>%
   distinct()
 
 # Life Expectancy at Birth in PEPFAR vs non-PEPFAR
-
 
 
 # visualize --------------------------------------------------------------------
