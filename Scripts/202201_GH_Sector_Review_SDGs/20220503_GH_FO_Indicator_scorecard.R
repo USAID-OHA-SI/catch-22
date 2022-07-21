@@ -3,7 +3,7 @@
 # PURPOSE:  GH scorecard data pull on common indicators
 # LICENSE:  MIT
 # DATE:     2022-05-03
-# UPDATED:  2022-06-23
+# UPDATED:  2022-07-21 (with WPP2022 Estimates)
 
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -128,9 +128,10 @@ df_mal_deaths <- si_path() %>%
   return_latest("malaria-death-rates.csv") %>% 
   read_csv()
 
-#Life expectancy - WPP 2019
-df_wpp <- read_xlsx("Data/WPP2019_SA1_INT_F01_ANNUAL_DEMOGRAPHIC_INDICATORS.xlsx",
-                    sheet = "ESTIMATES",
+#Life expectancy - WPP 2022 Estimates (updated 7-21-2022)
+df_wpp <- readxl::read_excel("Data/WPP2022_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT_REV1.xlsx",
+                    sheet = "Estimates",
+                    col_types = "text",
                     skip = 16) %>% 
   clean_names()
 
@@ -302,8 +303,8 @@ df_vls <- df_tt %>%
 #clean up life expectancy estimates
 df_wpp <- df_wpp %>% 
   rename(country = region_subregion_country_or_area,
-         year = reference_date_1_january_31_december) %>% 
-  select(country, country_code, type, parent_code, year, starts_with('life_expectancy_at_birth_both')) %>% 
+         iso = iso3_alpha_code) %>% 
+  select(country, iso, type, parent_code, year, starts_with('life_expectancy_at_birth_both')) %>% 
   pivot_longer(c(starts_with("life")), names_to = "indicator", values_to = "value") %>% 
   mutate(value = as.numeric(value),
          country = recode(country, "Samoa" = "American Samoa",
@@ -346,13 +347,14 @@ df_gh_final <- df_uhc_final %>%
 country_iso <- df_gh_final %>% count(country, iso) %>% select(-(n))
 
 df_wpp_clean <- df_wpp %>% 
-  left_join(country_iso, by = c("country")) %>% 
-  mutate(iso = case_when(country == "Western Sahara" ~ "ESH",
-                         TRUE ~ iso)) %>% 
+#  left_join(country_iso, by = c("country")) %>% 
+  # mutate(iso = case_when(country == "Western Sahara" ~ "ESH",
+  #                        TRUE ~ iso)) %>% 
   mutate(cntry_group = NA,
          goal = NA,
          ref_link = "https://population.un.org/wpp/Download/SpecialAggregates/EconomicTrading/",
-         date_data_pulled = lubridate::today()) %>% 
+         date_data_pulled = lubridate::today(),
+         year = as.numeric(year)) %>% 
   select(indicator, iso, country, year, value, cntry_group, ref_link, date_data_pulled)
 
 df_gh_final <- df_gh_final %>%
@@ -366,6 +368,20 @@ df_gh_final <- df_gh_final %>%
   left_join(who_region
             %>% dplyr::select(iso, who_region)
             , by = "iso") 
+
+#Make a column for PEPFAR/non-PEPFAR
+pepfar_xwalk <- df_tt %>% 
+  select(country, iso, pepfar) %>% 
+  filter(pepfar == "PEPFAR") %>% 
+  distinct() %>% 
+  pull(iso)
+
+df_gh_final <- df_gh_final %>% 
+  mutate(pepfar = ifelse(iso %in% pepfar_xwalk, "PEPFAR", "Non-PEPFAR")) %>% 
+  select(year, iso, country, indicator, value, goal,
+         cntry_group, pepfar,
+         usaid_supported, usaid_region, idea_region, income_group, who_region,
+         ref_link, date_data_pulled)
 
 date <- lubridate::today()
   
