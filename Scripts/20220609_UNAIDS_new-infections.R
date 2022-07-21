@@ -1,9 +1,10 @@
 # PROJECT:  catch-22
 # AUTHOR:   A.Chafetz | USAID
 # PURPOSE:  Trend in NEW HIV infections
+# REF ID:   f197b743 
 # LICENSE:  MIT
 # DATE:     2022-06-09
-# UPDATED: 
+# UPDATED:  2022-07-21
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -22,11 +23,12 @@
 
 # GLOBAL VARIABLES --------------------------------------------------------
   
-
+  ref_id <- "f197b743"
+  
 # IMPORT ------------------------------------------------------------------
   
 
-df_un <- pull_unaids("HIV Estimates - Integer")
+  df_un <- pull_unaids("HIV Estimates - Integer")
 
 
 # MUNGE -------------------------------------------------------------------
@@ -48,7 +50,7 @@ df_un <- pull_unaids("HIV Estimates - Integer")
   df_trend <- df_un %>% 
     bind_rows(df_un %>% 
                 filter(pepfar == "PEPFAR") %>% 
-                mutate(country = "PEPFAR Only Countries")) %>% 
+                mutate(country = "PEPFAR")) %>% 
     filter(country %in% c("Global","PEPFAR"),
            indicator == "New HIV Infections",
            # stat == "est",
@@ -98,11 +100,12 @@ df_un <- pull_unaids("HIV Estimates - Integer")
     scale_y_continuous(label = label_number_si()) +
     expand_limits(y = 0) +
     coord_cartesian(expand = T, clip = "off") +
-    facet_wrap(~country) +
+    facet_wrap(~fct_rev(country)) +
     labs(x = NULL, y = NULL,
-         title = "SIGNIFICANT DELCINE IN NEW INFECTIONS SINCE PEPFAR'S INCEPTION IN 2004",
-         subtitle = "New HIV Infections Trends (estimates and error bounds)",
-         caption = source_note) +
+         title = "SIGNIFICANT DECLINE IN NEW INFECTIONS SINCE PEPFAR'S INCEPTION IN 2004",
+         subtitle = "New HIV Infections 15+ Trends (estimates and error bounds)",
+         caption = glue("{source_note} | Ref Id: {ref_id}")) +
     si_style()
 
   si_save("Images/new_infections.png")
+  si_save("Graphics/new_infections.svg")

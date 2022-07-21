@@ -1,6 +1,6 @@
 # PROJECT:  catch-22
 # AUTHOR:   A.Chafetz | USAID
-# PURPOSE:  remake SID score graphic
+# PURPOSE:  SIC - remake SID score graphic
 # LICENSE:  MIT
 # REF ID:   9e751bb2
 # DATE:     2022-07-06
