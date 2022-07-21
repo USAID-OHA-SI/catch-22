@@ -41,7 +41,9 @@ inputs <- list(
 
 outputs <- list(
   full_data = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv"),
-  hsc_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg"))
+  hsc_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg"),
+  lifeexp_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.svg")
+  )
 
 # munge ------------------------------------------------------------------------
 
@@ -63,7 +65,7 @@ selected_data <- read_csv(inputs$unweighted_data,
   # keep only life expectancy and UHC indicators
   filter(indicator %in% c(
     "uhc_service_coverage_index",
-    "life_expectancy_at_birth_all_sexes", # no longer in the data
+    "life_expectancy_at_birth_both_sexes_years",
     "uhc_subindex1_capacity_access",
     "uhc_subindex2_ncd",
     "uhc_subindex3_mchn",
@@ -93,7 +95,7 @@ country_by_support <- selected_data %>%
 countries_by_support <- tabyl(country_by_support$pepfar)
 
 # ~26% (0.26) of countries in this dataset (51) are supported by PEPFAR
-# and 143 are not. It seems like we have class imbalance here too
+# and 188 are not. It seems like we have class imbalance here too
 
 # of the countries in each income group, how many are PEPFAR supported?
 countries_by_support_income <- tabyl(country_by_support, pepfar, income_group)
@@ -155,7 +157,15 @@ uhc_low_support <- full_data %>%
   distinct()
 
 # Life Expectancy at Birth in PEPFAR vs non-PEPFAR
-
+lifeexp_low_support <- full_data %>%
+  filter(indicator == "life_expectancy_at_birth_both_sexes_years",
+         income_group == "Low Income Country (World Bank Classification)") %>%
+  group_by(pepfar, year) %>%
+  summarize(pepfar = pepfar,
+            year = year,
+            unweighted_avg = round_half_up(mean(value), 2),
+            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
+  distinct()
 
 # visualize --------------------------------------------------------------------
 
@@ -167,7 +177,11 @@ ggplot(uhc_low_support, aes(
   group = pepfar,
   color = pepfar)) +
   geom_line() +
+  geom_vline(xintercept = 2003,
+             color = usaid_red,
+             linetype = "longdash") +
   si_style_ygrid() +
+  # hsc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -189,13 +203,50 @@ ggplot(uhc_low_support, aes(
     x = NULL,
     y = NULL,
     color = NULL,
+    caption = "Dashed red line indicates first PEPFAR authorization in 2003",
     title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX</b> SINCE 2000
             <span style='color: #002a6c;'>PEPFAR</span> AND <span style='color: #6c6463;'>NON-PEPFAR</span> LOWER-INCOME COUNTRIES")
 
 si_save(outputs$hsc_fig)
 
-# What has been the change in Life Expectancy at Birth in USAID vs non-USAID countries over time?
-# filter by lower income
+# What has been the change in Life Expectancy at Birth in PEPFAR vs non-PEPFAR countries over time?
+ggplot(lifeexp_low_support, aes(
+  x = year,
+  y = weighted_avg,
+  group = pepfar,
+  color = pepfar)) +
+  geom_line() +
+  geom_vline(xintercept = 2003,
+             color = usaid_red,
+             linetype = "longdash") +
+  si_style_ygrid() +
+  scale_y_continuous(
+    limits = c(0, 65),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 65)) +
+  scale_x_continuous(
+    breaks = c(1960, 1970, 1980, 1990, 2000, 2010, 2020)) +
+  scale_color_manual(
+    values = c(
+      "PEPFAR" = usaid_blue,
+      "Non-PEPFAR" = usaid_darkgrey),
+    labels = NULL) +
+  theme( axis.text = element_text(family = "Source Sans Pro",
+                                  size = 10,
+                                  color = "#505050"),
+         plot.title = element_markdown(family = "Source Sans Pro",
+                                       size = 14,
+                                       color = "#202020"),
+         legend.position = "none") +
+  labs(
+    x = NULL,
+    y = NULL,
+    color = NULL,
+    caption = "Dashed red line indicates first PEPFAR authorization in 2003",
+    title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX</b> SINCE 2000
+            <span style='color: #002a6c;'>PEPFAR</span> AND <span style='color: #6c6463;'>NON-PEPFAR</span> LOWER-INCOME COUNTRIES")
+
+si_save(outputs$lifeexp_fig)
+
 
 # save data --------------------------------------------------------------------
 
