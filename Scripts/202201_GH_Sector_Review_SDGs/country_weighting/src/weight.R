@@ -180,6 +180,11 @@ ggplot(uhc_low_support, aes(
   geom_vline(xintercept = 2003,
              color = usaid_red,
              linetype = "longdash") +
+  annotate("text",
+           x = 2004.8, y = 100,
+           label = "  PEPFAR first authorized",
+           size = 3,
+           color = usaid_red) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -192,7 +197,7 @@ ggplot(uhc_low_support, aes(
       "PEPFAR" = usaid_blue,
       "Non-PEPFAR" = usaid_darkgrey),
     labels = NULL) +
-  theme( axis.text = element_text(family = "Source Sans Pro",
+  theme(axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
                                   color = "#505050"),
         plot.title = element_markdown(family = "Source Sans Pro",
@@ -203,7 +208,7 @@ ggplot(uhc_low_support, aes(
     x = NULL,
     y = NULL,
     color = NULL,
-    caption = "Dashed red line indicates first PEPFAR authorization in 2003",
+    caption = "Data from GH_scorecard_indicators_2022-07-21.csv",
     title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX</b> SINCE 2000
             <span style='color: #002a6c;'>PEPFAR</span> AND <span style='color: #6c6463;'>NON-PEPFAR</span> LOWER-INCOME COUNTRIES")
 
@@ -219,6 +224,11 @@ ggplot(lifeexp_low_support, aes(
   geom_vline(xintercept = 2003,
              color = usaid_red,
              linetype = "longdash") +
+  annotate("text",
+           x = 2008, y = 65,
+           label = "  PEPFAR first authorized",
+           size = 3,
+           color = usaid_red) +
   si_style_ygrid() +
   scale_y_continuous(
     limits = c(0, 65),
@@ -241,7 +251,9 @@ ggplot(lifeexp_low_support, aes(
     x = NULL,
     y = NULL,
     color = NULL,
-    caption = "Dashed red line indicates first PEPFAR authorization in 2003",
+    caption = "Data from GH_scorecard_indicators_2022-07-21.csv",
+
+      "Dashed red line indicates first PEPFAR authorization in 2003",
     title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX</b> SINCE 2000
             <span style='color: #002a6c;'>PEPFAR</span> AND <span style='color: #6c6463;'>NON-PEPFAR</span> LOWER-INCOME COUNTRIES")
 

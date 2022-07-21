@@ -43,6 +43,7 @@
 <polyline points='65.25,274.49 225.60,263.92 385.95,244.75 546.31,239.81 610.45,235.29 674.59,232.86 ' style='stroke-width: 1.07; stroke: #6C6463; stroke-linecap: butt;' />
 <polyline points='65.25,293.41 225.60,278.45 385.95,251.05 546.31,235.11 610.45,229.61 674.59,225.09 ' style='stroke-width: 1.07; stroke: #002A6C; stroke-linecap: butt;' />
 <line x1='161.46' y1='370.63' x2='161.46' y2='32.74' style='stroke-width: 1.07; stroke: #BA0C2F; stroke-dasharray: 9.96,4.27; stroke-linecap: butt;' />
+<text x='219.19' y='51.15' text-anchor='middle' style='font-size: 8.54px;fill: #BA0C2F; font-family: "Arial";' textLength='96.72px' lengthAdjust='spacingAndGlyphs'>  PEPFAR first authorized</text>
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw0MDUuMDA=)'>
 <text x='29.85' y='358.56' text-anchor='end' style='font-size: 10.00px;fill: #505050; font-family: "Source Sans Pro";' textLength='4.97px' lengthAdjust='spacingAndGlyphs'>0</text>
@@ -76,6 +77,6 @@
 <text x='569.65' y='24.12' style='font-size: 14.00px; font-weight: bold;fill: #6C6463; font-family: "Source Sans Pro";' textLength='81.16px' lengthAdjust='spacingAndGlyphs'>NON-PEPFAR</text>
 <text x='649.96' y='24.12' style='font-size: 14.00px; font-weight: bold;fill: #202020; font-family: "Source Sans Pro";' textLength='98.72px' lengthAdjust='spacingAndGlyphs'>LOWER-INCOME</text>
 <text x='747.15' y='24.12' style='font-size: 14.00px; font-weight: bold;fill: #202020; font-family: "Source Sans Pro";' textLength='72.40px' lengthAdjust='spacingAndGlyphs'>COUNTRIES</text>
-<text x='705.06' y='393.02' text-anchor='end' style='font-size: 9.00px;fill: #909090; font-family: "Source Sans Pro";' textLength='223.55px' lengthAdjust='spacingAndGlyphs'>Dashed red line indicates first PEPFAR authorization in 2003</text>
+<text x='705.06' y='393.02' text-anchor='end' style='font-size: 9.00px;fill: #909090; font-family: "Source Sans Pro";' textLength='194.87px' lengthAdjust='spacingAndGlyphs'>Data from GH_scorecard_indicators_2022-07-21.csv</text>
 </g>
 </svg>
