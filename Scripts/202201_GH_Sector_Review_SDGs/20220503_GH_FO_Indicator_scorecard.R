@@ -40,31 +40,12 @@ usaid_mal <- c("Angola", "Benin", "Burkina Faso", "Burma",
                "Zimbabwe") 
 
 #https://www.usaid.gov/global-health/health-areas/maternal-and-child-health/priority-countries
-usaid_mch <- c("Afghanistan",
-               "Bangladesh",
-               "Myanmar",
-               "Democratic Republic of Congo",
-               "Ethiopia",
-               "Ghana",
-               "Haiti",
-               "India",
-               "Indonesia",
-               "Kenya",
-               "Liberia",
-               "Madagascar",
-               "Malawi",
-               "Mali",
-               "Mozambique",
-               "Nepal",
-               "Nigeria",
-               "Pakistan",
-               "Rwanda",
-               "Senegal",
-               "South Sudan",
-               "Tanzania",
-               "Uganda",
-               "Yemen",
-               "Zambia")
+usaid_mch <- c(
+              "Afghanistan", "Bangladesh", "Myanmar", 
+              "Democratic Republic of Congo","Ethiopia", "Ghana", "Haiti", 
+              "India", "Indonesia","Kenya","Liberia","Madagascar","Malawi",
+              "Mali","Mozambique","Nepal","Nigeria","Pakistan","Rwanda",
+              "Senegal","South Sudan","Tanzania","Uganda","Yemen","Zambia")
 
 #site adjusted dataset
 folder_path <- "Data/"
@@ -99,7 +80,7 @@ df_uhc_sub4 <- folder_path %>%
 
 
 #Under 5 Mortality 
-df_under5 <- si_path() %>% 
+df_under5 <- folder_path %>% 
   return_latest("under5child-mortality") %>% 
   read_csv() 
 
@@ -109,22 +90,22 @@ df_tt <- pull_unaids("Test & Treat - Percent", FALSE)
 #TB ---
 
 ## Incidence TB per 100,000 population
-df_tb_inc <- si_path() %>% 
+df_tb_inc <- folder_path %>% 
   return_latest("incidence-of-tuberculosis-sdgs.csv") %>% 
   read_csv() 
 
 ## Deaths per 100,000 population (all ages)
-df_tb_deaths<- si_path() %>% 
+df_tb_deaths<- folder_path %>% 
   return_latest("tuberculosis-death-rates.csv") %>% 
   read_csv()  
 
 ## Incidence of malaria per 1,000 population
-df_mal_inc <- si_path() %>% 
+df_mal_inc <- folder_path %>% 
   return_latest("incidence-of-malaria-sdgs.csv") %>% 
   read_csv()  
 
 ## Malaria deaths per 100,000 population (all ages)
-df_mal_deaths <- si_path() %>% 
+df_mal_deaths <- folder_path %>% 
   return_latest("malaria-death-rates.csv") %>% 
   read_csv()
 
@@ -307,7 +288,7 @@ df_wpp <- df_wpp %>%
   select(country, iso, type, parent_code, year, starts_with('life_expectancy_at_birth_both')) %>% 
   pivot_longer(c(starts_with("life")), names_to = "indicator", values_to = "value") %>% 
   mutate(value = as.numeric(value),
-         country = recode(country, "Samoa" = "American Samoa",
+         country = recode(country, 
                           "Bolivia (Plurinational State of)" = "Bolivia",
                           "Brunei Darussalam" = "Brunei",
                           "Myanmar" = "Burma",
@@ -377,15 +358,15 @@ pepfar_xwalk <- df_tt %>%
   pull(iso)
 
 df_gh_final <- df_gh_final %>% 
-  mutate(pepfar = ifelse(iso %in% pepfar_xwalk, "PEPFAR", "Non-PEPFAR")) %>% 
-  select(year, iso, country, indicator, value, goal,
-         cntry_group, pepfar,
-         usaid_supported, usaid_region, idea_region, income_group, who_region,
-         ref_link, date_data_pulled)
+  mutate(pepfar = ifelse(iso %in% pepfar_xwalk, "PEPFAR", "Non-PEPFAR"), 
+         usaid_supported = as.character(
+           if_else(is.na(usaid_supported) == TRUE &
+                     income_group == "Low Income Country (World Bank Classification)", 
+           "No", usaid_supported))) %>% 
+  select(country,iso, cntry_group, who_region, usaid_region, idea_region,
+         income_group, indicator, goal, pepfar, usaid_supported, 
+         indicator, value, year, ref_link, date_data_pulled)
 
 date <- lubridate::today()
   
 write_csv(df_gh_final, glue::glue("Dataout/GH_scorecard_indicators_{date}.csv"))
-  
-    
-  

@@ -16,8 +16,6 @@
   library(assertthat)
   library(ggplot2)
   library(readr)
-  library(extrafont)
-  library(here)
   library(glue)
   library(lubridate)
   library(openintro)
@@ -26,23 +24,28 @@
   library(readxl)
   library(assertthat)
   library(ggtext)
+  library(showtext)
+  library(sysfonts)
+
+  font_add_google("Source Sans Pro")
+  showtext::showtext_auto()
 
 # global variables -------------------------------------------------------------
 
 ref_id <- "ae3887aa"
 
 # set inputs and outputs -------------------------------------------------------
-
-i_am("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/src/weight.R")
-
+  
+folder_path <- "Dataout/"
+  
 inputs <- list(
-  unweighted_data = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/GH_scorecard_indicators_2022-07-21.csv"),
-  country_names = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv"))
+  country_names = "Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv", 
+  country_support = "Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/support_crossmap.csv")
 
 outputs <- list(
-  full_data = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv"),
-  hsc_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg"),
-  lifeexp_fig = here("catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.svg")
+  full_data = "Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
+  hsc_fig = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg",
+  lifeexp_fig = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.svg"
   )
 
 # munge ------------------------------------------------------------------------
@@ -54,23 +57,32 @@ names <- read_csv(inputs$country_names,
   mutate(
     across(.cols = country_ghlist:country_worldpop, ~ as.character(.)))
 
+support <- read_csv(inputs$country_support,
+                  show_col_types = FALSE) %>%
+  clean_names() %>%
+  mutate(
+    across(.cols = everything(),  ~ as.character(.)))
+
 # unweighted data
 
-selected_data <- read_csv(inputs$unweighted_data,
-  show_col_types = FALSE) %>%
+selected_data <-  folder_path %>%
+  return_latest("GH_scorecard_indicators_2022-07-26.csv") %>%
+  read_csv(show_col_types = FALSE) %>%
   clean_names() %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator,
          year, value, goal, date_data_pulled, ref_link) %>%
   # keep only life expectancy and UHC indicators
+  # keep only countries in list provided by Karishma
   filter(indicator %in% c(
     "uhc_service_coverage_index",
     "life_expectancy_at_birth_both_sexes_years",
     "uhc_subindex1_capacity_access",
     "uhc_subindex2_ncd",
     "uhc_subindex3_mchn",
-    "uhc_subindex4_id")) %>%
-  # join with GH country list names
+    "uhc_subindex4_id"), 
+    country %in% names$country_ghlist) %>%
+  # join with GH country list names to make sure names are the same across data sources
   left_join(., names,
     by = c("country" = "country_unweighted")) %>%
   mutate(
@@ -94,14 +106,14 @@ country_by_support <- selected_data %>%
 
 countries_by_support <- tabyl(country_by_support$pepfar)
 
-# ~26% (0.26) of countries in this dataset (51) are supported by PEPFAR
-# and 188 are not. It seems like we have class imbalance here too
+# ~73% (0.727) of countries in this dataset (48) are supported by PEPFAR
+# and 18 are not. It seems like we have class imbalance here
 
 # of the countries in each income group, how many are PEPFAR supported?
 countries_by_support_income <- tabyl(country_by_support, pepfar, income_group)
 
-# Among Low income and LMI countries,
-# we have comparable numbers of PEPFAR and non-PEPFAR
+# Among Low income selected countries of interest
+# 12 are PEPFAR and 6 are non-PEPFAR
 
 pop_data <- world_pop %>%
   pivot_longer(
@@ -109,6 +121,8 @@ pop_data <- world_pop %>%
     names_to = "year",
     values_to = "population") %>%
   select(country, year, population) %>%
+  # filter data by only countries of interest
+  filter(country %in% names$country_worldpop) %>%
   # join with GH country list names
   left_join(., names,
     by = c("country" = "country_worldpop")) %>%
@@ -146,7 +160,7 @@ full_data <- selected_data %>%
   distinct()
 
 # HSC index in PEPFAR vs non-PEPFAR countries
-uhc_low_support <- full_data %>%
+uhc_low_pepfar <- full_data %>%
   filter(indicator == "uhc_service_coverage_index",
          income_group == "Low Income Country (World Bank Classification)") %>%
   group_by(pepfar, year) %>%
@@ -157,11 +171,33 @@ uhc_low_support <- full_data %>%
   distinct()
 
 # Life Expectancy at Birth in PEPFAR vs non-PEPFAR
-lifeexp_low_support <- full_data %>%
+lifeexp_low_pepfar <- full_data %>%
   filter(indicator == "life_expectancy_at_birth_both_sexes_years",
          income_group == "Low Income Country (World Bank Classification)") %>%
   group_by(pepfar, year) %>%
   summarize(pepfar = pepfar,
+            year = year,
+            unweighted_avg = round_half_up(mean(value), 2),
+            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
+  distinct()
+
+# HSC index in USAID support vs non-USAID support countries
+uhc_low_support <- full_data %>%
+  filter(indicator == "uhc_service_coverage_index",
+         income_group == "Low Income Country (World Bank Classification)") %>%
+  group_by(usaid_supported, year) %>%
+  summarize(usaid_supported = usaid_supported,
+            year = year,
+            unweighted_avg = round_half_up(mean(value), 2),
+            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
+  distinct()
+
+# Life Expectancy at Birth in USAID support vs non-USAID support
+lifeexp_low_support <- full_data %>%
+  filter(indicator == "life_expectancy_at_birth_both_sexes_years",
+         income_group == "Low Income Country (World Bank Classification)") %>%
+  group_by(usaid_supported, year) %>%
+  summarize(usaid_supported = usaid_supported,
             year = year,
             unweighted_avg = round_half_up(mean(value), 2),
             weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
