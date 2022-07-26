@@ -3,7 +3,7 @@
 # PURPOSE:  GH scorecard data pull on common indicators
 # LICENSE:  MIT
 # DATE:     2022-05-03
-# UPDATED:  2022-07-21 (with WPP2022 Estimates)
+# UPDATED:  2022-07-26 (with WPP2022 Estimates)
 
 
 # DEPENDENCIES ------------------------------------------------------------
