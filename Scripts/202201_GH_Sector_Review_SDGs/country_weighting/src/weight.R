@@ -4,7 +4,7 @@
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-07-21
+# DATE UPDATED: 2022-07-27
 
 # dependencies -----------------------------------------------------------------
 
@@ -36,14 +36,13 @@ ref_id <- "ae3887aa"
 
 # set inputs and outputs -------------------------------------------------------
   
-folder_path <- "Dataout/"
+folder_path <- "catch-22/Dataout/"
   
 inputs <- list(
-  country_names = "Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv", 
-  country_support = "Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/support_crossmap.csv")
+  country_names = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv")
 
 outputs <- list(
-  full_data = "Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
+  full_data = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
   hsc_fig = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg",
   lifeexp_fig = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.svg"
   )
@@ -56,12 +55,6 @@ names <- read_csv(inputs$country_names,
   clean_names() %>%
   mutate(
     across(.cols = country_ghlist:country_worldpop, ~ as.character(.)))
-
-support <- read_csv(inputs$country_support,
-                  show_col_types = FALSE) %>%
-  clean_names() %>%
-  mutate(
-    across(.cols = everything(),  ~ as.character(.)))
 
 # unweighted data
 
@@ -89,6 +82,9 @@ selected_data <-  folder_path %>%
     across(.cols = idea_region:indicator, ~ as.character(.)),
     across(.cols = year:value, ~ as.numeric(.)),
     pepfar = as_factor(pepfar),
+    # fix missing usaid_region for Togo
+    usaid_region = as.character(if_else(
+      iso == "TGO", "Sub-Saharan Africa", usaid_region)),
     # replace country names from unweighted data with names from GH list
     # provided by Karishma, otherwise keep the country name
     country = as.character(if_else(is.na(country_ghlist) == FALSE,
@@ -152,7 +148,8 @@ full_data <- selected_data %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator, year, value, goal,
          population, date_data_pulled, ref_link) %>%
-  group_by(country, year) %>%
+  group_by(idea_region, usaid_region, who_region, country, iso, cntry_group,
+           income_group, indicator, year) %>%
   mutate(
     value = as.numeric(value),
     population = as.numeric(population),
@@ -164,7 +161,7 @@ uhc_low_pepfar <- full_data %>%
   filter(indicator == "uhc_service_coverage_index",
          income_group == "Low Income Country (World Bank Classification)") %>%
   group_by(pepfar, year) %>%
-  summarize(pepfar = pepfar,
+  summarize(pepfar = pepfar, 
             year = year,
             unweighted_avg = round_half_up(mean(value), 2),
             weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
@@ -174,8 +171,10 @@ uhc_low_pepfar <- full_data %>%
 lifeexp_low_pepfar <- full_data %>%
   filter(indicator == "life_expectancy_at_birth_both_sexes_years",
          income_group == "Low Income Country (World Bank Classification)") %>%
-  group_by(pepfar, year) %>%
-  summarize(pepfar = pepfar,
+  group_by(country, year, pepfar) %>%
+  summarize(country = country,
+            iso = iso,
+            pepfar = pepfar,
             year = year,
             unweighted_avg = round_half_up(mean(value), 2),
             weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
@@ -185,8 +184,10 @@ lifeexp_low_pepfar <- full_data %>%
 uhc_low_support <- full_data %>%
   filter(indicator == "uhc_service_coverage_index",
          income_group == "Low Income Country (World Bank Classification)") %>%
-  group_by(usaid_supported, year) %>%
-  summarize(usaid_supported = usaid_supported,
+ # group_by(usaid_supported, year) %>%
+  summarize(country = country, 
+            iso = iso, 
+            usaid_supported = usaid_supported,
             year = year,
             unweighted_avg = round_half_up(mean(value), 2),
             weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
@@ -196,8 +197,10 @@ uhc_low_support <- full_data %>%
 lifeexp_low_support <- full_data %>%
   filter(indicator == "life_expectancy_at_birth_both_sexes_years",
          income_group == "Low Income Country (World Bank Classification)") %>%
-  group_by(usaid_supported, year) %>%
-  summarize(usaid_supported = usaid_supported,
+  # group_by(usaid_supported, year) %>%
+  summarize(country = country, 
+            iso = iso, 
+            usaid_supported = usaid_supported,
             year = year,
             unweighted_avg = round_half_up(mean(value), 2),
             weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
@@ -207,16 +210,17 @@ lifeexp_low_support <- full_data %>%
 
 # What has been the change in HSC index in USAID vs non-USAID countries over time?
 # filter by lower income
-ggplot(uhc_low_support, aes(
+ggplot(uhc_low_pepfar, aes(
   x = year,
-  y = weighted_avg,
+  y = unweighted_avg,
   group = pepfar,
   color = pepfar)) +
-  geom_line() +
+  geom_smooth() +
   geom_vline(xintercept = 2003,
              color = usaid_red,
              linetype = "longdash") +
-  annotate("text",
+ geom_point(aes(year, weighted_avg)) +
+ annotate("text",
            x = 2004.8, y = 100,
            label = "  PEPFAR first authorized",
            size = 3,
@@ -251,7 +255,7 @@ ggplot(uhc_low_support, aes(
 si_save(outputs$hsc_fig)
 
 # What has been the change in Life Expectancy at Birth in PEPFAR vs non-PEPFAR countries over time?
-ggplot(lifeexp_low_support, aes(
+ggplot(lifeexp_low_pepfar, aes(
   x = year,
   y = weighted_avg,
   group = pepfar,
