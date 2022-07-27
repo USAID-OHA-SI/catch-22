@@ -26,6 +26,8 @@
   library(ggtext)
   library(showtext)
   library(sysfonts)
+  library(svglite)
+  
 
   font_add_google("Source Sans Pro")
   showtext::showtext_auto()
@@ -39,13 +41,19 @@ ref_id <- "ae3887aa"
 folder_path <- "catch-22/Dataout/"
   
 inputs <- list(
-  country_names = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv")
+  country_names = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv", 
+  template_hsc_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_hsccov_usaid.pptx", 
+  template_lexp_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_lifeexp_usaid.pptx", 
+  template_hsc_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_hsccov_pepfar.pptx",  
+  template_hsc_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_hsccov_usaid.pptx" )
 
 outputs <- list(
   full_data = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
-  hsc_fig = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavgfig.svg",
-  lifeexp_fig = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavgfig.svg"
-  )
+  hsc_fig_uasid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavg_usaid.svg",
+  lifeexp_fig_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavg_usaid.svg",
+  hsc_fig_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavg_pepfar.svg",
+  lifeexp_fig_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavg_pepfar.svg"
+)
 
 # munge ------------------------------------------------------------------------
 
@@ -134,92 +142,40 @@ pop_data <- world_pop %>%
 
 # weight "value" by most recent population from each country -------------------
 # only contains data from 1960 onward, need previous decade
-# data grouped by country, indicator, income group, and year so that
-# different countries, indicators, income groups, and years are not affecting weights
 
 full_data <- selected_data %>%
   left_join(., pop_data, by = c(
-    "country",
-    "year")) %>%
-  # remove rows without population data for now
-  # (pre 1960, will work back in later)
+    "country","year")) %>%
   drop_na(population) %>%
   distinct() %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator, year, value, goal,
          population, date_data_pulled, ref_link) %>%
-  group_by(idea_region, usaid_region, who_region, country, iso, cntry_group,
+  group_by(idea_region, usaid_region, who_region, country, iso,
            income_group, indicator, year) %>%
   mutate(
     value = as.numeric(value),
-    population = as.numeric(population),
-    weight = as.numeric(sum(value*population))) %>%
-  distinct()
-
-# HSC index in PEPFAR vs non-PEPFAR countries
-uhc_low_pepfar <- full_data %>%
-  filter(indicator == "uhc_service_coverage_index",
-         income_group == "Low Income Country (World Bank Classification)") %>%
-  group_by(pepfar, year) %>%
-  summarize(pepfar = pepfar, 
-            year = year,
-            unweighted_avg = round_half_up(mean(value), 2),
-            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
-  distinct()
-
-# Life Expectancy at Birth in PEPFAR vs non-PEPFAR
-lifeexp_low_pepfar <- full_data %>%
-  filter(indicator == "life_expectancy_at_birth_both_sexes_years",
-         income_group == "Low Income Country (World Bank Classification)") %>%
-  group_by(country, year, pepfar) %>%
-  summarize(country = country,
-            iso = iso,
-            pepfar = pepfar,
-            year = year,
-            unweighted_avg = round_half_up(mean(value), 2),
-            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
-  distinct()
-
-# HSC index in USAID support vs non-USAID support countries
-uhc_low_support <- full_data %>%
-  filter(indicator == "uhc_service_coverage_index",
-         income_group == "Low Income Country (World Bank Classification)") %>%
- # group_by(usaid_supported, year) %>%
-  summarize(country = country, 
-            iso = iso, 
-            usaid_supported = usaid_supported,
-            year = year,
-            unweighted_avg = round_half_up(mean(value), 2),
-            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
-  distinct()
-
-# Life Expectancy at Birth in USAID support vs non-USAID support
-lifeexp_low_support <- full_data %>%
-  filter(indicator == "life_expectancy_at_birth_both_sexes_years",
-         income_group == "Low Income Country (World Bank Classification)") %>%
-  # group_by(usaid_supported, year) %>%
-  summarize(country = country, 
-            iso = iso, 
-            usaid_supported = usaid_supported,
-            year = year,
-            unweighted_avg = round_half_up(mean(value), 2),
-            weighted_avg = round_half_up(weighted.mean(value, weight), 2)) %>%
+    population = as.numeric(population), 
+    weighted_value = round_half_up(weighted.mean(value, population), 2)) %>%
   distinct()
 
 # visualize --------------------------------------------------------------------
 
-# What has been the change in HSC index in USAID vs non-USAID countries over time?
-# filter by lower income
-ggplot(uhc_low_pepfar, aes(
+# What has been the change in HSC index in PEPFAR vs non-PEPFAR countries over time?
+# filter by indicator and lower income
+uhc_low_pepfar <- 
+  ggplot(uhc_low_pepfar <- full_data %>%
+         filter(indicator =="uhc_service_coverage_index" , 
+                income_group == "Low Income Country (World Bank Classification)"), 
+  aes(
   x = year,
-  y = unweighted_avg,
+  y = weighted_value,
   group = pepfar,
   color = pepfar)) +
   geom_smooth() +
   geom_vline(xintercept = 2003,
              color = usaid_red,
              linetype = "longdash") +
- geom_point(aes(year, weighted_avg)) +
  annotate("text",
            x = 2004.8, y = 100,
            label = "  PEPFAR first authorized",
@@ -240,27 +196,65 @@ ggplot(uhc_low_pepfar, aes(
   theme(axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
                                   color = "#505050"),
-        plot.title = element_markdown(family = "Source Sans Pro",
-                                      size = 14,
-                                      color = "#202020"),
         legend.position = "none") +
   labs(
     x = NULL,
     y = NULL,
-    color = NULL,
-    caption = "Data from GH_scorecard_indicators_2022-07-21.csv",
-    title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX</b> SINCE 2000
-            <span style='color: #002a6c;'>PEPFAR</span> AND <span style='color: #6c6463;'>NON-PEPFAR</span> LOWER-INCOME COUNTRIES")
+    color = NULL)
 
-si_save(outputs$hsc_fig)
+
+# What has been the change in HSC index in USAID vs non-USAID countries over time?
+# filter by indicator and lower income
+uhc_low_usaid  <- 
+  ggplot(uhc_low_usaid <- full_data %>%
+         filter(indicator =="uhc_service_coverage_index" , 
+                income_group == "Low Income Country (World Bank Classification)")
+                , aes(
+  x = year,
+  y = weighted_value,
+  group = usaid_supported,
+  color = usaid_supported)) +
+  geom_smooth() +
+  geom_vline(xintercept = 2003,
+             color = usaid_red,
+             linetype = "longdash") +
+  annotate("text",
+           x = 2004.8, y = 100,
+           label = "  PEPFAR first authorized",
+           size = 3,
+           color = usaid_red) +
+  si_style_ygrid() +
+  # hsc is an index from 0-100
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
+  scale_x_continuous(
+    breaks = c(2000, 2005, 2010, 2015, 2019)) +
+  scale_color_manual(
+    values = c(
+      "Yes" = usaid_blue,
+      "No" = usaid_darkgrey),
+    labels = NULL) +
+  theme(axis.text = element_text(family = "Source Sans Pro",
+                                 size = 10,
+                                 color = "#505050"),
+        legend.position = "none") +
+  labs(
+    x = NULL,
+    y = NULL,
+    color = NULL)
 
 # What has been the change in Life Expectancy at Birth in PEPFAR vs non-PEPFAR countries over time?
-ggplot(lifeexp_low_pepfar, aes(
+lexp_low_pepfar_fig <- 
+  ggplot(lexp_low_pepfar <- full_data %>%
+         filter(indicator =="life_expectancy_at_birth_both_sexes_years" , 
+                income_group == "Low Income Country (World Bank Classification)")
+       , aes(
   x = year,
-  y = weighted_avg,
+  y = weighted_value,
   group = pepfar,
   color = pepfar)) +
-  geom_line() +
+  geom_smooth() +
   geom_vline(xintercept = 2003,
              color = usaid_red,
              linetype = "longdash") +
@@ -271,8 +265,8 @@ ggplot(lifeexp_low_pepfar, aes(
            color = usaid_red) +
   si_style_ygrid() +
   scale_y_continuous(
-    limits = c(0, 65),
-    breaks = c(0, 10, 20, 30, 40, 50, 60, 65)) +
+    limits = c(0, 85),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80)) +
   scale_x_continuous(
     breaks = c(1960, 1970, 1980, 1990, 2000, 2010, 2020)) +
   scale_color_manual(
@@ -283,22 +277,86 @@ ggplot(lifeexp_low_pepfar, aes(
   theme( axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
                                   color = "#505050"),
-         plot.title = element_markdown(family = "Source Sans Pro",
-                                       size = 14,
-                                       color = "#202020"),
          legend.position = "none") +
   labs(
     x = NULL,
     y = NULL,
-    color = NULL,
-    caption = "Data from GH_scorecard_indicators_2022-07-21.csv",
+    color = NULL)
 
-      "Dashed red line indicates first PEPFAR authorization in 2003",
-    title = "GAINS IN <b>POPULATION WEIGHTED HEALTH SERVICE COVERAGE INDEX</b> SINCE 2000
-            <span style='color: #002a6c;'>PEPFAR</span> AND <span style='color: #6c6463;'>NON-PEPFAR</span> LOWER-INCOME COUNTRIES")
+# What has been the change in Life Expectancy at Birth in USAID vs non-USAID countries over time?
+lexp_low_usaid_fig <- 
+  ggplot(lexp_low_usaid <- full_data %>%
+         filter(indicator =="life_expectancy_at_birth_both_sexes_years" , 
+                income_group == "Low Income Country (World Bank Classification)")
+       , aes(
+  x = year,
+  y = weighted_value,
+  group = usaid_supported,
+  color = usaid_supported)) +
+  geom_smooth() +
+  geom_vline(xintercept = 2003,
+             color = usaid_red,
+             linetype = "longdash") +
+  annotate("text",
+           x = 2008, y = 65,
+           label = "  PEPFAR first authorized",
+           size = 3,
+           color = usaid_red) +
+  si_style_ygrid() +
+  scale_y_continuous(
+    limits = c(0, 85),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80)) +
+  scale_x_continuous(
+    breaks = c(1960, 1970, 1980, 1990, 2000, 2010, 2020)) +
+  scale_color_manual(
+    values = c(
+      "Yes" = usaid_blue,
+      "No" = usaid_darkgrey),
+    labels = NULL) +
+  theme( axis.text = element_text(family = "Source Sans Pro",
+                                  size = 10,
+                                  color = "#505050"),
+         legend.position = "none") +
+  labs(
+    x = NULL,
+    y = NULL,
+    color = NULL)
 
-si_save(outputs$lifeexp_fig)
+# prepare slides ---------------------------------------------------------------
 
+# HSC index
+
+# PEPFAR
+uhc_pepfar_dml <- dml(grid.arrange(uhc_low_pepfar,
+                              nrow = 1, widths = 12.5))
+
+uhc_pepfar_template <- read_pptx(path = inputs$template_hsc_pepfar)
+
+uhc_pepfar_complete <- ph_with(uhc_pepfar_template, uhc_pepfar_dml,
+                          location = ph_location(
+                            left = 0.5,
+                            top = 2.0,
+                            width = 12.5,
+                            height = 4.55,
+                            newlabel = ""))
+
+print(uhc_pepfar_complete,
+      target = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsccov_pepfar.pptx")
+
+
+# # USAID
+# hsc_usaid_dml <- dml(grid.arrange(uhc_low_usaid,
+#                                    nrow = 1, widths = 12.75))
+# 
+# # Life Expectancy
+# 
+# # PEPFAR
+# lexp_pepfar_dml <- dml(grid.arrange(lexp_low_pepfar_fig,
+#                                    nrow = 1, widths = 12.75))
+# 
+# # USAID
+# lexp_usaid_dml <- dml(grid.arrange(lexp_low_usaid_fig,
+#                                   nrow = 1, widths = 12.75))
 
 # save data --------------------------------------------------------------------
 
