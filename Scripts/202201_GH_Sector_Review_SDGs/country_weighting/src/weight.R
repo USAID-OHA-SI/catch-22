@@ -4,7 +4,7 @@
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-07-27
+# DATE UPDATED: 2022-07-28
 
 # dependencies -----------------------------------------------------------------
 
@@ -27,6 +27,10 @@
   library(showtext)
   library(sysfonts)
   library(svglite)
+  library(officer)
+  library(Cairo)
+  library(rvg)
+  library(gridExtra)
   
 
   font_add_google("Source Sans Pro")
@@ -42,17 +46,13 @@ folder_path <- "catch-22/Dataout/"
   
 inputs <- list(
   country_names = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv", 
-  template_hsc_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_hsccov_usaid.pptx", 
-  template_lexp_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_lifeexp_usaid.pptx", 
-  template_hsc_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_hsccov_pepfar.pptx",  
-  template_hsc_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/template_hsccov_usaid.pptx" )
+  template_hsc_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_hsccov_usaid.pptx", 
+  template_lexp_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_lifeexp_usaid.pptx", 
+  template_hsc_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_hsccov_pepfar.pptx",  
+  template_lexp_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_lifeexp_pepfar.pptx" )
 
 outputs <- list(
-  full_data = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
-  hsc_fig_uasid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavg_usaid.svg",
-  lifeexp_fig_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavg_usaid.svg",
-  hsc_fig_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_weightedavg_pepfar.svg",
-  lifeexp_fig_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_weightedavg_pepfar.svg"
+  select_pop_data = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv"
 )
 
 # munge ------------------------------------------------------------------------
@@ -73,8 +73,7 @@ selected_data <-  folder_path %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator,
          year, value, goal, date_data_pulled, ref_link) %>%
-  # keep only life expectancy and UHC indicators
-  # keep only countries in list provided by Karishma
+  # keep only life expectancy and UHC indicators, low income group
   filter(indicator %in% c(
     "uhc_service_coverage_index",
     "life_expectancy_at_birth_both_sexes_years",
@@ -82,7 +81,7 @@ selected_data <-  folder_path %>%
     "uhc_subindex2_ncd",
     "uhc_subindex3_mchn",
     "uhc_subindex4_id"), 
-    country %in% names$country_ghlist) %>%
+   income_group == "Low Income Country (World Bank Classification)") %>%
   # join with GH country list names to make sure names are the same across data sources
   left_join(., names,
     by = c("country" = "country_unweighted")) %>%
@@ -93,6 +92,11 @@ selected_data <-  folder_path %>%
     # fix missing usaid_region for Togo
     usaid_region = as.character(if_else(
       iso == "TGO", "Sub-Saharan Africa", usaid_region)),
+    # fix usaid_support for Togo since it is on the list provided by 
+    # Karishma 
+    usaid_supported = as.character(if_else(iso == "TGO", "Yes", usaid_supported)), 
+      # fix missing usaid support issue 
+     usaid_supported = as.character(replace_na(usaid_supported,"No")),
     # replace country names from unweighted data with names from GH list
     # provided by Karishma, otherwise keep the country name
     country = as.character(if_else(is.na(country_ghlist) == FALSE,
@@ -102,31 +106,17 @@ selected_data <-  folder_path %>%
          year, value, goal, date_data_pulled, ref_link) %>%
   distinct()
 
-# What percentage of the data includes countries supported by PEPFAR?
-country_by_support <- selected_data %>%
-  select(country, pepfar, income_group) %>%
-  group_by(country, pepfar, income_group) %>%
-  distinct()
+# check for no missing values in usaid_supported, should not have any
+assertthat::validate_that(noNA(selected_data$usaid_supported) == TRUE, 
+                         msg = "Warning, usaid_supported has missing values.")
 
-countries_by_support <- tabyl(country_by_support$pepfar)
-
-# ~73% (0.727) of countries in this dataset (48) are supported by PEPFAR
-# and 18 are not. It seems like we have class imbalance here
-
-# of the countries in each income group, how many are PEPFAR supported?
-countries_by_support_income <- tabyl(country_by_support, pepfar, income_group)
-
-# Among Low income selected countries of interest
-# 12 are PEPFAR and 6 are non-PEPFAR
-
+# bring in population data from World Bank
 pop_data <- world_pop %>%
   pivot_longer(
     cols = year_1960:year_2020,
     names_to = "year",
     values_to = "population") %>%
   select(country, year, population) %>%
-  # filter data by only countries of interest
-  filter(country %in% names$country_worldpop) %>%
   # join with GH country list names
   left_join(., names,
     by = c("country" = "country_worldpop")) %>%
@@ -140,36 +130,84 @@ pop_data <- world_pop %>%
   select(country, year, population) %>%
   distinct()
 
-# weight "value" by most recent population from each country -------------------
-# only contains data from 1960 onward, need previous decade
+# join data --------------------------------------------------------------------
 
-full_data <- selected_data %>%
+select_pop_data <- selected_data %>%
   left_join(., pop_data, by = c(
     "country","year")) %>%
-  drop_na(population) %>%
+  # filter data by years between 1960-2020
+  # since world_pop only goes back that far
+  filter(as.numeric(year) >= 1960 & as.numeric(year) <= 2020, 
+  # filter out Eritrea because it does not have population ests.
+  # for 2015, 2017, and 2019 for all uch indicators 
+  # nor for 2012-2020 for life expectancy indicators
+         iso != "ERI") %>%
   distinct() %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator, year, value, goal,
          population, date_data_pulled, ref_link) %>%
-  group_by(idea_region, usaid_region, who_region, country, iso,
-           income_group, indicator, year) %>%
   mutate(
     value = as.numeric(value),
-    population = as.numeric(population), 
-    weighted_value = round_half_up(weighted.mean(value, population), 2)) %>%
+    population = as.numeric(population))
+
+# About the data ---------------------------------------------------------------
+
+# What percentage of the data includes countries supported by USAID or PEPFAR?
+country_by_groupings <- select_pop_data %>%
+  ungroup() %>%
+  select(country, usaid_supported, pepfar) %>%
+  group_by(country, usaid_supported, pepfar) %>%
   distinct()
+
+# How many are usaid supported?
+countries_by_usaid <- tabyl(country_by_groupings, usaid_supported)
+# among low income countries: 2 non-USAID supported, 24 USAID supported
+
+# Which are those 2 non-USAID supported?
+notsupported <- country_by_groupings %>%
+  filter(usaid_supported == "No")
+# DPRK and Guinea-Bissau
+
+# How many are PEPFAR supported?
+countries_by_pepfar_income <- tabyl(country_by_groupings, pepfar)
+# 13 PEPFAR and 13 non-PEPFAR countries
+
+# Example calculation for one indicator, year, and pepfar category -------------
+# "UHC Service Coverage Index, 2005, PEPFAR supported countries
+
+uhc_yespepfar_2005 <- select_pop_data %>%
+  filter(indicator =="uhc_service_coverage_index", 
+         year == 2005, 
+         pepfar == "PEPFAR") %>%
+  group_by(year, pepfar) %>%
+  mutate(
+    weighted_avg = weighted.mean(value, population))
+
+# sum the values times the populations
+sum_wtvals <- sum(uhc_yespepfar_2005$value*uhc_yespepfar_2005$population)
+
+# sum the populations
+sum_pops <- sum(uhc_yespepfar_2005$population)
+
+# divide the summed weighted values by the summed population
+weighted_avg = sum_wtvals/sum_pops
+
+# show unweighted avg for comparison
+unweighted_avg = sum(uhc_yespepfar_2005$value)/13
 
 # visualize --------------------------------------------------------------------
 
 # What has been the change in HSC index in PEPFAR vs non-PEPFAR countries over time?
-# filter by indicator and lower income
-uhc_low_pepfar <- 
-  ggplot(uhc_low_pepfar <- full_data %>%
-         filter(indicator =="uhc_service_coverage_index" , 
-                income_group == "Low Income Country (World Bank Classification)"), 
+# filter by indicator
+uhc_pepfar <- 
+  ggplot(uhc_pepfar <- select_pop_data %>%
+           filter(indicator =="uhc_service_coverage_index") %>%
+           group_by(year, pepfar) %>%
+           mutate(
+             weighted_avg = weighted.mean(value, population)), 
   aes(
   x = year,
-  y = weighted_value,
+  y = weighted_avg,
   group = pepfar,
   color = pepfar)) +
   geom_smooth() +
@@ -204,14 +242,16 @@ uhc_low_pepfar <-
 
 
 # What has been the change in HSC index in USAID vs non-USAID countries over time?
-# filter by indicator and lower income
-uhc_low_usaid  <- 
-  ggplot(uhc_low_usaid <- full_data %>%
-         filter(indicator =="uhc_service_coverage_index" , 
-                income_group == "Low Income Country (World Bank Classification)")
+# filter by indicator and grouping var, 2 non-USAID countries
+uhc_usaid  <- 
+  ggplot(uhc_usaid <- select_pop_data %>%
+           filter(indicator =="uhc_service_coverage_index") %>%
+           group_by(year, usaid_supported) %>%
+           mutate(
+             weighted_avg = weighted.mean(value, population))
                 , aes(
   x = year,
-  y = weighted_value,
+  y = weighted_avg,
   group = usaid_supported,
   color = usaid_supported)) +
   geom_smooth() +
@@ -245,13 +285,15 @@ uhc_low_usaid  <-
     color = NULL)
 
 # What has been the change in Life Expectancy at Birth in PEPFAR vs non-PEPFAR countries over time?
-lexp_low_pepfar_fig <- 
-  ggplot(lexp_low_pepfar <- full_data %>%
-         filter(indicator =="life_expectancy_at_birth_both_sexes_years" , 
-                income_group == "Low Income Country (World Bank Classification)")
+lexp_pepfar_fig <- 
+  ggplot(lexp_pepfar<- select_pop_data %>%
+      filter(indicator =="life_expectancy_at_birth_both_sexes_years") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population))
        , aes(
   x = year,
-  y = weighted_value,
+  y = weighted_avg,
   group = pepfar,
   color = pepfar)) +
   geom_smooth() +
@@ -284,13 +326,15 @@ lexp_low_pepfar_fig <-
     color = NULL)
 
 # What has been the change in Life Expectancy at Birth in USAID vs non-USAID countries over time?
-lexp_low_usaid_fig <- 
-  ggplot(lexp_low_usaid <- full_data %>%
-         filter(indicator =="life_expectancy_at_birth_both_sexes_years" , 
-                income_group == "Low Income Country (World Bank Classification)")
+lexp_usaid_fig <- 
+  ggplot(lexp_usaid <- select_pop_data %>%
+           filter(indicator =="life_expectancy_at_birth_both_sexes_years") %>%
+           group_by(year, usaid_supported) %>%
+           mutate(
+             weighted_avg = weighted.mean(value, population))
        , aes(
   x = year,
-  y = weighted_value,
+  y = weighted_avg,
   group = usaid_supported,
   color = usaid_supported)) +
   geom_smooth() +
@@ -327,40 +371,64 @@ lexp_low_usaid_fig <-
 # HSC index
 
 # PEPFAR
-uhc_pepfar_dml <- dml(grid.arrange(uhc_low_pepfar,
-                              nrow = 1, widths = 12.5))
-
+uhc_pepfar_dml <- dml(grid.arrange(uhc_pepfar,
+                              nrow = 1, widths = 12.89))
 uhc_pepfar_template <- read_pptx(path = inputs$template_hsc_pepfar)
-
 uhc_pepfar_complete <- ph_with(uhc_pepfar_template, uhc_pepfar_dml,
                           location = ph_location(
                             left = 0.5,
                             top = 2.0,
-                            width = 12.5,
-                            height = 4.55,
+                            width = 12.89,
+                            height = 5.9,
                             newlabel = ""))
 
 print(uhc_pepfar_complete,
       target = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsccov_pepfar.pptx")
 
+lifexp_pepfar_dml <- dml(grid.arrange(lexp_pepfar_fig,nrow = 1, widths = 12.89))
+lifexp_pepfar_template <- read_pptx(path = inputs$template_lexp_pepfar)
+lifexp_pepfar_complete <- ph_with(lifexp_pepfar_template, lifexp_pepfar_dml,
+                               location = ph_location(
+                                 left = 0.5,
+                                 top = 2.0,
+                                 width = 12.89,
+                                 height = 5.9,
+                                 newlabel = ""))
 
-# # USAID
-# hsc_usaid_dml <- dml(grid.arrange(uhc_low_usaid,
-#                                    nrow = 1, widths = 12.75))
-# 
-# # Life Expectancy
-# 
-# # PEPFAR
-# lexp_pepfar_dml <- dml(grid.arrange(lexp_low_pepfar_fig,
-#                                    nrow = 1, widths = 12.75))
-# 
-# # USAID
-# lexp_usaid_dml <- dml(grid.arrange(lexp_low_usaid_fig,
-#                                   nrow = 1, widths = 12.75))
+print(lifexp_pepfar_complete,
+      target = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_pepfar.pptx")
+
+
+# USAID
+uhc_usaid_dml <- dml(grid.arrange(uhc_usaid,nrow = 1, widths = 12.89))
+uhc_usaid_template <- read_pptx(path = inputs$template_hsc_usaid)
+uhc_usaid_complete <- ph_with(uhc_usaid_template, uhc_usaid_dml,
+                               location = ph_location(
+                                 left = 0.5,
+                                 top = 2.0,
+                                 width = 12.89,
+                                 height = 5.9,
+                                 newlabel = ""))
+
+print(uhc_usaid_complete,
+      target = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsccov_usaid.pptx")
+
+lifexp_usaid_dml <- dml(grid.arrange(lexp_usaid_fig,nrow = 1, widths = 12.89))
+lifexp_usaid_template <- read_pptx(path = inputs$template_lexp_usaid)
+lifexp_usaid_complete <- ph_with(lifexp_usaid_template, lifexp_usaid_dml,
+                                  location = ph_location(
+                                    left = 0.5,
+                                    top = 2.0,
+                                    width = 12.89,
+                                    height = 5.9,
+                                    newlabel = ""))
+
+print(lifexp_usaid_complete,
+      target = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifeexp_usaid.pptx")
 
 # save data --------------------------------------------------------------------
 
 # add full data set here
-write_excel_csv(full_data, outputs$full_data)
+write_excel_csv(select_pop_data, outputs$select_pop_data)
 
 # end
