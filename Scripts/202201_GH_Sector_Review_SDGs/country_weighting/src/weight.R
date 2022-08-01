@@ -4,7 +4,7 @@
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-07-29
+# DATE UPDATED: 2022-08-01
 
 # dependencies -----------------------------------------------------------------
 
@@ -45,13 +45,15 @@ inputs <- list(
 
 outputs <- list(
   select_pop_data = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
-  hsc_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_pepfar_fig.svg",
-  lifexp_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_pepfar_fig.svg",
-  hscid_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscID_pepfar_fig.svg",
-  hsc_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_usaid_fig.svg",
-  lifexp_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_usaid_fig.svg",
-  hscid_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscID_usaid_fig.svg", 
-  hscca_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscCA_pepfar_fig.svg")
+  hsc_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_lowinc_pepfar_fig.svg",
+  hsc_lmic_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_lmic_pepfar_fig.svg",
+  lexp_lmi_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lmic_pepfar_fig.svg",
+  lifexp_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lowinc_pepfar_fig.svg",
+  hscid_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscID_lowinc_pepfar_fig.svg",
+  hsc_low_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_lowinc_usaid_fig.svg",
+  lifexp_low_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lowinc_usaid_fig.svg",
+  hscid_low_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscID_lowinc_usaid_fig.svg", 
+  hscca_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscCA_lowinc_pepfar_fig.svg")
 
 # munge ------------------------------------------------------------------------
 
@@ -126,8 +128,6 @@ pop_data <- world_pop %>%
       country_ghlist, country))) %>%
   select(country, year, population) %>%
   distinct()
-
-# join data --------------------------------------------------------------------
 
 select_pop_data <- selected_data %>%
   left_join(., pop_data, by = c(
@@ -212,7 +212,7 @@ uhc_low_pepfar_fig <-
     group = pepfar, color = pepfar)) +
   geom_point(aes(x = year, y = value,
     color = pepfar, fill = pepfar),
-    alpha = 0.3,
+    alpha = 0.4,
   position = position_jitter(width = 0.2)) +
   geom_text(aes(x = year, y = value, color = pepfar,
     label = if_else(value > 50, as.character(iso), "")),
@@ -221,13 +221,9 @@ uhc_low_pepfar_fig <-
   size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #   x = 2006, y = 100,
-  #   label = "  PEPFAR first authorized May 27, 2003",
-  #   size = 3,
-  #   color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash", 
+    alpha = 0.5) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -237,8 +233,8 @@ uhc_low_pepfar_fig <-
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "PEPFAR" = usaid_blue,
-      "Non-PEPFAR" = usaid_darkgrey),
+      "PEPFAR" = denim,
+      "Non-PEPFAR" = denim_light),
     labels = NULL) +
   theme(
     axis.text = element_text(
@@ -250,6 +246,12 @@ uhc_low_pepfar_fig <-
     x = NULL,
     y = NULL,
     color = NULL)
+
+# difference between 2000 and 2019?
+diff_uhc_low_pepfar <- uhc_low_pepfar %>%
+  ungroup() %>%
+  filter(pepfar == "PEPFAR", 
+         year %in% c("2000", "2019"))
 
 # What has been the change in UHC index over time in PEPFAR vs non-PEPFAR LMIC?
 # LMI countries 
@@ -271,7 +273,7 @@ uhc_lmi_pepfar_fig <-
                   group = pepfar, color = pepfar)) +
   geom_point(aes(x = year, y = value,
                  color = pepfar, fill = pepfar),
-             alpha = 0.3,
+             alpha = 0.4,
              position = position_jitter(width = 0.2)) +
   geom_text(aes(x = year, y = value, color = pepfar,
                 label = if_else(value > 70, as.character(iso), "")),
@@ -280,13 +282,9 @@ uhc_lmi_pepfar_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #   x = 2006, y = 100,
-  #   label = "  PEPFAR first authorized May 27, 2003",
-  #   size = 3,
-  #   color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -296,8 +294,8 @@ uhc_lmi_pepfar_fig <-
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "PEPFAR" = usaid_blue,
-      "Non-PEPFAR" = usaid_darkgrey),
+      "PEPFAR" = denim,
+      "Non-PEPFAR" = denim_light),
     labels = NULL) +
   theme(
     axis.text = element_text(
@@ -331,7 +329,7 @@ uhc_low_id_pepfar_fig <-
                   group = pepfar, color = pepfar)) +
   geom_point(aes(x = year, y = value,
                  color = pepfar, fill = pepfar),
-             alpha = 0.3,
+             alpha = 0.4,
              position = position_jitter(width = 0.2)) +
   geom_text(aes(x = year, y = value, color = pepfar,
                 label = if_else(value > 60, as.character(iso), "")),
@@ -340,13 +338,9 @@ uhc_low_id_pepfar_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "  PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -356,8 +350,8 @@ uhc_low_id_pepfar_fig <-
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "PEPFAR" = usaid_blue,
-      "Non-PEPFAR" = usaid_darkgrey),
+      "PEPFAR" = denim,
+      "Non-PEPFAR" = denim_light),
     labels = NULL) +
   theme(
     axis.text = element_text(
@@ -369,6 +363,12 @@ uhc_low_id_pepfar_fig <-
     x = NULL,
     y = NULL,
     color = NULL)
+
+# difference between 2000 and 2019?
+diff_uhc_low_id_pepfar <- uhc_low_id_pepfar %>%
+  ungroup() %>%
+  filter(pepfar == "Non-PEPFAR", 
+         year %in% c("2000", "2019"))
 
 # which countries were included in the above figure?
 countries_uhc_low_id_pepfar <- uhc_low_id_pepfar %>%
@@ -391,7 +391,7 @@ uhc_low_ca_pepfar_fig <-
                   group = pepfar, color = pepfar)) +
   geom_point(aes(x = year, y = value,
                  color = pepfar, fill = pepfar),
-             alpha = 0.3,
+             alpha = 0.4,
              position = position_jitter(width = 0.2)) +
   geom_text(aes(x = year, y = value, color = pepfar,
                 label = if_else(value > 50, as.character(iso), "")),
@@ -400,13 +400,9 @@ uhc_low_ca_pepfar_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "  PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -416,8 +412,8 @@ uhc_low_ca_pepfar_fig <-
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "PEPFAR" = usaid_blue,
-      "Non-PEPFAR" = usaid_darkgrey),
+      "PEPFAR" = denim,
+      "Non-PEPFAR" = denim_light),
     labels = NULL) +
   theme(
     axis.text = element_text(
@@ -445,7 +441,7 @@ uhc_low_usaid_fig  <-
                 group = usaid_supported, color = usaid_supported)) +
   geom_point(aes(x = year, y = value,
                  color = usaid_supported, fill = usaid_supported),
-                 alpha = 0.3,
+                 alpha = 0.4,
              position = position_jitter(width = 0.2)) +
   geom_text(aes(x = year, y = value, color = usaid_supported,
                 label = if_else(value > 50, as.character(iso), "")),
@@ -454,13 +450,9 @@ uhc_low_usaid_fig  <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "  PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -470,8 +462,8 @@ uhc_low_usaid_fig  <-
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "Yes" = usaid_blue,
-      "No" = usaid_darkgrey),
+      "Yes" = denim,
+      "No" = denim_light),
     labels = NULL) +
   theme(
     axis.text = element_text(
@@ -484,11 +476,23 @@ uhc_low_usaid_fig  <-
     y = NULL,
     color = NULL)
 
+# which countries are being compared?
+countries_uhc_low_usaid <- uhc_low_usaid %>%
+  ungroup() %>%
+  select(country, usaid_supported) %>%
+  distinct()
+
+# difference between 2000 and 2019?
+diff_uhc_low_usaid <- uhc_low_usaid %>%
+  ungroup() %>%
+  filter(usaid_supported == "Yes", 
+         year %in% c("2000", "2019"))
+
 # What has been the change in the UHC sub index on infectious diseases over time
 # in USAID vs non-USAID countries?
 uhc_low_id_usaid_fig <-
   ggplot(
-    uhc_low_usaid_supported <- select_pop_data %>%
+    uhc_low_ID_usaid_supported <- select_pop_data %>%
       filter(indicator == "uhc_subindex4_id",
              income_group == "Low Income Country (World Bank Classification)") %>%
       group_by(year, usaid_supported) %>%
@@ -499,7 +503,7 @@ uhc_low_id_usaid_fig <-
                   group = usaid_supported, color = usaid_supported)) +
   geom_point(aes(x = year, y = value,
                  color = usaid_supported, fill = usaid_supported),
-             alpha = 0.3,
+             alpha = 0.4,
              position = position_jitter(width = 0.2)) +
   geom_text(aes(x = year, y = value, color = usaid_supported,
                 label = if_else(value > 60, as.character(iso), "")),
@@ -508,13 +512,9 @@ uhc_low_id_usaid_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "  PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   # hsc is an index from 0-100
   scale_y_continuous(
@@ -524,8 +524,8 @@ uhc_low_id_usaid_fig <-
     breaks = c(2000, 2005, 2010, 2015, 2019)) +
   scale_color_manual(
     values = c(
-      "Yes" = usaid_blue,
-      "No" = usaid_darkgrey),
+      "Yes" = denim,
+      "No" = denim_light),
     labels = NULL) +
   theme(
     axis.text = element_text(
@@ -537,6 +537,68 @@ uhc_low_id_usaid_fig <-
     x = NULL,
     y = NULL,
     color = NULL)
+
+# difference between 2000 and 2019?
+diff_uhc_low_ID_usaid_supported <- uhc_low_ID_usaid_supported %>%
+  ungroup() %>%
+  filter(usaid_supported == "Yes", 
+         year %in% c("2000", "2019"))
+
+# What has been the change in the UHC sub index on capacity and access over time
+# in PEPFAR vs non-PEPFAR countries?
+uhc_low_ca_usaid_fig <-
+  ggplot(
+    uhc_low_ca_USAID <- select_pop_data %>%
+      filter(indicator == "uhc_subindex1_capacity_access", 
+             income_group == "Low Income Country (World Bank Classification)") %>%
+      group_by(year, usaid_supported) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_smooth(aes(x = year, y = weighted_avg,
+                  group = usaid_supported, color = usaid_supported)) +
+  geom_point(aes(x = year, y = value,
+                 color = usaid_supported, fill = usaid_supported),
+             alpha = 0.4,
+             position = position_jitter(width = 0.2)) +
+  geom_text(aes(x = year, y = value, color = usaid_supported,
+                label = if_else(value > 50, as.character(iso), "")),
+            hjust = -0.4, vjust = 0.4,
+            position = position_jitter(width = -0.4),
+            size = 2) +
+  geom_vline(
+    xintercept = 2003,
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
+  si_style_ygrid() +
+  # hsc is an index from 0-100
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
+  scale_x_continuous(
+    breaks = c(2000, 2005, 2010, 2015, 2019)) +
+  scale_color_manual(
+    values = c(
+      "Yes" = denim,
+      "No" = denim_light),
+    labels = NULL) +
+  theme(
+    axis.text = element_text(
+      family = "Source Sans Pro",
+      size = 10,
+      color = "#505050"),
+    legend.position = "none") +
+  labs(
+    x = NULL,
+    y = NULL,
+    color = NULL)
+
+# difference between 2000 and 2019?
+diff_uhc_low_ca_USAID <- uhc_low_ca_USAID %>%
+  ungroup() %>%
+  filter(usaid_supported == "Yes", 
+         year %in% c("2000", "2019"))
 
 # What has been the change in Life Expectancy at Birth in PEPFAR vs non-PEPFAR countries over time?
 # low income countries
@@ -552,7 +614,7 @@ lexp_low_pepfar_fig <-
                 group = pepfar, color = pepfar)) +
   geom_point(aes(x = year, y = value,
                  color = pepfar, fill = pepfar),
-                 alpha = 0.3,
+                 alpha = 0.4,
              position = position_jitter(width = 0.3)) +
   geom_text(aes(x = year, y = value, color = pepfar,
                 label = if_else(value < 20, as.character(iso), "")),
@@ -561,13 +623,9 @@ lexp_low_pepfar_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "  PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   scale_y_continuous(
     limits = c(0, 85),
@@ -576,8 +634,8 @@ lexp_low_pepfar_fig <-
     breaks = c(1960, 1970, 1980, 1990, 2000, 2010, 2020)) +
   scale_color_manual(
     values = c(
-      "PEPFAR" = usaid_blue,
-      "Non-PEPFAR" = usaid_darkgrey),
+      "PEPFAR" = denim,
+      "Non-PEPFAR" = denim_light),
     labels = NULL) +
   theme( axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
@@ -587,6 +645,14 @@ lexp_low_pepfar_fig <-
     x = NULL,
     y = NULL,
     color = NULL)
+
+
+# difference between 2000 and 2019?
+diff_lexp_low_pepfar <- lexp_low_pepfar %>%
+  ungroup() %>%
+  filter(pepfar == "Non-PEPFAR", 
+         year %in% c("2003", "2020"))
+
 
 # What has been the change in Life Expectancy at Birth in PEPFAR vs non-PEPFAR countries over time?
 # LMIC 
@@ -604,7 +670,7 @@ lexp_lmi_pepfar_fig <-
                   group = pepfar, color = pepfar)) +
   geom_point(aes(x = year, y = value,
                  color = pepfar, fill = pepfar),
-             alpha = 0.3,
+             alpha = 0.4,
              position = position_jitter(width = 0.3)) +
   geom_text(aes(x = year, y = value, color = pepfar,
                 label = if_else(value < 30, as.character(iso), "")),
@@ -613,13 +679,9 @@ lexp_lmi_pepfar_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "  PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
   si_style_ygrid() +
   scale_y_continuous(
     limits = c(0, 85),
@@ -628,8 +690,8 @@ lexp_lmi_pepfar_fig <-
     breaks = c(1960, 1970, 1980, 1990, 2000, 2010, 2020)) +
   scale_color_manual(
     values = c(
-      "PEPFAR" = usaid_blue,
-      "Non-PEPFAR" = usaid_darkgrey),
+      "PEPFAR" = denim,
+      "Non-PEPFAR" = denim_light),
     labels = NULL) +
   theme( axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
@@ -653,7 +715,7 @@ lexp_low_usaid_fig <-
                 group = usaid_supported, color = usaid_supported)) +
   geom_point(aes(x = year, y = value,
                  color = usaid_supported, fill = usaid_supported), 
-                 alpha = 0.3,
+                 alpha = 0.4,
              position = position_jitter(width = 0.3)) +
   geom_text(aes(x = year, y = value, color = usaid_supported,
                 label = if_else(value < 20, as.character(iso), "")),
@@ -662,13 +724,9 @@ lexp_low_usaid_fig <-
             size = 2) +
   geom_vline(
     xintercept = 2003,
-    color = usaid_red,
-    linetype = "longdash") +
-  # annotate("text",
-  #          x = 2006, y = 100,
-  #          label = "PEPFAR first authorized May 27, 2003",
-  #          size = 3,
-  #          color = usaid_red) +
+    color = trolley_grey,
+    linetype = "longdash", 
+    alpha = 0.5) +
   si_style_ygrid() +
   scale_y_continuous(
     limits = c(0, 85),
@@ -677,8 +735,8 @@ lexp_low_usaid_fig <-
     breaks = c(1960, 1970, 1980, 1990, 2000, 2010, 2020)) +
   scale_color_manual(
     values = c(
-      "Yes" = usaid_blue,
-      "No" = usaid_darkgrey),
+      "Yes" = denim,
+      "No" = denim_light),
     labels = NULL) +
   theme( axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
@@ -689,13 +747,21 @@ lexp_low_usaid_fig <-
     y = NULL,
     color = NULL)
 
+# difference between 2000 and 2019?
+diff_lexp_low_usaid <- lexp_low_usaid %>%
+  ungroup() %>%
+  filter(usaid_supported == "No", 
+         year %in% c("2003", "2020"))
+
 # save images ------------------------------------------------------------------
 
 # PEPFAR
 hsc_low_pepfar_svg <- si_save(outputs$hsc_low_pepfar_saved, plot = uhc_low_pepfar_fig)
-lifexp_low_pepfar_svg <- si_save(outputs$lifexp_pepfar_saved, plot = lexp_low_pepfar_fig)
-hscID_low_pepfar_svg <- si_save(outputs$hscid_pepfar_saved, plot = uhc_low_id_pepfar_fig)
-uhc_low_ca_pepfar_svg <- si_save(outputs$hscca_pepfar_saved, plot = uhc_low_ca_pepfar_fig)
+# hsc_lmic_pepfar_saved <- si_save(outputs$hsc_lmic_pepfar_saved, plot = uhc_lmi_pepfar_fig)
+lifexp_low_pepfar_svg <- si_save(outputs$lifexp_low_pepfar_saved, plot = lexp_low_pepfar_fig)
+hscID_low_pepfar_svg <- si_save(outputs$hscid_low_pepfar_saved, plot = uhc_low_id_pepfar_fig)
+uhc_low_ca_pepfar_svg <- si_save(outputs$hscca_low_pepfar_saved, plot = uhc_low_ca_pepfar_fig)
+# lexp_lmi_pepfar_svg <- si_save(outputs$lexp_lmi_pepfar_saved, plot = lexp_lmi_pepfar_fig)
 
 # USAID
 hsc_low_usaid_svg <- si_save(outputs$hsc_low_usaid_saved, plot = uhc_low_usaid_fig)
