@@ -291,3 +291,21 @@ df_long_flt %>%
 si_save("Images/lp_remake_base_title_6.png")
 
 # SPINDOWN ============================================================================
+
+  # What would a diverging bar graph version look like?
+  df_div <- df %>% mutate(International = -International)
+  
+
+  df_div %>% 
+    mutate(ou = fct_reorder(ou, Local)) %>% 
+    ggplot(aes(y = ou)) +
+    geom_col(aes(x = Local), fill = scooter, width = 0.5) +
+    geom_col(aes(x = International), fill = old_rose, width = 0.5) +
+    geom_vline(xintercept = 0, size = 1, color = grey90k) +
+    si_style_nolines() +
+    labs(x = NULL, y = NULL) +
+    scale_x_continuous(lim = c(-1, 1), labels = percent, 
+                       position = "top") 
+    
+    si_save("Images/lp_viz_remake_diverging.svg")
+    
