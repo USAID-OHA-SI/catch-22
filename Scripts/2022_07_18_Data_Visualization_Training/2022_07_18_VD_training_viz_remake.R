@@ -302,6 +302,14 @@ si_save("Images/lp_remake_base_title_6.png")
     geom_col(aes(x = Local), fill = scooter, width = 0.5) +
     geom_col(aes(x = International), fill = old_rose, width = 0.5) +
     geom_vline(xintercept = 0, size = 1, color = grey90k) +
+    geom_text(aes(x = Local, label = percent(Local, 1),
+                  size = 8/.pt,
+                  family = "Source Sans Pro"),
+                  hjust = -0.1) +
+  geom_text(aes(x = International, label = percent(abs(International), 1),
+                size = 8/.pt,
+                family = "Source Sans Pro"),
+            hjust = 1.1) +
     si_style_nolines() +
     labs(x = NULL, y = NULL) +
     scale_x_continuous(lim = c(-1, 1), labels = percent, 
