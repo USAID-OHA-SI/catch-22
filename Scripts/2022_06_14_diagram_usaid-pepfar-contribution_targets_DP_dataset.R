@@ -4,7 +4,13 @@
 # LICENSE:  MIT
 # DATE:     2022-01-03
 # UPDATED:  2022-05-31
-# NOTE:     adapted from 2022_01_03_gawande_briefing_usaid-pepfar-contribution.R
+# NOTE:     Adapted from 2022_01_03_gawande_briefing_usaid-pepfar-contribution.R
+#           Created using a data set of DataPacks compiled & combined by 
+#           Expenditure Branch, before the final 2023 MSD was available 
+#           Used to generate images for regional briefings (Africa & LAC) 
+#           A more updated/flexible version of the code was created for the Asia 
+#           data set once the Q2 clean MSD was released (which included the full 
+#           set of FY23 targets) (see XXX)
 
 # DEPENDENCIES ------------------------------------------------------------
 
@@ -28,9 +34,8 @@ library(countrycode)
 
 # GLOBAL VARIABLES --------------------------------------------------------
 
-
 load_secrets()
-setwd("~/GitHub/catch-22/Scripts")
+#setwd("~/GitHub/catch-22/Scripts")
 
 # PARAMETERS
 region_sel<-"LAC" ## The region for which you are calculating targets
@@ -38,8 +43,8 @@ region_sel<-"LAC" ## The region for which you are calculating targets
 
 # IMPORT ------------------------------------------------------------------
 
-df <- si_path("MSD") %>% 
-  return_latest("OU_IM") %>%
+df <- si_path("path_datapacks") %>% 
+  return_latest("Datapack_Agency_IM") %>%
   read.csv()
 
 df_meta <- get_outable(datim_user(), datim_pwd()) %>%
@@ -127,7 +132,7 @@ agency_targets <- function(region, indicator_type) {
     pivot_wider(names_from=funding_agency, values_from=targets) %>%
     mutate(share=USAID/PEPFAR) %>%
     filter(usaid_region == region)
-    
+  
     print(df_region_wide)
 }
   
