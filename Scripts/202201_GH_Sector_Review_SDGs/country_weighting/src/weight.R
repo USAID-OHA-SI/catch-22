@@ -4,7 +4,7 @@
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-08-01
+# DATE UPDATED: 2022-08-12
 
 # dependencies -----------------------------------------------------------------
 
@@ -27,48 +27,39 @@
   library(sysfonts)
   library(svglite)
   library(extrafont)
+  library(googlesheets4)
 
 # global variables -------------------------------------------------------------
 
 ref_id <- "ae3887aa"
+load_secrets()
 
 # set inputs and outputs -------------------------------------------------------
   
-folder_path <- "catch-22/Dataout/"
-  
-inputs <- list(
-  country_names = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/hand/country_crossmap.csv", 
-  template_hsc_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_hsccov_usaid.pptx", 
-  template_lexp_usaid = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_lifeexp_usaid.pptx", 
-  template_hsc_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_hsccov_pepfar.pptx",  
-  template_lexp_pepfar = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/input/template_lifeexp_pepfar.pptx" )
-
 outputs <- list(
+  # data used in figures 
   select_pop_data = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/GH_scorecard_indicators_weights_2022-07-21.csv",
-  hsc_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_lowinc_pepfar_fig.svg",
-  hsc_lmic_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_lmic_pepfar_fig.svg",
-  lexp_lmi_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lmic_pepfar_fig.svg",
-  lifexp_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lowinc_pepfar_fig.svg",
-  hscid_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscID_lowinc_pepfar_fig.svg",
-  hsc_low_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hsc_lowinc_usaid_fig.svg",
-  lifexp_low_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lowinc_usaid_fig.svg",
-  hscid_low_usaid_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscID_lowinc_usaid_fig.svg", 
-  hscca_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/hscCA_lowinc_pepfar_fig.svg")
+  # UHC LI countries by PEPFAR
+  uhc_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/uhc_lowinc_pepfar_fig.svg",
+  # LEXP LI countries by PEPFAR
+lifexp_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/lifexp_lowinc_pepfar_fig.svg",
+  # UHC (ID) LI countries by PEPFAR
+  uhcid_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/uhcID_lowinc_pepfar_fig.svg",
+  # UHC (CA) LI countries by PEPFAR
+uhcca_low_pepfar_saved = "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/output/uhcCA_lowinc_pepfar_fig.svg", 
+  # Combined (LI+LMI) countries 
 
 # munge ------------------------------------------------------------------------
 
 # read in country names from all sources for consistency
-names <- read_csv(inputs$country_names,
-  show_col_types = FALSE) %>%
+names <- read_sheet("1tQNqPsgekfty--oA5va4PQCFMrZBVro4fGjFk8zaa70") %>%
   clean_names() %>%
   mutate(
     across(.cols = country_ghlist:country_worldpop, ~ as.character(.)))
 
 # unweighted data
 
-selected_data <-  folder_path %>%
-  return_latest("GH_scorecard_indicators_2022-07-26.csv") %>%
-  read_csv(show_col_types = FALSE) %>%
+selected_data <-  read_sheet("17oCZviSJ8EIJ3gqP6Z9H2P4ToUORNykn8EwbLrxWp6I") %>%
   clean_names() %>%
   select(idea_region, usaid_region, who_region, country, iso, cntry_group,
          pepfar, usaid_supported, income_group, indicator,
@@ -197,7 +188,7 @@ unweighted_avg = sum(uhc_yespepfar_2005$value)/13
 
 # visualize --------------------------------------------------------------------
 
-# What has been the change in HSC index in PEPFAR vs non-PEPFAR countries over time?
+# What has been the change in uhc index in PEPFAR vs non-PEPFAR countries over time?
 # low income countries
 uhc_low_pepfar_fig <-
   ggplot(
@@ -225,7 +216,7 @@ uhc_low_pepfar_fig <-
     linetype = "longdash", 
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -286,7 +277,7 @@ uhc_lmi_pepfar_fig <-
     linetype = "longdash",
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -342,7 +333,7 @@ uhc_low_id_pepfar_fig <-
     linetype = "longdash",
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -404,7 +395,7 @@ uhc_low_ca_pepfar_fig <-
     linetype = "longdash",
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -427,7 +418,7 @@ uhc_low_ca_pepfar_fig <-
     color = NULL)
 
 
-# What has been the change in HSC index in USAID vs non-USAID countries over time?
+# What has been the change in uhc index in USAID vs non-USAID countries over time?
 # 2 non-USAID countries
 uhc_low_usaid_fig  <- 
   ggplot(uhc_low_usaid <- select_pop_data %>%
@@ -454,7 +445,7 @@ uhc_low_usaid_fig  <-
     linetype = "longdash",
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -516,7 +507,7 @@ uhc_low_id_usaid_fig <-
     linetype = "longdash",
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -572,7 +563,7 @@ uhc_low_ca_usaid_fig <-
     linetype = "longdash",
     alpha = 0.5) +
   si_style_ygrid() +
-  # hsc is an index from 0-100
+  # uhc is an index from 0-100
   scale_y_continuous(
     limits = c(0, 100),
     breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
@@ -738,7 +729,7 @@ lexp_low_usaid_fig <-
       "Yes" = denim,
       "No" = denim_light),
     labels = NULL) +
-  theme( axis.text = element_text(family = "Source Sans Pro",
+  theme(axis.text = element_text(family = "Source Sans Pro",
                                   size = 10,
                                   color = "#505050"),
          legend.position = "none") +
@@ -756,17 +747,10 @@ diff_lexp_low_usaid <- lexp_low_usaid %>%
 # save images ------------------------------------------------------------------
 
 # PEPFAR
-hsc_low_pepfar_svg <- si_save(outputs$hsc_low_pepfar_saved, plot = uhc_low_pepfar_fig)
-# hsc_lmic_pepfar_saved <- si_save(outputs$hsc_lmic_pepfar_saved, plot = uhc_lmi_pepfar_fig)
+uhc_low_pepfar_svg <- si_save(outputs$uhc_low_pepfar_saved, plot = uhc_low_pepfar_fig)
 lifexp_low_pepfar_svg <- si_save(outputs$lifexp_low_pepfar_saved, plot = lexp_low_pepfar_fig)
-hscID_low_pepfar_svg <- si_save(outputs$hscid_low_pepfar_saved, plot = uhc_low_id_pepfar_fig)
-uhc_low_ca_pepfar_svg <- si_save(outputs$hscca_low_pepfar_saved, plot = uhc_low_ca_pepfar_fig)
-# lexp_lmi_pepfar_svg <- si_save(outputs$lexp_lmi_pepfar_saved, plot = lexp_lmi_pepfar_fig)
-
-# USAID
-hsc_low_usaid_svg <- si_save(outputs$hsc_low_usaid_saved, plot = uhc_low_usaid_fig)
-lifexp_low_usaid_svg <- si_save(outputs$lifexp_low_usaid_saved, plot = lexp_low_usaid_fig)
-hscID_low_usaid_svg <- si_save(outputs$hscid_low_usaid_saved, plot = uhc_low_id_usaid_fig)
+uhcID_low_pepfar_svg <- si_save(outputs$uhcid_low_pepfar_saved, plot = uhc_low_id_pepfar_fig)
+uhc_low_ca_pepfar_svg <- si_save(outputs$uhcca_low_pepfar_saved, plot = uhc_low_ca_pepfar_fig)
 
 # save data --------------------------------------------------------------------
 
