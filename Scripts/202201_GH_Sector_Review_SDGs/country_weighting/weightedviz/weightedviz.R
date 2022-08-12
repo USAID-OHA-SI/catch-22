@@ -1,0 +1,476 @@
+
+# PROJECT:  catch-22
+# AUTHOR:   J.Hoehner | USAID/PHI
+# PURPOSE:  To adjust estimates by population for comparison
+# REF ID:   ae3887aa
+# LICENSE:  MIT
+# DATE CREATED: 2022-07-15
+# DATE UPDATED: 2022-08-12
+
+# dependencies -----------------------------------------------------------------
+
+  library(glamr)
+  library(glitr)
+  library(tidyverse)
+  library(janitor)
+  library(glue)
+  library(lubridate)
+  library(openintro)
+  library(ggtext)
+  library(sysfonts)
+  library(svglite)
+  library(extrafont)
+  library(googlesheets4)
+
+# global variables -------------------------------------------------------------
+
+ref_id <- "ae3887aa"
+load_secrets()
+output_loc <- "catch-22/Scripts/202201_GH_Sector_Review_SDGs/country_weighting/weightedviz/output"
+date <- today()
+
+# repeated settings for UHC figures
+uhc_settings <- function(ggobj) {
+  
+  ggobj <- ggobj +
+    geom_smooth(aes(
+      x = year, y = weighted_avg,
+      group = pepfar, color = pepfar)) +
+    geom_point(aes(
+      x = year, y = value,
+      color = pepfar, fill = pepfar),
+      alpha = 0.4,
+      position = position_jitter(width = 0.2)) +
+    geom_vline(
+      xintercept = 2003,
+      color = trolley_grey,
+      linetype = "longdash",
+      alpha = 0.5) +
+    si_style_ygrid() +
+    # uhc is an index from 0-100
+    scale_y_continuous(
+      limits = c(0, 100),
+      breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
+    scale_x_continuous(
+      breaks = c(2000, 2005, 2010, 2015, 2019)) +
+    scale_color_manual(
+      values = c(
+        "PEPFAR" = denim,
+        "Non-PEPFAR" = usaid_medgrey),
+      labels = NULL) +
+    theme(
+      axis.text = element_text(
+        family = "Source Sans Pro",
+        size = 10,
+        color = "#505050"),
+      legend.position = "none") +
+    labs(
+      x = NULL,
+      y = NULL,
+      color = NULL)
+  
+  return(ggobj)
+  
+}
+
+# repeated settings for Life Exp. figures
+lexp_settings <- function(ggobj) {
+  
+  ggobj <- ggobj +
+    geom_smooth(aes(
+      x = year, y = weighted_avg,
+      group = pepfar, color = pepfar)) +
+    geom_point(aes(
+      x = year, y = value,
+      color = pepfar, fill = pepfar),
+      alpha = 0.4,
+      position = position_jitter(width = 0.3)) +
+    geom_vline(
+      xintercept = 2003,
+      color = trolley_grey,
+      linetype = "longdash",
+      alpha = 0.5) +
+    si_style_ygrid() +
+    scale_y_continuous(
+      limits = c(0, 85),
+      breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80)) +
+    scale_x_continuous(
+      breaks = c(1990, 2000, 2010, 2020)) +
+    scale_color_manual(
+      values = c(
+        "PEPFAR" = denim,
+        "Non-PEPFAR" = usaid_medgrey),
+      labels = NULL) +
+    theme(
+      axis.text = element_text(
+        family = "Source Sans Pro",
+        size = 10,
+        color = "#505050"),
+      legend.position = "none") +
+    labs(
+      x = NULL,
+      y = NULL,
+      color = NULL)
+  
+}
+
+# read in ----------------------------------------------------------------------
+
+# produced by catch-22/Scripts/202201_GH_Sector_Review_SDGs/
+# country_weighting/src/clean.R
+figure_data <- read_sheet("17ZBOzPux0lgkmN48BtE3yzKpeEzDLVmx9B4Pei9nGbw", 
+                          sheet = "figure_data")
+
+# visualize --------------------------------------------------------------------
+  
+# LI countries only ------------------------------------------------------------
+
+# filter data by low income status for all LI country figures
+low_income <- figure_data %>%
+    filter(income_group == "Low Income Country (World Bank Classification)")
+
+# What has been the change in the UHC index over time 
+# in PEPFAR vs non-PEPFAR countries?
+uhc_low_pepfar_fig <-
+  ggplot(
+    # indicator changes with each figure
+    uhc_low_pepfar <- low_income %>%
+      filter(
+        indicator == "uhc_service_coverage_index") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    # value to start labelling outliers changes with each figure
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 50, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+# apply common UHC figure settings
+uhc_low_pepfar_fig <- uhc_settings(uhc_low_pepfar_fig)
+
+# which countries were included in the above figure?
+countries_uhc_low_pepfar <- uhc_low_pepfar %>%
+  ungroup() %>%
+  select(country, pepfar) %>%
+  distinct()
+
+# What has been the change in the UHC sub index on infectious diseases over time
+# in PEPFAR vs non-PEPFAR countries?
+uhc_low_id_pepfar_fig <-
+  ggplot(
+    uhc_low_id_pepfar <- low_income %>%
+      filter(
+        indicator == "uhc_subindex4_id") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 60, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_low_id_pepfar_fig <- uhc_settings(uhc_low_id_pepfar_fig)
+
+# What has been the change in the UHC sub index on capacity and access over time
+# in PEPFAR vs non-PEPFAR countries?
+uhc_low_ca_pepfar_fig <-
+  ggplot(
+    uhc_low_ca_pepfar <- low_income %>%
+      filter(
+        indicator == "uhc_subindex1_capacity_access") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 50, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_low_ca_pepfar_fig <- uhc_settings(uhc_low_ca_pepfar_fig)
+
+# What has been the change in Life Expectancy at Birth in 
+# PEPFAR vs non-PEPFAR countries over time?
+# low income countries
+
+lexp_low_pepfar_fig <-
+  ggplot(
+    lexp_low_pepfar <- low_income %>%
+      # indicator changes with each figure
+      filter(
+        indicator == "life_expectancy_at_birth_both_sexes_years") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    # value at which to label "outliers" changes with each figure
+    x = year, y = value, color = pepfar,
+    label = if_else(value < 20, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.3,
+  position = position_jitter(width = -0.3),
+  size = 2) 
+
+# apply settings common to all Life Exp figs
+lexp_low_pepfar_fig <- lexp_settings(lexp_low_pepfar_fig)
+
+# LMI + LI countries -----------------------------------------------------------
+# figure_data contains both LI and LMI country data
+
+# What has been the change in uhc index in 
+# PEPFAR vs non-PEPFAR LI countries over time?
+
+uhc_comb_pepfar_fig <-
+  ggplot(
+    uhc_comb_pepfar <- figure_data %>%
+      filter(indicator == "uhc_service_coverage_index") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(
+    aes(x = year, y = value, color = pepfar,
+    label = if_else(value > 70, as.character(iso), "")),
+  hjust = -0.5, vjust = 0.5,
+ position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_comb_pepfar_fig <- uhc_settings(uhc_comb_pepfar_fig)
+
+# which countries were included in the above figure?
+countries_uhc_comb_pepfar <- uhc_comb_pepfar %>%
+  ungroup() %>%
+  select(country, pepfar) %>%
+  distinct()
+
+# What has been the change in the UHC sub index on infectious diseases over time
+# in PEPFAR vs non-PEPFAR countries?
+uhc_comb_id_pepfar_fig <-
+  ggplot(
+    uhc_comb_id_pepfar <- figure_data %>%
+      filter(indicator == "uhc_subindex4_id") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 75, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_comb_id_pepfar_fig <- uhc_settings(uhc_comb_id_pepfar_fig)
+
+# What has been the change in the UHC sub index on capacity and access over time
+# in PEPFAR vs non-PEPFAR countries?
+uhc_comb_ca_pepfar_fig <-
+  ggplot(
+    uhc_comb_ca_pepfar <- figure_data %>%
+      filter(indicator == "uhc_subindex1_capacity_access") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 80, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_comb_ca_pepfar_fig <- uhc_settings(uhc_comb_ca_pepfar_fig)
+
+# What has been the change in Life Expectancy at Birth in 
+# PEPFAR vs non-PEPFAR LI + LMI countries over time?
+
+lexp_comb_pepfar_fig <-
+  ggplot(
+    lexp_comb_pepfar <- figure_data %>%
+      filter(indicator == "life_expectancy_at_birth_both_sexes_years") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value < 40, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.3,
+  position = position_jitter(width = -0.3),
+  size = 2) 
+
+lexp_comb_pepfar_fig <- lexp_settings(lexp_comb_pepfar_fig)
+
+# SSA LI countries only --------------------------------------------------------
+
+# filter data by Sub-Saharan African Region for all LI, SSA country figures
+lic_ssa <- low_income %>%
+  filter(usaid_region == "Sub-Saharan Africa")
+
+uhc_ssa_pepfar_fig <-
+  ggplot(
+    uhc_ssa_pepfar <- lic_ssa %>%
+      filter(
+        indicator == "uhc_service_coverage_index") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 50, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_ssa_pepfar_fig <- uhc_settings(uhc_ssa_pepfar_fig)
+
+# which countries were included in the above figure?
+countries_uhc_ssa_pepfar <- uhc_ssa_pepfar %>%
+  ungroup() %>%
+  select(country, pepfar) %>%
+  distinct()
+
+# this is off by one country, ask MD
+tabyl(countries_uhc_ssa_pepfar$pepfar)
+
+pepfar_countries <- glamr::pepfar_country_list
+
+# What has been the change in the UHC sub index on infectious diseases over time
+# in PEPFAR vs non-PEPFAR countries?
+
+uhc_ssa_id_pepfar_fig <-
+  ggplot(
+    uhc_ssa_id_pepfar <- lic_ssa %>%
+      filter(
+        indicator == "uhc_subindex4_id") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 60, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2)
+
+uhc_ssa_id_pepfar_fig <- uhc_settings(uhc_ssa_id_pepfar_fig)
+
+# What has been the change in the UHC sub index on capacity and access over time
+# in PEPFAR vs non-PEPFAR countries?
+uhc_ssa_ca_pepfar_fig <-
+  ggplot(
+    uhc_ssa_ca_pepfar <- lic_ssa %>%
+      filter(
+        indicator == "uhc_subindex1_capacity_access") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 30, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.4,
+  position = position_jitter(width = -0.4),
+  size = 2) 
+
+uhc_ssa_ca_pepfar_fig <- uhc_settings(uhc_ssa_ca_pepfar_fig)
+
+# What has been the change in Life Expectancy at Birth in 
+# PEPFAR vs non-PEPFAR countries over time?
+# low income countries
+lexp_ssa_pepfar_fig <-
+  ggplot(
+    lexp_ssa_pepfar <- lic_ssa %>%
+      filter(
+        indicator == "life_expectancy_at_birth_both_sexes_years") %>%
+      group_by(year, pepfar) %>%
+      mutate(
+        weighted_avg = weighted.mean(value, population)),
+    aes()) +
+  geom_text(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value < 20, as.character(iso), "")),
+  hjust = -0.4, vjust = 0.3,
+  position = position_jitter(width = -0.3),
+  size = 2) 
+
+lexp_ssa_pepfar_fig <- lexp_settings(lexp_ssa_pepfar_fig)
+
+# analysis of figures for titles -----------------------------------------------
+
+# difference between 2000 and 2019?
+diff_uhc_low_pepfar <- uhc_low_pepfar %>%
+  ungroup() %>%
+  filter(pepfar == "PEPFAR", 
+         year %in% c("2000", "2019"))
+
+# difference between 2000 and 2019?
+diff_uhc_low_id_pepfar <- uhc_low_id_pepfar %>%
+  ungroup() %>%
+  filter(pepfar == "Non-PEPFAR", 
+         year %in% c("2000", "2019"))
+
+# difference in lexp in li countries between 2000 and 2019?
+diff_lexp_low_pepfar <- lexp_low_pepfar %>%
+  ungroup() %>%
+  filter(year %in% c("2003", "2020"))
+
+# save images ------------------------------------------------------------------
+
+# LI countries by PEPFAR
+# UHC LI countries by PEPFAR
+si_save(glue("{output_loc}/uhc_lowinc_pepfar_fig_{date}.svg"), 
+        plot = uhc_low_pepfar_fig)
+# LEXP LI countries by PEPFAR
+si_save(glue("{output_loc}/lifexp_lowinc_pepfar_fig_{date}.svg"), 
+        plot = lexp_low_pepfar_fig)
+# UHC (ID) LI countries by PEPFAR
+si_save(glue("{output_loc}/uhcID_lowinc_pepfar_fig_{date}.svg"), 
+        plot = uhc_low_id_pepfar_fig)
+# UHC (CA) LI countries by PEPFAR
+si_save(glue("{output_loc}/uhcCA_lowinc_pepfar_fig_{date}.svg"), 
+        plot = uhc_low_ca_pepfar_fig)
+
+# Combined (LI+LMI) countries by PEPFAR
+# UHC comb countries by PEPFAR
+si_save(glue("{output_loc}/uhc_combinc_pepfar_fig_{date}.svg"), 
+        plot = uhc_comb_pepfar_fig)
+# LEXP comb countries by PEPFAR
+si_save(glue("{output_loc}/lifexp_combinc_pepfar_fig_{date}.svg"), 
+        plot = lexp_comb_pepfar_fig)
+# UHC (ID) comb countries by PEPFAR
+si_save(glue("{output_loc}/uhcID_combinc_pepfar_fig_{date}.svg"), 
+        plot = uhc_comb_id_pepfar_fig)
+# UHC (CA) comb countries by PEPFAR
+si_save(glue("{output_loc}/uhcCA_combinc_pepfar_fig_{date}.svg"), 
+        plot = uhc_comb_ca_pepfar_fig)
+
+# LI SSA countries only by PEPFAR
+# UHC SSA countries by PEPFAR
+si_save(glue("{output_loc}/uhc_ssainc_pepfar_fig_{date}.svg"), 
+        plot = uhc_ssa_pepfar_fig)
+# LEXP SSA countries by PEPFAR
+si_save(glue("{output_loc}/lifexp_ssainc_pepfar_fig_{date}.svg"), 
+        plot = lexp_ssa_pepfar_fig)
+# UHC (ID) SSA countries by PEPFAR
+si_save(glue("{output_loc}/uhcID_ssainc_pepfar_fig_{date}.svg"), 
+        plot = uhc_ssa_id_pepfar_fig)
+# UHC (CA) SSA countries by PEPFAR
+si_save(glue("{output_loc}/uhcCA_ssainc_pepfar_fig_{date}.svg"), 
+        plot = uhc_ssa_ca_pepfar_fig)
+
+# save data --------------------------------------------------------------------
+
+# add full data set here
+write_excel_csv(figure_data, glue("{output_loc}/gh_scorecard_figure_data.csv"))
