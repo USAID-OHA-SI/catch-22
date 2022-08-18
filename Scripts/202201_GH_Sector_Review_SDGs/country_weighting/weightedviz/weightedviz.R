@@ -5,7 +5,7 @@
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-08-12
+# DATE UPDATED: 2022-08-18
 
 # dependencies -----------------------------------------------------------------
 
@@ -114,6 +114,18 @@ lexp_settings <- function(ggobj) {
   
 }
 
+# percent change function 
+# sample calculation
+# percent increase formula = 
+# ((weighted_avg(pepfar)2019 - weighted_avg(pepfar)2000/ weighted_avg(pepfar)2000)/
+# weighted_avg(pepfar)2000)*100
+
+pct_change <- function(current, starting, sig_dig){
+  
+   round_half_up(sum(sum(current - starting)/abs(starting))*100, sig_dig)
+  
+}
+
 # read in ----------------------------------------------------------------------
 
 # produced by catch-22/Scripts/202201_GH_Sector_Review_SDGs/
@@ -158,6 +170,27 @@ countries_uhc_low_pepfar <- uhc_low_pepfar %>%
   select(country, pepfar) %>%
   distinct()
 
+# What percentage did the weighted average increase over time?
+
+# pepfar
+uhc_low_pct <- uhc_low_pepfar %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar, year) %>%
+  distinct()
+
+# pepfar 
+uhc_low_pct_pepfar <- uhc_low_pct %>%
+  filter(pepfar == "PEPFAR")
+pct_change(uhc_low_pct_pepfar$weighted_avg[2],  # 2019
+           uhc_low_pct_pepfar$weighted_avg[1], 0) # 2000
+
+# non-pepfar
+uhc_low_pct_nonpepfar <- uhc_low_pct %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(uhc_low_pct_nonpepfar$weighted_avg[2], # 2019
+           uhc_low_pct_nonpepfar$weighted_avg[1], 0) # 2000
+
 # What has been the change in the UHC sub index on infectious diseases over time
 # in PEPFAR vs non-PEPFAR countries?
 uhc_low_id_pepfar_fig <-
@@ -178,6 +211,27 @@ uhc_low_id_pepfar_fig <-
 
 uhc_low_id_pepfar_fig <- uhc_settings(uhc_low_id_pepfar_fig)
 
+# What percentage did the weighted average increase over time?
+
+# pepfar
+uhc_low_id_pct <- uhc_low_id_pepfar %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar, year) %>%
+  distinct()
+
+# pepfar 
+uhc_low_id_pct_pepfar <- uhc_low_id_pct %>%
+  filter(pepfar == "PEPFAR")
+pct_change(uhc_low_id_pct_pepfar$weighted_avg[2], 
+           uhc_low_id_pct_pepfar$weighted_avg[1], 0)
+
+# non-pepfar
+uhc_low_id_pct_nonpepfar <- uhc_low_id_pct  %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(uhc_low_id_pct_nonpepfar$weighted_avg[2], 
+           uhc_low_id_pct_nonpepfar$weighted_avg[1], 0)
+
 # What has been the change in the UHC sub index on capacity and access over time
 # in PEPFAR vs non-PEPFAR countries?
 uhc_low_ca_pepfar_fig <-
@@ -197,6 +251,25 @@ uhc_low_ca_pepfar_fig <-
   size = 2) 
 
 uhc_low_ca_pepfar_fig <- uhc_settings(uhc_low_ca_pepfar_fig)
+
+# What percentage did the weighted average increase over time?
+uhc_low_ca_pct <- uhc_low_ca_pepfar %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar, year) %>%
+  distinct()
+
+# pepfar 
+uhc_low_ca_pct_pepfar <- uhc_low_ca_pct  %>%
+  filter(pepfar == "PEPFAR")
+pct_change(uhc_low_ca_pct_pepfar$weighted_avg[2], 
+           uhc_low_ca_pct_pepfar$weighted_avg[1], 0)
+
+# non-pepfar
+uhc_low_ca_pct_nonpepfar <- uhc_low_ca_pct  %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(uhc_low_ca_pct_nonpepfar$weighted_avg[2], 
+           uhc_low_ca_pct_nonpepfar$weighted_avg[1], 0)
 
 # What has been the change in Life Expectancy at Birth in 
 # PEPFAR vs non-PEPFAR countries over time?
@@ -222,6 +295,27 @@ lexp_low_pepfar_fig <-
 
 # apply settings common to all Life Exp figs
 lexp_low_pepfar_fig <- lexp_settings(lexp_low_pepfar_fig)
+
+# By how many years did the weighted average life expectancy
+# increase over time?
+
+lexp_low_pct <- lexp_low_pepfar %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar,year) %>%
+  distinct()
+
+# pepfar 
+lexp_low_pct_pepfar <- lexp_low_pct  %>%
+  filter(pepfar == "PEPFAR")
+round_half_up(lexp_low_pct_pepfar$weighted_avg[2] - 
+              lexp_low_pct_pepfar$weighted_avg[1], 0)
+
+# non-pepfar
+lexp_low_pct_nonpepfar <- lexp_low_pct  %>%
+  filter(pepfar == "Non-PEPFAR")
+round_half_up(lexp_low_pct_nonpepfar$weighted_avg[2] - 
+              lexp_low_pct_nonpepfar$weighted_avg[1], 0)
 
 # LMI + LI countries -----------------------------------------------------------
 # figure_data contains both LI and LMI country data
@@ -252,6 +346,26 @@ countries_uhc_comb_pepfar <- uhc_comb_pepfar %>%
   select(country, pepfar) %>%
   distinct()
 
+# What percentage did the weighted average increase over time?
+
+comb_percent <- uhc_comb_pepfar %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar,year) %>%
+  distinct()
+
+# pepfar 
+comb_pct_pepfar <- comb_percent %>%
+  filter(pepfar == "PEPFAR")
+pct_change(comb_pct_pepfar$weighted_avg[2], 
+           comb_pct_pepfar$weighted_avg[1], 0)
+
+# non-pepfar
+comb_pct_nonpepfar <- comb_percent  %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(comb_pct_nonpepfar$weighted_avg[2], 
+           comb_pct_nonpepfar$weighted_avg[1], 0)
+
 # What has been the change in the UHC sub index on infectious diseases over time
 # in PEPFAR vs non-PEPFAR countries?
 uhc_comb_id_pepfar_fig <-
@@ -271,6 +385,26 @@ uhc_comb_id_pepfar_fig <-
 
 uhc_comb_id_pepfar_fig <- uhc_settings(uhc_comb_id_pepfar_fig)
 
+# What percentage has UHC increased in pepfar vs non-pepfar countries?
+
+comb_uhc_id_percent <- uhc_comb_id_pepfar %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar,year) %>%
+  distinct()
+
+# pepfar 
+comb_uhc_id_pct_pepfar <- comb_uhc_id_percent %>%
+  filter(pepfar == "PEPFAR")
+pct_change(comb_uhc_id_pct_pepfar$weighted_avg[2], # 2019
+           comb_uhc_id_pct_pepfar$weighted_avg[1], 0) # 2000
+
+# non-pepfar
+comb_uhc_id_pct_nonpepfar <- comb_uhc_id_percent %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(comb_uhc_id_pct_nonpepfar$weighted_avg[2], # 2019
+           comb_uhc_id_pct_nonpepfar$weighted_avg[1], 0) # 2000
+
 # What has been the change in the UHC sub index on capacity and access over time
 # in PEPFAR vs non-PEPFAR countries?
 uhc_comb_ca_pepfar_fig <-
@@ -289,6 +423,21 @@ uhc_comb_ca_pepfar_fig <-
   size = 2) 
 
 uhc_comb_ca_pepfar_fig <- uhc_settings(uhc_comb_ca_pepfar_fig)
+
+# What percentage has UHC increased in pepfar vs non-pepfar countries?
+
+uhc_comb_ca_percent <- uhc_comb_ca_pepfar  %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  distinct()
+
+# pepfar 
+pct_change(uhc_comb_ca_percent$weighted_avg[3], # 2019
+           uhc_comb_ca_percent$weighted_avg[4], 0) # 2000
+
+# non-pepfar
+pct_change(uhc_comb_ca_percent$weighted_avg[1], # 2019
+           uhc_comb_ca_percent$weighted_avg[2], 0) # 2000
 
 # What has been the change in Life Expectancy at Birth in 
 # PEPFAR vs non-PEPFAR LI + LMI countries over time?
@@ -338,12 +487,28 @@ uhc_ssa_pepfar_fig <- uhc_settings(uhc_ssa_pepfar_fig)
 countries_uhc_ssa_pepfar <- uhc_ssa_pepfar %>%
   ungroup() %>%
   select(country, pepfar) %>%
+  distinct() %>%
+  write_excel_csv("ssalow_countries.csv")
+
+# What percentage has UHC increased in pepfar vs non-pepfar countries?
+
+uhc_ssa_percent <- uhc_ssa_pepfar  %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar, year) %>%
   distinct()
 
-# this is off by one country, ask MD
-tabyl(countries_uhc_ssa_pepfar$pepfar)
+# pepfar 
+uhc_ssa_percent_pepfar <- uhc_ssa_percent  %>%
+  filter(pepfar == "PEPFAR")
+pct_change(uhc_ssa_percent_pepfar$weighted_avg[2], # 2019
+          uhc_ssa_percent_pepfar$weighted_avg[1], 0) # 2000
 
-pepfar_countries <- glamr::pepfar_country_list
+# non-pepfar
+uhc_ssa_percent_nonpepfar <- uhc_ssa_percent  %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(uhc_ssa_percent_nonpepfar$weighted_avg[2], # 2019
+          uhc_ssa_percent_nonpepfar$weighted_avg[1], 0) # 2000
 
 # What has been the change in the UHC sub index on infectious diseases over time
 # in PEPFAR vs non-PEPFAR countries?
@@ -366,6 +531,26 @@ uhc_ssa_id_pepfar_fig <-
 
 uhc_ssa_id_pepfar_fig <- uhc_settings(uhc_ssa_id_pepfar_fig)
 
+# What percentage has UHC increased in pepfar vs non-pepfar countries?
+
+uhc_ssa_id_percent <- uhc_ssa_id_pepfar  %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar, year) %>%
+  distinct()
+
+# pepfar 
+uhc_ssa_id_pct_pepfar <- uhc_ssa_id_percent %>%
+  filter(pepfar == "PEPFAR")
+pct_change(uhc_ssa_id_pct_pepfar$weighted_avg[2], # 2019
+           uhc_ssa_id_pct_pepfar$weighted_avg[1], 0) # 2000
+
+# non-pepfar
+uhc_ssa_id_pct_nonpepfar <- uhc_ssa_id_percent  %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(uhc_ssa_id_pct_nonpepfar$weighted_avg[2], # 2019
+           uhc_ssa_id_pct_nonpepfar$weighted_avg[1], 0) # 2000
+
 # What has been the change in the UHC sub index on capacity and access over time
 # in PEPFAR vs non-PEPFAR countries?
 uhc_ssa_ca_pepfar_fig <-
@@ -385,6 +570,26 @@ uhc_ssa_ca_pepfar_fig <-
   size = 2) 
 
 uhc_ssa_ca_pepfar_fig <- uhc_settings(uhc_ssa_ca_pepfar_fig)
+
+# What percentage has UHC increased in pepfar vs non-pepfar countries?
+
+uhc_ssa_ca_percent <- uhc_ssa_ca_pepfar  %>%
+  filter(year %in% c("2000", "2019")) %>%
+  select(pepfar, year, weighted_avg) %>%
+  arrange(pepfar, year) %>%
+  distinct()
+
+# pepfar 
+uhc_ssa_ca_pct_pepfar <- uhc_ssa_ca_percent %>%
+  filter(pepfar == "PEPFAR")
+pct_change(uhc_ssa_ca_pct_pepfar$weighted_avg[2], # 2019
+           uhc_ssa_ca_pct_pepfar$weighted_avg[1], 0) # 2000
+
+# non-pepfar
+uhc_ssa_ca_pct_nonpepfar <- uhc_ssa_ca_percent  %>%
+  filter(pepfar == "Non-PEPFAR")
+pct_change(uhc_ssa_ca_pct_nonpepfar$weighted_avg[2], # 2019
+           uhc_ssa_ca_pct_nonpepfar$weighted_avg[1], 0) # 2000
 
 # What has been the change in Life Expectancy at Birth in 
 # PEPFAR vs non-PEPFAR countries over time?
@@ -406,25 +611,6 @@ lexp_ssa_pepfar_fig <-
   size = 2) 
 
 lexp_ssa_pepfar_fig <- lexp_settings(lexp_ssa_pepfar_fig)
-
-# analysis of figures for titles -----------------------------------------------
-
-# difference between 2000 and 2019?
-diff_uhc_low_pepfar <- uhc_low_pepfar %>%
-  ungroup() %>%
-  filter(pepfar == "PEPFAR", 
-         year %in% c("2000", "2019"))
-
-# difference between 2000 and 2019?
-diff_uhc_low_id_pepfar <- uhc_low_id_pepfar %>%
-  ungroup() %>%
-  filter(pepfar == "Non-PEPFAR", 
-         year %in% c("2000", "2019"))
-
-# difference in lexp in li countries between 2000 and 2019?
-diff_lexp_low_pepfar <- lexp_low_pepfar %>%
-  ungroup() %>%
-  filter(year %in% c("2003", "2020"))
 
 # save images ------------------------------------------------------------------
 
