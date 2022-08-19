@@ -591,6 +591,73 @@ uhc_ssa_ca_pct_nonpepfar <- uhc_ssa_ca_percent  %>%
 pct_change(uhc_ssa_ca_pct_nonpepfar$weighted_avg[2], # 2019
            uhc_ssa_ca_pct_nonpepfar$weighted_avg[1], 0) # 2000
 
+# What has been the change in each of the subindeces on over time
+# in PEPFAR supported countries?
+uhc_ssa_all_pepfar <- lic_ssa %>%
+  filter(
+    !indicator == "life_expectancy_at_birth_both_sexes_years") %>%
+  group_by(year, indicator, pepfar) %>%
+  mutate(
+    weighted_avg = weighted.mean(value, population)) %>%
+  filter(pepfar %in% c("PEPFAR")) %>%
+  distinct()
+
+uhc_ssa_all_pepfar_labels <- uhc_ssa_all_pepfar  %>%
+  filter(year %in% c("2000", "2019"))
+
+
+ggplot() +
+  geom_smooth(data = uhc_ssa_all_pepfar, 
+    aes(x = year, y = weighted_avg,
+    group = indicator, color = indicator)) +
+  geom_text(data = uhc_ssa_all_pepfar_labels,
+    aes(x = year, y = weighted_avg, 
+    label = glue::glue("{round_half_up(weighted_avg, 0)}"), 
+    color = indicator), 
+    nudge_x = 0.5, 
+    nudge_y = -0.5) +
+  geom_vline(
+    xintercept = 2003,
+    color = trolley_grey,
+    linetype = "longdash",
+    alpha = 0.5) +
+  geom_vline(
+    xintercept = 2008,
+    color = trolley_grey,
+    linetype = "dotted",
+    alpha = 0.5) +
+  si_style_ygrid() +
+  # uhc is an index from 0-100
+  scale_y_continuous(
+    limits = c(0, 100),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)) +
+  scale_x_continuous(
+    breaks = c(2000, 2010, 2019)) +
+  scale_color_manual(
+    values = c(
+      "uhc_service_coverage_index" = usaid_blue,
+      "uhc_subindex1_capacity_access" = moody_blue_light,
+      "uhc_subindex2_ncd" = old_rose_light,
+      "uhc_subindex3_mchn" = golden_sand_light,
+      "uhc_subindex4_id" = genoa_light),
+    labels = c(
+      "uhc_service_coverage_index" = "HSC Index",
+      "uhc_subindex1_capacity_access" = "HSC sub-index on service capacity and access",
+      "uhc_subindex2_ncd" = "HSC sub-index on noncommunicable diseases",
+      "uhc_subindex3_mchn" = "HSC sub-index on reproductive, maternal, newborn, and child health",
+      "uhc_subindex4_id" = "HSC sub-index on infectious disease")) +
+  theme(
+    axis.text = element_text(
+      family = "Source Sans Pro",
+      size = 10,
+      color = "#505050")) +
+  theme(legend.position = "none") +
+  labs(x = NULL, 
+       y = NULL, 
+       # title = "HSC INDEX AND SUB-INDECES INCREASED IN PEPFAR SUPPORTED LOW INCOME SUB-SAHARAN AFRICAN COUNTRIES FOLLOWING PRIORITIZATION OF HEALTH SYSTEMS STRENGTHENING",
+       # subtitle = "Largest growth seen in the infectious disease sub-index followed by the sub-index on reproductive, maternal, newborn, and child health, the HSC Index overall, the sub-index on noncommunicable diseases, and the sub-index on service capacity and access",
+       CAPTION = glue::glue("Source:  | {ref_id} | Jessica Hoehner "))
+
 # What has been the change in Life Expectancy at Birth in 
 # PEPFAR vs non-PEPFAR countries over time?
 # low income countries

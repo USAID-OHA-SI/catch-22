@@ -42,6 +42,8 @@ unweighted_data <-  read_sheet("17oCZviSJ8EIJ3gqP6Z9H2P4ToUORNykn8EwbLrxWp6I") %
     "uhc_service_coverage_index",
     "life_expectancy_at_birth_both_sexes_years",
     "uhc_subindex1_capacity_access",
+    "uhc_subindex2_ncd",
+    "uhc_subindex3_mchn",
     "uhc_subindex4_id"), 
   # keep only LI and LMI countries
     income_group %in% c("Low Income Country (World Bank Classification)", 
