@@ -18,6 +18,8 @@
   library(ggtext)
   library(glue)
   library(mindthegap)
+library(googledrive)
+library(googlesheets4)
 
 # GLOBAL VARIABLES --------------------------------------------------------
   
@@ -37,66 +39,59 @@
 # IMPORT ------------------------------------------------------------------
   
   #HIV estimates
-  df_est <- pull_unaids("HIV Estimates - Integer", TRUE)
+  df_est <- pull_unaids("HIV Estimates", TRUE)
   
   #Test and Treat percent estimates
-  df_tt <- pull_unaids("Test & Treat - Percent", TRUE)
+  df_tt <- pull_unaids("HIV Test & Treat", TRUE)
   
-
-  df_deaths <- readxl::read_excel(file.path(si_path("path_downloads"), "Reshma request 7Jun2022.xlsx"),
-                                  na = c("", "..."))
-    
-# MUNGE ALL DEATHS --------------------------------------------------------
+  #pull Total PLHIV death data
+  g_id <- "1CSVOauu2gyq9Am0eCl7TgpAeB1Xd3dCtE_Oc_yk3cI4"
   
-  df_deaths_lim <- df_deaths %>% 
-    rename("indicator" = ...1,
-           "country" = ...3,
-           "iso" = ISO3) %>% 
-    filter(iso %in% pepfar_country_list$country_iso) %>%
-    pivot_longer(-c(iso, indicator, country),
-                 names_to = "year") %>% 
-    mutate(indicator = "Non-AIDS Related Deaths to HIV Population",
-           year = as.double(year)) %>%
-    select(year, country, #indicator, 
-           deaths_non_aids = value)
-
+  df_deaths <- range_speedread(ss = g_id, sheet = "UNAIDS_epi_control") %>% 
+    filter(indicator == "Number Total Deaths HIV Pop")
+  
 
 # MUNGE HIV ESTIMATES -----------------------------------------------------
 
   #limit HIV estimates data
   df_est_lim <- df_est %>% 
-    filter(indicator %in% c("PLHIV", "AIDS Related Deaths", "New HIV Infections"),
-           # age == "all",
-           age == "15+",
-           sex == "all",
-           stat == "est") %>% 
-    select(year, country, indicator, value)
+    filter(indicator %in% c("Number PLHIV", "Number AIDS Related Deaths", "Number New HIV Infections"),
+           age == "All",
+           sex == "All",
+         #  stat == "est"
+           ) %>% 
+    select(year, country, indicator, estimate)
   
   #reshape wide to align with T&T
   df_est_lim <- df_est_lim %>% 
     pivot_wider(names_from = indicator,
+                values_from = "estimate",
                 names_glue = "{indicator %>% str_extract_all('Deaths|Infections|PLHIV') %>% tolower}")
-  
-  #join with total deaths
-  df_est_lim <- df_est_lim %>% 
-    tidylog::left_join(df_deaths_lim) %>% 
-    rowwise() %>% 
-    mutate(deaths_all = sum(deaths, deaths_non_aids)) %>% 
-    ungroup()
   
   #plhiv for plot
   df_plhiv <- df_est_lim %>%
     filter(year == max(year)) %>% 
     select(year, country, plhiv)
   
+  #grab total deaths
+  total_deaths <- df_deaths %>% 
+    #select(-c(iso2, geo_level)) %>% 
+    filter(age == "all",
+           sex == "all") %>% 
+    select(c(country, year, indicator, estimate)) %>% 
+    spread(indicator, estimate) %>% 
+    janitor::clean_names() %>% 
+    rename(total_deaths = number_total_deaths_hiv_pop)
+  
   #identify if epi control or not
   df_est_lim <- df_est_lim %>%
     arrange(country, year) %>% 
+    left_join(total_deaths, by = c("year", "country")) %>% 
     group_by(country) %>% 
-    mutate(declining_deaths = deaths_all - lag(deaths_all, order_by = year) <= 0) %>% 
+    mutate(declining_deaths = total_deaths - lag(total_deaths, order_by = year) <= 0) %>% 
     ungroup() %>% 
-    mutate(infections_below_deaths = infections < deaths_all,
-           ratio = infections / deaths_all,
+    mutate(infections_below_deaths = infections < total_deaths,
+           ratio = infections / total_deaths,
            direction_streak = sequence(rle(declining_deaths)$lengths),
            epi_control = declining_deaths == TRUE & infections_below_deaths == TRUE)
   
@@ -117,21 +112,26 @@
   #limit Test and Treat data
   df_tt_lim <- df_tt %>% 
     filter(year == max(year),
-           indicator %in% c("KNOWN_STATUS", "PLHIV_ON_ART", "VLS"),
-           age == "all",
-           sex == "all",
-           stat == "est") %>% 
-    select(year, country, indicator, value)
+           indicator %in% c("Percent Known Status of PLHIV",
+                            "Percent on ART of PLHIV",
+                            "Percent VLS of PLHIV"),
+           age == "All",
+           sex == "All",
+          # stat == "est"
+           ) %>% 
+    select(year, country, indicator, estimate) %>% 
+    rename(value = estimate)
   
   df_tt_lim <- df_tt_lim %>% 
     filter(!is.na(value)) %>% 
-    mutate(indicator = recode(indicator, "KNOWN_STATUS" = "Known\nStatus",
-                              "PLHIV_ON_ART" = "On\nART"),
+    mutate(indicator = recode(indicator, "Percent Known Status of PLHIV" = "Known\nStatus",
+                              "Percent on ART of PLHIV" = "On\nART",
+                              "Percent VLS of PLHIV" = "VLS"),
            set = recode(indicator, "Known\nStatus" = 1,
                         "On\nART" = 2,
                         "VLS" = 3),
            goal_rate = round((goal/100)^set*100),
-           achv = value >= goal_rate) %>% 
+           achv = value > goal_rate) %>% 
     group_by(country) %>% 
     mutate(gap = goal_rate - value,
            grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
@@ -218,6 +218,6 @@
           strip.text.y = element_blank(),
           panel.spacing.y = unit(.5, "lines"))
   
-  si_save("Graphics/ctip-ou-unaids_plus_epi.svg", 
+  si_save("Graphics/ctip-ou-unaids_plus_epi-2022.svg", 
           width = 3.2, height = 12)
   
