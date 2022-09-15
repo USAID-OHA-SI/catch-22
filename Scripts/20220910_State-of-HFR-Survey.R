@@ -54,6 +54,11 @@
                    .name_repair = make_clean_names)   
 
 
+  #latest cumulative MER results (for HFR indicator) 
+  df_mer <- return_latest("../Wavelength//out/DATIM/", "GLOBAL_DATIM") %>% 
+    vroom()
+  
+
 # REFERENCE INFO ----------------------------------------------------------
 
   cntry_reporting <- length(unique(df$country_affiliation))
@@ -61,11 +66,6 @@
   source_info <- glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {cntry_reporting} countries | Ref ID: {ref_id}")
   
 # REVIEW COMPLETENESS -----------------------------------------------------
-
-  #latest cumulative MER results (for HFR indicator) 
-  df_mer <- return_latest("../Wavelength//out/DATIM/", "GLOBAL_DATIM") %>% 
-    vroom()
-  
   #remove duplication from country teams
   df <- df %>% 
     filter(str_detect(email_address, "^(kow|cnh|kiz)", negate = TRUE))
@@ -77,6 +77,8 @@
     count(country, sort = TRUE, name = "site_mech_ind_combos") %>% 
     mutate(responded = country %in% df$country_affiliation) %>% 
     arrange(responded, desc(site_mech_ind_combos), country)
+  
+  length(unique(df$country_affiliation))
   
   length(unique(df$country_affiliation)) == sum(df_response$responded)
   df$country_affiliation[duplicated(df$country_affiliation)]
@@ -588,6 +590,42 @@ text_resources <-  df_resources %>%
   si_save("Graphics/HFR_willing-ready.svg")
   
 
+# MATRIX ------------------------------------------------------------------
+
+  
+  df_cont3 <- df %>% 
+    select(country = country_affiliation, starts_with("x8_")) %>% 
+    rename(willingness = 2) %>% 
+    mutate(response_w = recode(as.character(willingness), 
+                             "1" = "Disagree",
+                             "2" = "Disagree",
+                             "3" = "Neutral",
+                             "4" = "Agree",
+                             "5" = "Agree"))
+  
+  
+  df_sys <- df %>% 
+    select(country = country_affiliation, starts_with("x4a_")) %>% 
+    rename(response_sys= 2) %>%
+    mutate(has_sys = response_sys != "No")
+  
+  tidylog::left_join(df_cont3, df_sys) %>% 
+    tidylog::left_join(df_response) %>% 
+    arrange(response_w, has_sys) %>% 
+    filter(response_w == "Neutral",
+           has_sys == FALSE) %>%
+    mutate(country = country %>% 
+             recode("Democratic Republic of the Congo" = "DRC") %>% 
+             str_replace("West Africa Region", "WAR") %>% 
+             str_replace("Western Hemisphere Region", "WHR") %>% 
+             str_replace("Asia Region", "AR")) %>% 
+    arrange(desc(site_mech_ind_combos)) %>% 
+    pull(country) %>% 
+    clipr::write_clip()
+    ggplot(aes(reponse_w, has_sys)) +
+    geom_point()
+    prinf()
+  
 # STORIES -----------------------------------------------------------------
 
   df %>% 
