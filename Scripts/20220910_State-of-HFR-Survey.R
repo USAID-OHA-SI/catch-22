@@ -8,21 +8,21 @@
 
 # DEPENDENCIES ------------------------------------------------------------
 
-library(tidyverse)
-library(gagglr)
-library(glue)
-library(scales)
-library(extrafont)
-library(tidytext)
-library(patchwork)
-library(ggtext)
-library(googlesheets4)
-library(janitor)
-library(Wavelength)
-library(vroom)
-library(RColorBrewer)
-library(waffle)
-library(ggrepel)
+  library(tidyverse)
+  library(gagglr)
+  library(glue)
+  library(scales)
+  library(extrafont)
+  library(tidytext)
+  library(patchwork)
+  library(ggtext)
+  library(googlesheets4)
+  library(janitor)
+  library(Wavelength)
+  library(vroom)
+  library(RColorBrewer)
+  library(waffle)
+  library(ggrepel)
 
 # GLOBAL VARIABLES --------------------------------------------------------
 
@@ -54,10 +54,21 @@ library(ggrepel)
                    .name_repair = make_clean_names)   
 
 
+# REFERENCE INFO ----------------------------------------------------------
+
+  cntry_reporting <- length(unique(df$country_affiliation))
+  
+  source_info <- glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {cntry_reporting} countries | Ref ID: {ref_id}")
+  
 # REVIEW COMPLETENESS -----------------------------------------------------
 
+  #latest cumulative MER results (for HFR indicator) 
   df_mer <- return_latest("../Wavelength//out/DATIM/", "GLOBAL_DATIM") %>% 
     vroom()
+  
+  #remove duplication from country teams
+  df <- df %>% 
+    filter(str_detect(email_address, "^(kow|cnh|kiz)", negate = TRUE))
   
   df_response <- df_mer %>% 
     mutate(country = ifelse(operatingunit == countryname, operatingunit, glue("{operatingunit}/{countryname}"))) %>%
@@ -71,6 +82,7 @@ library(ggrepel)
   df$country_affiliation[duplicated(df$country_affiliation)]
   setdiff(unique(df$country_affiliation), filter(df_response, responded) %>% pull(country))
   setdiff(filter(df_response, responded) %>% pull(country), unique(df$country_affiliation))
+  
   
   df_response %>% 
     count(responded)
@@ -165,7 +177,7 @@ df_viz_utility %>%
   ggplot(aes(response_value_direction, fct_reorder(indicator, response_value_pos, sum, na.rm = TRUE),
              fill = fct_rev(response))) +
   geom_col(alpha = .9) +
-  geom_vline(xintercept = -14:40, color = "white") +
+  geom_vline(xintercept = -15:40, color = "white") +
   geom_vline(xintercept = 0, color = "#999999", size = 1.1) +
   annotate(geom = "text",
            x = -.5, y = Inf, hjust = 1,
@@ -187,7 +199,7 @@ df_viz_utility %>%
        subtitle = glue("{df_resp %>%
     filter(indicator == 'Should be required (all partners/sites)') %>%
     pull()} thought it should continued to be required for all partner and sites"),
-       caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+       caption = source_info) +
   si_style_nolines() +
   theme(axis.text.x = element_blank(),
         strip.text.y = element_blank(),
@@ -212,7 +224,7 @@ si_save("Graphics/HFR_utility.svg")
                               data_are_difficult_to_access = "Access", 
                               data_difficult_to_use_analyze = "Ease of Analysis", 
                               insufficient_tools_technology_to_analyze_the_data = "Tools/technology", 
-                              analyses_difficult_to_apply_to_program_decisions = "Applicability to program decusions", 
+                              analyses_difficult_to_apply_to_program_decisions = "Applicability to program decisions", 
                               leadership_technical_teams_not_requesting_analyses = "Leadership need", 
            )) %>% 
     count(indicator, response) 
@@ -242,13 +254,20 @@ si_save("Graphics/HFR_utility.svg")
     labs(x = NULL, y = NULL,
          title = glue("STAFF TIME WAS REPORTED AS A MAJOR BARRIER FOR {text_barrier} OF COUNTRIES"),
          subtitle = glue("Lack of leadership and/or technical requests involving HFR is also a large barrier for its use"),
-         caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+         caption = source_info) +
     si_style_nolines() +
     theme(legend.position = "none")
   
   
   si_save("Graphics/HFR_barriers.svg")
   
+  
+  df %>% 
+    select(country = country_affiliation, starts_with("x2b_")) %>% 
+    rename(other_barriers = 2) %>% 
+    filter(other_barriers %ni% c(NA, "NA")) %>% 
+    pull() %>% 
+    clipr::write_clip()
   
 
 # LOE ---------------------------------------------------------------------
@@ -280,7 +299,7 @@ si_save("Graphics/HFR_utility.svg")
     scale_x_discrete(position = "top") +
     labs(x = NULL, y = NULL,
          title = glue("{loe_high} OF COUNTRIES REPORTED THE LEVEL OF EFFORT FOR HFR WAS HIGH OR EXTREME"),
-         caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+         caption = source_info) +
     si_style_nolines() +
     theme(legend.position = "none")
           
@@ -289,6 +308,16 @@ si_save("Graphics/HFR_utility.svg")
            
            
 
+# IN-COUNTRY SYSTEM -------------------------------------------------------
+
+  df %>% 
+    select(country = country_affiliation, starts_with("x4a_")) %>% 
+    rename(response = 2) %>% 
+    mutate(has_system = response != "No") %>% 
+    count(has_system) %>% 
+    mutate(share = n / sum(n))
+  
+  
 # PREFERENCE --------------------------------------------------------------
 
   df_pref <- df %>% 
@@ -327,7 +356,7 @@ si_save("Graphics/HFR_utility.svg")
                                  "Only largest org units" = fill_col[['Strongly Disagree']])) +
     labs(x = NULL, y = NULL,
          title = glue("While {bau} of countries prefer keeping HFR as it is, {cdo} want to determine which org units report") %>% toupper,
-         caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+         caption = source_info) +
     si_style_nolines() +
     theme(legend.position = "none",
           axis.text = element_blank())
@@ -411,13 +440,13 @@ si_save("Graphics/HFR_utility.svg")
     scale_fill_manual(values = fill_col) +
     coord_cartesian(clip = "off") +
     labs(x = NULL, y = NULL,
-         title = glue("Of the {length(unique(df_utility$country))} countries that responded, { df_resp %>%
+         title = glue("Of the {cntry_reporting} countries that responded, { df_resp_cont %>%
     filter(response == 'Agree') %>%
     pull()} would continue with a similar model if OHA stopped HFR") %>% toupper,
          subtitle = glue("{df_resp_cont %>%
     filter(response == 'Strongly Disagree') %>%
     pull(n)} countries indicated they would 'very likely stop'"),
-         caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+         caption = source_info) +
     si_style_nolines() +
     theme(axis.text = element_blank(),
           legend.position = "none")
@@ -427,9 +456,16 @@ si_save("Graphics/HFR_utility.svg")
   
   
 
-# RESOURCES ---------------------------------------------------------------
+# DUPLICATIVE -------------------------------------------------------------
 
+  df %>% 
+    select(country = country_affiliation, starts_with("x4b_")) %>% 
+    rename(system = 2) %>% 
+    mutate(duplicative = str_detect(system, "completely duplicative")) %>% 
+    count(duplicative) %>% 
+    mutate(share = n/sum(n))
   
+# RESOURCES ---------------------------------------------------------------
 
   
   df_resources <- df %>% 
@@ -467,15 +503,15 @@ text_resources <-  df_resources %>%
     ggplot(aes(n, fct_reorder(indicator, sort_order, sum, na.rm = TRUE), 
                fill = response, alpha = fill_alpha)) +
     geom_col() +
-    geom_vline(xintercept = 0:35, color = "white") +
-    geom_vline(xintercept = length(unique(df_utility$country))/2, color = matterhorn, linetype = "dotted") +
+    geom_vline(xintercept = 0:(cntry_reporting+1), color = "white") +
+    geom_vline(xintercept = cntry_reporting/2, color = matterhorn, linetype = "dotted") +
     scale_x_continuous(expand=c(.005, .005), position = "top") +
     scale_fill_manual(values = fill_col_resources) +
     scale_alpha_identity() +
     labs(x = NULL, y = NULL,
          title = "MOST COUNTRIES INDICATED A NEED FOR SERVER ACCESS TO PICK UP HFR ON THEIR OWN",
          subtitle = glue("{text_resources} of countries indicated they would not get access to a server in the future"),
-         caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+         caption = source_info) +
     si_style_nolines() +
     theme(legend.position = "none")
   
@@ -538,15 +574,27 @@ text_resources <-  df_resources %>%
                shape = 21, fill = NA,
                position = position_jitter(height = .3, width =  .3, seed = 42), 
                alpha = .6) +
-    geom_text_repel(aes(label = country), force = 20) +
+    geom_text_repel(aes(label = country), size =3, color = matterhorn, 
+                    force = 50) +
     scale_fill_manual(values = append(brewer.pal(5, "BrBG"), "#ffffff"), aesthetics = c("color", "fill")) +
     scale_size(range = c(2, 10)) +
     coord_cartesian(clip = "off") +
     labs(title = "'LARGER' COUNTRIES TEND TO BE MORE LIKELY TO CONTINUE WITH HFR IF STOPPED BY OHA AND HAVE THE RESOURCES TO MANAGE IT" %>% str_wrap,
-         caption = glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {length(unique(df_utility$country))} countries | Ref ID: {ref_id}")) +
+         caption = source_info) +
     si_style() +
     theme(axis.text = element_blank(),
           legend.position = "none")
   
   si_save("Graphics/HFR_willing-ready.svg")
+  
+
+# STORIES -----------------------------------------------------------------
+
+  df %>% 
+    select(country = country_affiliation, starts_with("x10_")) %>% 
+    rename(stories = 2) %>% 
+    filter(stories %ni% c(NA, "NA")) %>% 
+    pull() %>% 
+    clipr::write_clip()
+  
   
