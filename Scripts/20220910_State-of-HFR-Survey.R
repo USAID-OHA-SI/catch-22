@@ -4,7 +4,7 @@
 # REF ID:   25205341 
 # LICENSE:  MIT
 # DATE:     2022-09-02
-# UPDATED:  2022-09-12
+# UPDATED:  2022-09-16
 
 # DEPENDENCIES ------------------------------------------------------------
 
@@ -47,7 +47,12 @@
                        "Exists currently")
   fill_col_resources <- brewer.pal(5, "BrBG")[c(1, 2, 5)]
   names(fill_col_resources) = resources_order
+  
+  loe_order <- c("Minimal", "Low", "Moderate", "High", "Extreme")
 
+  fill_col_loe <- brewer.pal(5, "BrBG")[order(c(5, 4, 1, 2, 3))] %>% replace(. == "#F5F5F5", "#C1C1C1")
+  names(fill_col_loe) = loe_order
+  
 # IMPORT ------------------------------------------------------------------
 
   df <- read_sheet(gs_id,
@@ -61,7 +66,7 @@
 
 # REFERENCE INFO ----------------------------------------------------------
 
-  cntry_reporting <- length(unique(df$country_affiliation))
+  (cntry_reporting <- length(unique(df$country_affiliation)))
   
   source_info <- glue("Source: 2022 State of HFR Survey [Sep 2022] | Responses from {cntry_reporting} countries | Ref ID: {ref_id}")
   
@@ -179,7 +184,7 @@ df_viz_utility %>%
   ggplot(aes(response_value_direction, fct_reorder(indicator, response_value_pos, sum, na.rm = TRUE),
              fill = fct_rev(response))) +
   geom_col(alpha = .9) +
-  geom_vline(xintercept = -15:40, color = "white") +
+  geom_vline(xintercept = -18:44, color = "white") +
   geom_vline(xintercept = 0, color = "#999999", size = 1.1) +
   annotate(geom = "text",
            x = -.5, y = Inf, hjust = 1,
@@ -248,7 +253,7 @@ si_save("Graphics/HFR_utility.svg")
     ggplot(aes(n, fct_reorder(indicator, sort_order, sum, na.rm = TRUE), 
                fill = response, alpha = fill_alpha)) +
     geom_col() +
-    geom_vline(xintercept = 0:35, color = "white") +
+    geom_vline(xintercept = 0:cntry_reporting, color = "white") +
     geom_vline(xintercept = length(unique(df_utility$country))/2, color = matterhorn, linetype = "dotted") +
     scale_x_continuous(expand=c(.005, .005), position = "top") +
     scale_fill_manual(values = fill_col_barrier) +
@@ -263,6 +268,14 @@ si_save("Graphics/HFR_utility.svg")
   
   si_save("Graphics/HFR_barriers.svg")
   
+  
+  df_barriers %>% 
+    mutate(barrier = response %in% c("Major Barrier", "Minor Barrier")) %>% 
+    count(indicator, barrier, wt = n) %>% 
+    group_by(indicator) %>% 
+    mutate(share = n/sum(n)) %>% 
+    filter(barrier == TRUE) %>% 
+    arrange(desc(share))
   
   df %>% 
     select(country = country_affiliation, starts_with("x2b_")) %>% 
@@ -297,7 +310,12 @@ si_save("Graphics/HFR_utility.svg")
     ggplot(aes(response, fct_rev(indicator), color = response)) + 
     geom_point(position = position_jitter(height = .3, width =  .3, seed = 42), 
                alpha = .6, size = 5) +
-    scale_color_brewer(palette = "BrBG", direction = -1)+
+    geom_text_repel(data = . %>% filter((indicator == "Implementing Partners" & response %in% c("Minimal", "Low")) |
+                                          (indicator == "Mission" & response == "High")),
+                    aes(label = country), force = 20, #segment.colour = NA,
+                    family = "Source Sans Pro", color = matterhorn,
+              position = position_jitter(height = .3, width =  .3, seed = 42)) +
+    scale_color_manual(values = fill_col_loe) +
     scale_x_discrete(position = "top") +
     labs(x = NULL, y = NULL,
          title = glue("{loe_high} OF COUNTRIES REPORTED THE LEVEL OF EFFORT FOR HFR WAS HIGH OR EXTREME"),
@@ -426,7 +444,7 @@ si_save("Graphics/HFR_utility.svg")
     ggplot(aes(response_value_direction, fct_reorder(indicator, response_value_pos, sum, na.rm = TRUE),
                fill = fct_rev(response))) +
     geom_col(alpha = .9) +
-    geom_vline(xintercept = -26:26, color = "white") +
+    geom_vline(xintercept = -23:30, color = "white") +
     geom_vline(xintercept = 0, color = "#999999", size = 1.1) +
     annotate(geom = "text",
              x = -.5, y = Inf, hjust = 1,
@@ -435,7 +453,7 @@ si_save("Graphics/HFR_utility.svg")
              x = .5, y = Inf, hjust = 0,
              label = "Agree", family = "Source Sans Pro", color  = matterhorn) +
     annotate(geom = "text",
-             x = 23, y = Inf, hjust = 0,
+             x = 25, y = Inf, hjust = 0,
              label = "Neutral", family = "Source Sans Pro", color  = matterhorn) +
     # facet_grid(fct_rev(group) ~ ., scales = "free_y", space = "free") +
     scale_x_continuous(expand = c(.005, .005)) +
@@ -456,7 +474,10 @@ si_save("Graphics/HFR_utility.svg")
   
   si_save("Graphics/HFR_continue.svg") 
   
-  
+  df_viz_cont %>% 
+    filter(response == "Strongly Disagree") %>% 
+    pull(country) %>% 
+    clipr::write_clip()
 
 # DUPLICATIVE -------------------------------------------------------------
 
@@ -494,12 +515,12 @@ si_save("Graphics/HFR_utility.svg")
                                          "Needed, but no resources to support")
            )) 
 
-text_resources <-  df_resources %>%
-  filter(indicator == "Data storage/management (server)") %>%
-  mutate(share = n/sum(n)) %>%
-  filter(response == "Needed, but no resources to support") %>%
-  pull() %>%
-  percent()
+  text_resources <-  df_resources %>%
+    filter(indicator == "Data storage/management (server)") %>%
+    mutate(share = n/sum(n)) %>%
+    filter(response == "Needed, but no resources to support") %>%
+    pull() %>%
+    percent()
 
   df_resources %>% 
     ggplot(aes(n, fct_reorder(indicator, sort_order, sum, na.rm = TRUE), 
@@ -576,7 +597,7 @@ text_resources <-  df_resources %>%
                shape = 21, fill = NA,
                position = position_jitter(height = .3, width =  .3, seed = 42), 
                alpha = .6) +
-    geom_text_repel(aes(label = country), size =3, color = matterhorn, 
+    geom_text_repel(aes(label = country), size =3, color = matterhorn,
                     force = 50) +
     scale_fill_manual(values = append(brewer.pal(5, "BrBG"), "#ffffff"), aesthetics = c("color", "fill")) +
     scale_size(range = c(2, 10)) +
@@ -612,7 +633,7 @@ text_resources <-  df_resources %>%
   tidylog::left_join(df_cont3, df_sys) %>% 
     tidylog::left_join(df_response) %>% 
     arrange(response_w, has_sys) %>% 
-    filter(response_w == "Neutral",
+    filter(response_w == "Agree",
            has_sys == FALSE) %>%
     mutate(country = country %>% 
              recode("Democratic Republic of the Congo" = "DRC") %>% 
