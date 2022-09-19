@@ -1,9 +1,9 @@
 # PROJECT:  catch-22
-# AUTHOR:   A.Chafetz | USAID
+# AUTHOR:   A.Chafetz & K.Srikanth | USAID
 # PURPOSE:  compare 90s and epi control
 # LICENSE:  MIT
 # DATE:     2021-12-07
-# UPDATED:  2021-12-15
+# UPDATED:  2022-09-19
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -18,8 +18,8 @@
   library(ggtext)
   library(glue)
   library(mindthegap)
-library(googledrive)
-library(googlesheets4)
+  library(googledrive)
+  library(googlesheets4)
 
 # GLOBAL VARIABLES --------------------------------------------------------
   
@@ -103,8 +103,8 @@ library(googlesheets4)
            value = round(ratio, 1),
            achv = epi_control,
            direction_arrow = ifelse(declining_deaths == TRUE, "\u25B2", "\u25BC"),
-           lab_epi = case_when(!is.na(ratio) ~ glue("{label_number_si()(infections)} | {label_number_si()(deaths)}")), 
-           lab_epi2 = case_when(!is.na(ratio) ~ glue("{label_number_si()(infections)} | {label_number_si()(deaths)} {direction_arrow}"))) %>% 
+           lab_epi = case_when(!is.na(ratio) ~ glue("{label_number(accuracy = 1, scale_cut = cut_short_scale())(infections)} | {label_number(accuracy = 1, scale_cut = cut_short_scale())(total_deaths)}")), 
+           lab_epi2 = case_when(!is.na(ratio) ~ glue("{label_number(accuracy = 1, scale_cut = cut_short_scale())(infections)} | {label_number(accuracy = 1, scale_cut = cut_short_scale())(total_deaths)} {direction_arrow}"))) %>% 
     select(year, country, indicator, value, lab_epi, lab_epi2, declining_deaths, achv)
   
 # MUNGE DATA --------------------------------------------------------------
