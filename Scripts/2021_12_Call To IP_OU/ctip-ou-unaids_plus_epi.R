@@ -1,6 +1,7 @@
 # PROJECT:  catch-22
 # AUTHOR:   A.Chafetz & K.Srikanth | USAID
 # PURPOSE:  compare 90s and epi control
+# REF ID:   e505d102 
 # LICENSE:  MIT
 # DATE:     2021-12-07
 # UPDATED:  2022-09-19
@@ -22,6 +23,8 @@
   library(googlesheets4)
 
 # GLOBAL VARIABLES --------------------------------------------------------
+  
+  ref_id <- "e505d102"
   
   authors <- c("Aaron Chafetz", "Tim Essam", "Karishma Srikanth")
   
@@ -212,7 +215,8 @@
     scale_x_discrete(position = "top", expand = c(.05, .05)) +
     scale_y_reordered() +
     coord_cartesian(clip = "off") +
-    labs(x = NULL, y = NULL) +
+    labs(x = NULL, y = NULL,
+         caption = glue("Source: {source_note} | Ref ID: {ref_id}")) +
     si_style_nolines() +
     theme(axis.text.y = element_markdown(),
           strip.text.y = element_blank(),
