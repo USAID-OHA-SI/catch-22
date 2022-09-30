@@ -29,6 +29,7 @@ Graphics/*
 *.png
 *.twbx
 *.pptx
+*.svg
 
 #nothing from these folders
 AI/*

@@ -135,12 +135,11 @@ figure_data <- read_sheet("17ZBOzPux0lgkmN48BtE3yzKpeEzDLVmx9B4Pei9nGbw",
 
 # visualize --------------------------------------------------------------------
   
-# LI countries only ------------------------------------------------------------
-
 # filter data by low income status for all LI country figures
 low_income <- figure_data %>%
     filter(income_group == "Low Income Country (World Bank Classification)")
 
+# LI countries only ------------------------------------------------------------
 # What has been the change in the UHC index over time 
 # in PEPFAR vs non-PEPFAR countries?
 uhc_low_pepfar_fig <-
