@@ -1,9 +1,10 @@
 # PROJECT:  catch-22
 # AUTHOR:   A.Chafetz | USAID
 # PURPOSE:  SIEI seat tracking
+# REF ID:   c57628fb 
 # LICENSE:  MIT
 # DATE:     2022-06-13
-# UPDATED: 
+# UPDATED:  2022-10-05
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -24,6 +25,9 @@
 
 # GLOBAL VARIABLES --------------------------------------------------------
   
+  #reference id (for tracking down purposes)
+  ref_id <- "c57628fb"
+  
   #authenication for GDrive
   load_secrets("email")
 
@@ -31,7 +35,8 @@
   seat_tracker <- as_sheets_id("1JM-EDxMlpvN8GklOf0bd3GArIEMJlIGxhaCejKuju_k")
   
   #identify max week of data (to filter out entry errors for future weeks)
-  max_week <- floor_date(Sys.Date() -7, "week", getOption("lubridate.week.start", 1))
+  # max_week <- floor_date(Sys.Date() -7, "week", getOption("lubridate.week.start", 1))
+  max_week <- as.Date("2022-09-05")
 
 # IMPORT ------------------------------------------------------------------
   
@@ -142,7 +147,7 @@
     geom_text(aes(label = seats), na.rm = TRUE,
               family = "Source Sans Pro", size = 7/.pt, color = matterhorn) + 
     # facet_grid(branch~fct_reorder(format(reporting_week, "Week of %B %d"), reporting_week, max), scales = "free_y", space = "free", switch = "y") +
-    facet_grid(branch~fct_reorder(format(reporting_week, "%B %d"), reporting_week, max), scales = "free_y", space = "free", switch = "y") +
+    facet_grid(branch~fct_reorder(format(reporting_week, "%b %d"), reporting_week, max), scales = "free_y", space = "free", switch = "y") +
     scale_x_discrete(position = "top") +
     scale_color_identity(na.value = NA) +
     scale_fill_manual(values = c("In office" = scooter,
@@ -161,8 +166,11 @@
           axis.text = element_text(size = 8))
   
   #export
+  # si_save(glue("Images/SIEI_seating_{Sys.Date()}.png"),
+  #              height = 10, width = 5.625)
+  
+  r <- 1920/1080
+  h <- 10
   si_save(glue("Images/SIEI_seating_{Sys.Date()}.png"),
-               height = 10, width = 5.625)
-  
-  
-  
+          height = h, width = h*r)
+    
