@@ -55,8 +55,8 @@ uhc_settings <- function(ggobj) {
       breaks = c(2000, 2005, 2010, 2015, 2019)) +
     scale_color_manual(
       values = c(
-        "PEPFAR" = denim,
-        "Non-PEPFAR" = usaid_medgrey),
+        "PEPFAR" = usaid_medblue,
+        "Non-PEPFAR" = usaid_lightgrey),
       labels = NULL) +
     theme(
       axis.text = element_text(
@@ -98,8 +98,8 @@ lexp_settings <- function(ggobj) {
       breaks = c(1990, 2000, 2010, 2020)) +
     scale_color_manual(
       values = c(
-        "PEPFAR" = denim,
-        "Non-PEPFAR" = usaid_medgrey),
+        "PEPFAR" = usaid_medblue,
+        "Non-PEPFAR" = usaid_lightgrey),
       labels = NULL) +
     theme(
       axis.text = element_text(
@@ -478,7 +478,7 @@ uhc_ssa_pepfar_fig <-
     label = if_else(value > 50, as.character(iso), "")),
   hjust = -0.4, vjust = 0.4,
   position = position_jitter(width = -0.4),
-  size = 2) 
+  size = 2)
 
 uhc_ssa_pepfar_fig <- uhc_settings(uhc_ssa_pepfar_fig)
 
@@ -710,16 +710,16 @@ si_save(glue("{output_loc}/uhcCA_combinc_pepfar_fig_{date}.svg"),
 
 # LI SSA countries only by PEPFAR
 # UHC SSA countries by PEPFAR
-si_save(glue("{output_loc}/uhc_ssainc_pepfar_fig_{date}.svg"), 
+si_save(glue("Graphics/uhc_ssainc_pepfar_fig_{date}.svg"), 
         plot = uhc_ssa_pepfar_fig)
 # LEXP SSA countries by PEPFAR
-si_save(glue("{output_loc}/lifexp_ssainc_pepfar_fig_{date}.svg"), 
+si_save(glue("Graphics/lifexp_ssainc_pepfar_fig_{date}.svg"), 
         plot = lexp_ssa_pepfar_fig)
 # UHC (ID) SSA countries by PEPFAR
-si_save(glue("{output_loc}/uhcID_ssainc_pepfar_fig_{date}.svg"), 
+si_save(glue("Graphics/uhcID_ssainc_pepfar_fig_{date}.svg"), 
         plot = uhc_ssa_id_pepfar_fig)
 # UHC (CA) SSA countries by PEPFAR
-si_save(glue("{output_loc}/uhcCA_ssainc_pepfar_fig_{date}.svg"), 
+si_save(glue("Graphics/uhcCA_ssainc_pepfar_fig_{date}.svg"), 
         plot = uhc_ssa_ca_pepfar_fig)
 
 # save data --------------------------------------------------------------------
