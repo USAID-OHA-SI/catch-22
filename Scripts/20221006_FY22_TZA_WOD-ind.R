@@ -4,12 +4,12 @@
 # REF ID:   826b8313 
 # LICENSE:  MIT
 # DATE:     2022-10-06
-# UPDATED: 
+# UPDATED:  2022-10-20
 
 # DEPENDENCIES ------------------------------------------------------------
   
   library(tidyverse)
-  library(gagglr)
+  library(gagglr)  # remotes::install_github("USAID-OHA-SI/gagglr")
   library(glue)
   library(gt)
   
@@ -17,9 +17,8 @@
 # GLOBAL VARIABLES --------------------------------------------------------
   
   ref_id <- "826b8313"
-
-  curr_fy <- source_info(return = "fiscal_year")
-  curr_pd <- source_info(return = "period")
+  
+  get_metadata()
   
 # IMPORT ------------------------------------------------------------------
   
@@ -29,7 +28,7 @@
   
   df_arch <- si_path() %>% 
     return_latest("OU_IM_FY15") %>% 
-    read_msd() %>% 
+    read_msd()
     
 
 # MUNGE -------------------------------------------------------------------
@@ -41,18 +40,24 @@
 
   #limit timeframe for last 5 years
   df_tza <- df_tza %>% 
-    filter(between(fiscal_year, curr_fy-5, curr_fy))
+    filter(between(fiscal_year, metadata$curr_fy-5, metadata$curr_fy))
     
-
+  rm(df, df_arch)
+  
 # CUMULATIVE STATS --------------------------------------------------------
 
   df_cum <- df_tza %>% 
-    filter(indicator %in% c("HTS_TST", "HTS_SELF", "AGYW_PREV", 
-                            "OVC_SERV_UNDER_18", "VMMC_CIRC",
+    filter(indicator %in% c("HTS_TST", "HTS_SELF", "VMMC_CIRC",
                             "PrEP_NEW","HRH_PRE", "TB_PREV")) %>% 
     pluck_totals()
+  
+  df_fo <- df_tza %>% 
+    filter(indicator == "PMTCT_FO",
+           otherdisaggregate == "HIV-uninfected") %>% 
+    mutate(indicator = "PMTCT_FO.Uninfected")
     
   df_cum_pds <- df_cum %>% 
+    bind_rows(df_fo) %>% 
     group_by(fiscal_year, indicator) %>% 
     summarise(across(starts_with("q"), sum, na.rm = TRUE), 
               .groups = "drop") %>% 
@@ -66,60 +71,36 @@
     select(indicator, reporting_period)
   
   df_cum <- df_cum %>% 
+    bind_rows(df_fo) %>% 
     count(indicator, wt = cumulative, name = "cumulative") %>% 
     left_join(df_cum_pds, by = "indicator")
 
 
-# TX STATS ----------------------------------------------------------------
+# SNAPSHOT STATS ----------------------------------------------------------
 
-  df_tx <- df_tza %>% 
-    filter(indicator == "TX_CURR",
+  df_snap <- df_tza %>% 
+    clean_indicator() %>% 
+    filter(indicator %in% c("AGYW_PREV", "OVC_SERV_UNDER_18","TX_CURR"),
            (standardizeddisaggregate == "Total Numerator" |
-            otherdisaggregate == "ARV Dispensing Quantity - 6 or more months"),
-           fiscal_year == curr_fy) %>% 
-    mutate(indicator = ifelse(standardizeddisaggregate == "Age/Sex/ARVDispense/HIVStatus", 
-                              "TX_MMD.6mo", indicator)) %>% 
-    count(indicator, wt = cumulative, name = "cumulative") %>% 
-    mutate(reporting_period = curr_pd)
-  
-  
-
-# BABIES HIV FREE STATS ---------------------------------------------------
-
-  df_hiv_free <- df_tza %>% 
-    filter(indicator %in% c("PMTCT_EID", "PMTCT_HEI_POS", "PMTCT_EID_POS"),
-           standardizeddisaggregate == "Total Numerator") 
-  
-  df_hiv_free_pds <- df_hiv_free %>% 
+              otherdisaggregate == "ARV Dispensing Quantity - 6 or more months")) %>% 
+    mutate(indicator = case_when(standardizeddisaggregate == "Age/Sex/ARVDispense/HIVStatus" ~ "TX_MMD.6mo", 
+                                 standardizeddisaggregate == "Outcome" ~ "PMTCT_FO.Uninfected",
+                                 TRUE ~ indicator)) %>% 
     group_by(fiscal_year, indicator) %>% 
     summarise(across(starts_with("q"), sum, na.rm = TRUE), 
               .groups = "drop") %>% 
-    reshape_msd() %>% 
+    reshape_msd(include_type = FALSE) %>% 
     filter(value != 0) %>% 
-    summarise(period_min = min(period, na.rm = TRUE),
-              period_max = max(period, na.rm = TRUE),
-              .groups = "drop") %>% 
-    mutate(indicator = "BORN_HIV_FREE",
-           reporting_period = glue("{str_sub(period_min, end = 4)}-{period_max}")) %>% 
-    select(indicator, reporting_period) 
-    
-  df_hiv_free <- df_hiv_free %>% 
-    group_by(fiscal_year, indicator) %>% 
-    summarise(across(c(cumulative), sum, na.rm = TRUE), .groups = "drop") %>% 
-    pivot_wider(names_from = indicator, 
-                values_from = cumulative) %>%
-    rowwise() %>% 
-    mutate(hiv_free = PMTCT_EID - sum(PMTCT_HEI_POS, PMTCT_EID_POS, na.rm = TRUE)) %>% 
+    group_by(indicator) %>% 
+    slice_max(order_by = period, n = 1) %>% 
     ungroup() %>% 
-    mutate(indicator = "BORN_HIV_FREE") %>% 
-    count(indicator, wt = hiv_free, name = "cumulative") %>% 
-    left_join(df_hiv_free_pds, by = "indicator")
-
-
+    rename(cumulative = value,
+           reporting_period = period)
 
 # BIND TABLE --------------------------------------------------------------
 
-  df_totals <- bind_rows(df_cum, df_tx, df_hiv_free) %>% 
+  df_totals <- bind_rows(df_cum, df_snap, #df_hiv_free
+                         ) %>% 
       arrange(indicator)
 
   (gt_totals <- df_totals %>% 
