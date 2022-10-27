@@ -26,6 +26,17 @@ library(googlesheets4)
 
 authors <- c("Karishma Srikanth", "Aaron Chafetz", "Tim Essam")
 
+# IMPORT ------------------------------------------------------------------
+
+#Current MSD
+df <- si_path() %>% 
+  return_latest("OU_IM_FY20") %>% 
+  read_msd()
+
+#Archived MSD
+df_arch <- si_path() %>% 
+  return_latest("OU_IM_FY15") %>% 
+  read_msd()
 
 #source info
 curr_pd <- identifypd(df)
@@ -41,17 +52,7 @@ clean_number <- function(x, digits = 0){
 }
 
 
-# IMPORT ------------------------------------------------------------------
 
-#Current MSD
-df <- si_path() %>% 
-  return_latest("OU_IM_FY19") %>% 
-  read_msd()
-
-#Archived MSD
-df_arch <- si_path() %>% 
-  return_latest("OU_IM_FY15") %>% 
-  read_msd()
 
 #Read in the google sheet hyperfile with local partner
 sheet_id <- "1MQviknJkJDttGdNEJeNaYPKmHCw6BqPuJ0C5cslV5IE"
@@ -68,7 +69,7 @@ df_partner <- read_sheet(sheet_id, sheet = "MechID-PartnerType", range = "A:B") 
 #bind archived + current MSD and filter for PrEP - add the 
 df_prep <- df %>%
   bind_rows(df_arch) %>% 
-  filter(fundingagency == "USAID",
+  filter(funding_agency == "USAID",
          indicator == "PrEP_NEW",
          standardizeddisaggregate == "Total Numerator",
          fiscal_year >= 2017) %>% 
@@ -85,12 +86,12 @@ prep_cum <- df_prep %>%
 df_cntry_cnt <- df_prep %>% 
   filter(cumulative > 0,
          partner_type == "Local") %>% 
-  distinct(fiscal_year, countryname) %>% 
+  distinct(fiscal_year, country) %>% 
   count(fiscal_year, name = "n_countries")
 
 #aggregate result to USAID level
 df_prep <- df_prep %>% 
-  group_by(fiscal_year, fundingagency,  partner_type) %>% 
+  group_by(fiscal_year, funding_agency,  partner_type) %>% 
   summarise(across(starts_with("qtr"), sum, na.rm = TRUE)) %>% 
   ungroup() %>%
   filter(fiscal_year != 2022) %>%
@@ -150,7 +151,7 @@ df_viz <- df_prep %>%
          fill_color = ifelse(partner_type == "Local", scooter, scooter_light))
 
 title_info_prep <- df_prep %>% 
-  filter(period == "FY21Q3", 
+  filter(period == "FY22Q3", 
          partner_type == "Local") %>% 
   mutate(share = percent(round(share, 2)))
 

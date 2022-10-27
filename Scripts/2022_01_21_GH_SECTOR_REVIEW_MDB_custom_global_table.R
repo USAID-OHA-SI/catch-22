@@ -72,7 +72,7 @@
     # Load OU_IM table - using FY21 Q2 data from Panorama
     ou_im <- 
       si_path() %>% 
-      return_latest("OU_IM_FY19-22_20211217") %>%
+      return_latest("OU_IM_FY20-23") %>%
       read_msd() 
 
 
