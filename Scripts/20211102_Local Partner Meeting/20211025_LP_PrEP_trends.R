@@ -1,8 +1,10 @@
 # PROJECT:  catch-22
 # AUTHOR:   K. Srikanth | USAID
 # PURPOSE:  LP meeting - PrEP trends
+# REF ID:   cd414609 
 # LICENSE:  MIT
 # DATE:     2021-10-25
+# UPDATED: 2022-10-28
 # note: derived from agitprop/09a_usaid_prep_scaleup.R
 
 
@@ -28,6 +30,9 @@ authors <- c("Karishma Srikanth", "Aaron Chafetz", "Tim Essam")
 
 # IMPORT ------------------------------------------------------------------
 
+path_msd <-  si_path() %>% 
+  return_latest("OU_IM_FY20")
+
 #Current MSD
 df <- si_path() %>% 
   return_latest("OU_IM_FY20") %>% 
@@ -38,10 +43,16 @@ df_arch <- si_path() %>%
   return_latest("OU_IM_FY15") %>% 
   read_msd()
 
+ref_id <- "cd414609"
+
+
 #source info
-curr_pd <- identifypd(df)
-curr_fy <- identifypd(df, "year")
-msd_source <- source_info()
+
+get_metadata(path_msd, caption_note = "Created by: OHA SI Team")
+
+# curr_pd <- identifypd(df)
+# curr_fy <- identifypd(df, "year")
+# msd_source <- source_info()
 
 #clean number
 clean_number <- function(x, digits = 0){
@@ -79,7 +90,7 @@ df_prep <- df %>%
 
 #current fy prep for local partners
 prep_cum <- df_prep %>% 
-  filter(fiscal_year >= 2021, partner_type == "Local") %>% 
+  filter(fiscal_year == metadata$curr_fy, partner_type == "Local") %>%
   count(wt = cumulative)
 
 #count number of countries with PrEP
@@ -94,7 +105,7 @@ df_prep <- df_prep %>%
   group_by(fiscal_year, funding_agency,  partner_type) %>% 
   summarise(across(starts_with("qtr"), sum, na.rm = TRUE)) %>% 
   ungroup() %>%
-  filter(fiscal_year != 2022) %>%
+ # filter(fiscal_year != 2022) %>%
   reshape_msd() %>% 
   filter(partner_type != "TBD") %>%
   pivot_wider(names_from = partner_type, values_from = value) %>% 
@@ -109,7 +120,7 @@ df_prep <- df_prep %>%
 
 #PrEP in and out of quarterly and semi-annual reporting so need a complete set  
 #current period
-curr_pd <- identifypd(df)
+curr_pd <- metadata$curr_pd
 
 #current period as number
 curr_pd_num <- curr_pd %>% 
@@ -118,7 +129,8 @@ curr_pd_num <- curr_pd %>%
   as.numeric()
 
 #identify current fiscal year for max date
-curr_fy <- str_sub(curr_pd, 3,4) %>% as.numeric()
+curr_fy <- metadata$curr_fy %>% 
+  str_sub(3,4) %>% as.numeric()
 
 #propagate list of periods not in prep to add to df
 full_pds <- expand_grid(fiscal_year = c(17:curr_fy),
@@ -151,7 +163,7 @@ df_viz <- df_prep %>%
          fill_color = ifelse(partner_type == "Local", scooter, scooter_light))
 
 title_info_prep <- df_prep %>% 
-  filter(period == "FY22Q3", 
+  filter(period == metadata$curr_pd, 
          partner_type == "Local") %>% 
   mutate(share = percent(round(share, 2)))
 
@@ -170,16 +182,18 @@ df_viz %>%
   scale_color_identity() +
   labs(x = NULL, y = NULL, 
        title = glue("Local partners have initiated {clean_number(prep_cum, 0)} \\
-                      onto PrEP this year across \\
-                      {filter(df_cntry_cnt, fiscal_year == max(fiscal_year)) %>% pull()} \\
-                      countries, up from {filter(df_cntry_cnt, fiscal_year == 2017) %>% pull()} \\
-                      countries
-                      in 2017, and made up over {title_info_prep$share} of USAID's PrEP portfolio in FY21Q3") %>% toupper,
+                      onto PrEP this year and made up over {title_info_prep$share} of USAID's PrEP portfolio in {metadata$curr_pd}") %>% toupper,
        subtitle = "Pre-Exposure Prophylaxis (PrEP) Quarterly Results",
-       caption = glue("Source: {msd_source}
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
+       caption = glue("{metadata$caption}")) +
   si_style_ygrid() +
   theme(legend.position = 'none')
 
-si_save("Graphics/partner_prep_trends_usaid.svg")
+si_save(glue("Graphics/partner_prep_trends_usaid_{metadata$curr_pd}.svg"))
+
+# Old caption:
+# "Local partners have initiated {clean_number(prep_cum, 0)} \\
+#                       onto PrEP this year across \\
+#                       {filter(df_cntry_cnt, fiscal_year == max(fiscal_year)) %>% pull()} \\
+#                       countries, up from {filter(df_cntry_cnt, fiscal_year == 2017) %>% pull()} \\
+#                       countries
+#                       in 2017, and made up over {title_info_prep$share} of USAID's PrEP portfolio in {metadata$curr_pd}"
