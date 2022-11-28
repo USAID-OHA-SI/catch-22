@@ -1,0 +1,39 @@
+Provider: Silverchair
+Database: Oxford University Press
+Content: text/plain; charset="UTF-8"
+
+TY  - JOUR
+AU  - Luboga, Samuel Abimerech
+AU  - Stover, Bert
+AU  - Lim, Travis W
+AU  - Makumbi, Frederick
+AU  - Kiwanuka, Noah
+AU  - Lubega, Flavia
+AU  - Ndizihiwe, Assay
+AU  - Mukooyo, Eddie
+AU  - Hurley, Erin K
+AU  - Borse, Nagesh
+AU  - Wood, Angela
+AU  - Bernhardt, James
+AU  - Lohman, Nathaniel
+AU  - Sheppard, Lianne
+AU  - Barnhart, Scott
+AU  - Hagopian, Amy
+T1  - Did PEPFAR investments result in health system strengthening? A retrospective longitudinal study measuring non-HIV health service utilization at the district level
+PY  - 2016
+Y1  - 2016/09/01
+DO  - 10.1093/heapol/czw009
+JO  - Health Policy and Planning
+JA  - Health Policy Plan
+VL  - 31
+IS  - 7
+SP  - 897
+EP  - 909
+SN  - 0268-1080
+AB  - Objectives PEPFAR’s initial rapid scale-up approach was largely a vertical effort focused fairly exclusively on AIDS. The purpose of our research was to identify spill-over health system effects, if any, of investments intended to stem the HIV epidemic over a 6-year period with evidence from Uganda. The test of whether there were health system expansions (aside from direct HIV programming) was evidence of increases in utilization of non-HIV services—such as outpatient visits, in-facility births or immunizations—that could be associated with varying levels of PEPFAR investments at the district level.Methods Uganda’s Health Management Information System article-based records were available from mid-2005 onwards. We visited all 112 District Health offices to collect routine monthly reports (which contain data aggregated from monthly facility reports) and annual reports (which contain data aggregated from annual facility reports). Counts of individuals on anti-retroviral therapy (ART) at year-end served as our primary predictor variable. We grouped district-months into tertiles of high, medium or low PEPFAR investment based on their total reported number of patients on ART at the end of the year. We generated incidence-rate ratios, interpreted as the relative rate of the outcome measure in relation to the lowest investment PEPFAR tertile, holding constant control variables in the model.Results We found PEPFAR investment overall was associated with small declines in service volumes in several key areas of non-HIV care (outpatient care for young children, TB tests and in-facility deliveries), after adjusting for sanitation, elementary education and HIV prevalence. For example, districts with medium and high ART investment had 11% fewer outpatient visits for children aged 4 and younger compared with low investment districts, incidence rate ratio (IRR) of 0.89 for high investment compared with low (95% CI, 0.85–0.94) and IRR of 0.93 for medium compared with low (0.90–0.96). Similarly, 22% fewer TB sputum tests were performed in high investment districts compared with low investment, [IRR 0.78 (0.72–0.85)] and 13% fewer in medium compared with low, [IRR 0.88 (0.83–0.94)]. Districts with medium and high ART investment had 5% fewer in-facility deliveries compared with low investment districts [IRR 0.95 for high compared with low, (91–1.00) and 0.96 for medium compared with low (0.93–0.99)]. Although not statistically significant, the rate of maternal deaths in high investment district-months was 13% lower than observed in low investment districts.Conclusions This study sought to understand whether PEPFAR, as a vertical programme, may have had a spill-over effect on the health system generally, as measured by utilization. Our conclusion is that it did not, at least not in Uganda.
+Y2  - 8/19/2022
+UR  - https://doi.org/10.1093/heapol/czw009
+ER  - 
+
+
+
