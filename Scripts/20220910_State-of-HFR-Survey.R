@@ -73,7 +73,7 @@
 # REVIEW COMPLETENESS -----------------------------------------------------
   #remove duplication from country teams
   df <- df %>% 
-    filter(str_detect(email_address, "^(kow|cnh|kiz)", negate = TRUE))
+    filter(str_detect(email_address, "^(kow|cnh|kiz|nmk)", negate = TRUE))
   
   df_response <- df_mer %>% 
     mutate(country = ifelse(operatingunit == countryname, operatingunit, glue("{operatingunit}/{countryname}"))) %>%
@@ -582,7 +582,14 @@ si_save("Graphics/HFR_utility.svg")
     tidylog::left_join(df_response) %>% 
     tidylog::left_join(df_process) %>% 
     arrange(willingness) %>% 
-    mutate(response = fct_inorder(response))
+    mutate(response = fct_inorder(response),
+           country = country %>% 
+             str_replace("West Africa Region", "WAR") %>% 
+             str_replace("Asia Region", "AR") %>% 
+             str_replace("Western Hemisphere Region", "WHR") %>% 
+             str_replace("Democratic Republic of the Congo", "DRC") %>% 
+             str_replace("Papua New Guinea", "PNG")
+             )
 
 
   df_combo %>% 
@@ -597,7 +604,14 @@ si_save("Graphics/HFR_utility.svg")
                shape = 21, fill = NA,
                position = position_jitter(height = .3, width =  .3, seed = 42), 
                alpha = .6) +
-    geom_text_repel(aes(label = country), size =3, color = matterhorn,
+    geom_text_repel(data = . %>% filter(process_exists),
+                    aes(label = country), size =3, color = matterhorn,
+                    position = position_jitter(height = .3, width =  .3, seed = 42),
+                    #force = 50
+                    ) +
+    geom_text_repel(data = . %>% filter(!process_exists),
+                    aes(label = country), size =3, color = matterhorn,
+                    position = position_jitter(height = .3, width =  .3, seed = 42),
                     force = 50) +
     scale_fill_manual(values = append(brewer.pal(5, "BrBG"), "#ffffff"), aesthetics = c("color", "fill")) +
     scale_size(range = c(2, 10)) +
