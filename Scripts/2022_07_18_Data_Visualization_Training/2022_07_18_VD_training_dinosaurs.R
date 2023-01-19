@@ -14,6 +14,9 @@
     library(glue)
     library(extrafont)
   
+  # REF ID for plots
+  ref_id <- "6869be4d"
+
     
   # Functions
   # Pull distinct values
@@ -44,34 +47,23 @@
 
 # VIZ ============================================================================
   
-    
   df %>%  
   ggplot(aes(x = x, y = y)) +
-    geom_point(color = scooter, size = 3, alpha = 0.5) +
+    geom_point(color = "#BE3455", size = 3, alpha = 0.5) +
     theme(legend.position = "none") +
     facet_wrap(~dataset, ncol = 3, scale = "free") +
     scale_x_continuous(limits = c(0, 100)) + 
     scale_y_continuous(limits = c(0, 100)) +
     si_style_xyline(facet_space = 0.5) + 
-    geom_smooth(method = "lm", color = golden_sand) +
+    geom_smooth(method = "lm", color = "#CBC02D") +
     labs(subtitle = glue("Mean x = {mean_x}  y = {mean_y} | Standard Deviation x = {sd_x}  y = {sd_y} | Correlation = -0.06"),
-         caption = "Source: datasaurus dozen package") +
+         caption = "Source: datasaurus dozen package | Ref ID: 6869be4d") +
     theme(legend.position = "none")
   
   si_save("Images/dino_distribution.png", scale = 1.25)
 
 
 
-
-
-
-
-
-
-
-
-  
-  
 
 
 
