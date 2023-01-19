@@ -1,0 +1,156 @@
+---
+title: "OHA Briefing to AFR Bureau Request for TX_CURR #s"
+author: "Tim Essam | SI"
+date: "1/17/2023"
+output: html_document
+---
+
+##### Knitr Setup
+
+I was struggling to get `knitr` to read the `si_path()` and `file_path` lines in the SI setup portion. Turns out, you have to let knitr know where the Rstudio root is located -- where does your `.proj` file live. Once you set this path, it will be used in all *subsequent* chunks. See [here](https://stackoverflow.com/questions/30237310/setting-work-directory-in-knitr-using-opts-chunksetroot-dir-doesnt-wor) for more details.
+
+```{r setup, echo = TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Find the rstudio project root path -- this needs to live in it's own chunk to work downstream
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r SI setup, include = F}
+# Load the libraries, file paths, and metadata we will use for the analysis.
+
+  # Libraries
+    library(gagglr)
+    library(tidyverse)
+    library(scales)
+    library(sf)
+    library(extrafont)
+    library(tidytext)
+    library(patchwork)
+    library(ggtext)
+    library(glue)
+    library(countrycode)
+    library(mindthegap)
+
+  # SI specific paths/functions  
+    load_secrets()
+    
+  # Setting relative paths to data using SI infrastructure
+    merdata <- file.path(glamr::si_path("path_msd"))
+    file_path <- return_latest(folderpath = merdata, pattern = "OU_IM_FY20-23")
+      
+  # Grab metadata
+   get_metadata(file_path)
+  
+  # REF ID for plots
+    ref_id <- "99b27751"
+```
+
+##### Request from AFR Bureau
+
+**How many clients does USAID PEPFAR support in Sub-Saharan Africa?\
+For all of PEPFAR in SSA, what share of clients on treatment does USAID support?\
+Of all estimated PLHIV living in SSA, what share does USAID support in terms of ART?**
+
+To tackle this request, we are going to need four data sources:
+
+1.  OU_IM MSD from Panorama
+
+2.  A list of PEPFAR supported countries from DATIM + ISO codes (`grabr:get_outable())`
+
+3.  A list of country regions as classified by the World Bank (`countrycode::countrycode()`)
+
+4.  PLHIV estimates from UNAIDS (`mindthegap::pull_unaids()`)
+
+```{r load data, echo=TRUE, message=FALSE}
+
+  # Load the MSD from Panorama, this is where the topline #s are from
+  msd <- read_msd(file_path)
+  
+  # Import list of PEPFAR countries in regions from DATIM
+  df_meta <- grabr::get_outable(datim_user(), datim_pwd()) %>% 
+    select(country, country_iso)
+
+  # Pull in PLHIV data
+  df_plhiv <- pull_unaids("HIV Estimates", pepfar_only = FALSE)  
+  
+```
+
+##### Munging ISO data and MSD
+
+We need a common crosswalk between the World Bank regions and the PEPFAR countries. We'll use the `countrycode` package to align country names and pull along the regional fields. After we filter and aggregate the MSD, we'll join it with the countries to get our regional classifications alongside country names. Finish up by aggregationg the augmented MSD data for TX_CURR, by funding agency groups.
+
+```{r munge data, echo = TRUE}
+
+  #Cleaning up region classification to match USAID regions 
+  df_meta <- df_meta %>%
+    mutate(wb_region = countrycode(df_meta$country_iso, "iso3c", "region"),
+           usaid_region = case_when(country == "Ukraine" ~ "Europe",
+                                    wb_region == "Sub-Saharan Africa" ~ "Africa",
+                                    wb_region == "Latin America & Caribbean" ~ "LAC",
+                                    TRUE ~ "Asia")) %>% 
+    select(-c(wb_region))
+  
+  # Aggregate MSD data to USAID / ALL OTHER agencies and aggregate to country level
+  df <- msd %>% 
+    filter(indicator == "TX_CURR", 
+           standardizeddisaggregate == "Total Numerator",
+           fiscal_year == metadata$curr_fy) %>% 
+    mutate(agency = ifelse(funding_agency == "USAID", "USAID", "Non_USAID")) %>% 
+    group_by(operatingunit, country, indicator, fiscal_year, agency) %>% 
+    summarise(tx_curr = sum(cumulative, na.rm = T), .groups = "drop")
+  
+  #Adding regional information
+  df_full <- df %>% 
+    left_join(df_meta, by = "country") 
+  
+  # What share is USAID?
+  tx_curr_afr <- df_full %>% 
+    filter(usaid_region == "Africa") %>% 
+    group_by(agency) %>% 
+    summarize(tx_curr_tot = sum(tx_curr, na.rm = T)) %>% 
+    spread(agency, tx_curr_tot) %>% 
+    mutate(pct = percent(USAID / (Non_USAID + USAID), 0.1))
+```
+
+##### UNAIDS Data munging
+
+UNAIDS data at the country level will not aggregate up to the regional level due to missing data points (Mozambique). For example, if you want to calculate PLHIV aggregates for Eastern and Southern Africa, you will get a different number if you try to aggregate PLHIV for each country versus using the regional number provided in the data. We need to keep this in mind when looking at PLHIV for SSA.
+
+The purpose of this munging exercise is to pull out the estimate and upper and lower bounds for PLHIV in SSA. We will then use these to construct a range in which the value of PEPFAR supported clients as a share of all PLHIV in SSA may fall. This was done because the request was to mix M&E numbers with modeled estimates. Ideally, we would like to avoid this but we can provide a range or rough approximation, with all the caveats noted.
+
+```{r unaids data munge, echo = TRUE}
+
+  # Whittle down the UNAIDS PLHIV data to only Africa, flagging regional versus country level rows along the way. 
+  df_plhiv_afr <- 
+    df_plhiv %>% 
+    filter(indicator == "Number PLHIV", 
+           sex == "All", 
+           age == "All", 
+           year == 2021) %>% 
+    left_join(., df_meta, by = c("iso" = "country_iso", "country")) %>% 
+    filter(str_detect(region, "Africa")) %>% 
+    mutate(regional_flag = ifelse(is.na(iso), "Regional", "Country"))
+    
+  # Calculate the range of PLHIV estimates for Sub-Saharan Africa
+  plhiv_est <- 
+    df_plhiv_afr %>% 
+    filter(country %in% c("Eastern and southern Africa", 
+                          "Western and central Africa")) %>%
+    summarise(across(c(estimate:upper_bound), sum, na.rm = T))
+```
+
+With all the numbers we need, we can now craft the statements for responding to the FO.
+
+#### Response to the Front Office
+
+**How many clients does USAID PEPFAR support in Sub-Saharan Africa?\
+For all of PEPFAR in SSA, what share of clients on treatment does USAID support?**
+
+USAID supports over **`r tx_curr_afr$USAID %>% comma(., scale = 1/1e6, suffix = "M", accuracy = 0.01)`** PLHIV on antiretroviral tx. in Africa. This represents  **`r tx_curr_afr$pct`** of all PEPFAR supported PLHIV on treatment (**`r (tx_curr_afr$Non_USAID + tx_curr_afr$USAID) %>% comma(., scale = 1/1e6, suffix = "M", accuracy = 0.01)`**) in Africa.
+
+**Of all estimated PLHIV living in SSA, what share does USAID support in terms of ART?**
+
+USAID PEPFAR supports (on ART) between **`r percent(tx_curr_afr$USAID/plhiv_est$upper_bound)`** to **`r percent(tx_curr_afr$USAID/plhiv_est$lower_bound)`** of all PLHIV in SSA.
+
+PEPFAR in aggregate supports (on ART) between **`r percent((tx_curr_afr$Non_USAID + tx_curr_afr$USAID)/plhiv_est$upper_bound)`** to **`r percent((tx_curr_afr$Non_USAID + tx_curr_afr$USAID)/plhiv_est$lower_bound)`** of all PLHIV in SSA.
