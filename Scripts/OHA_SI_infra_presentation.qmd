@@ -1,0 +1,141 @@
+---
+title: "Digging a Pit of Success"
+subtitle: "Data Science Infrastructure in the Office of HIV/AIDS"
+date: "2027-04-19"
+author: "Tim Essam & Karishma Srinkanth"
+institute: "OHA | Strategic Information Branch"
+format:
+  revealjs: 
+    slide-number: c/t
+    width: 1600
+    height: 900
+    logo: "https://usaid-oha-si.github.io/assets/img/si_logo_white.png"
+    footer: "[SI DS Infra](https://rstudio-conf-2022.github.io/get-started-quarto/)"
+    css: ["theme/theme.css"]
+    theme: simple
+    echo: true
+    incremental: true
+editor: visual
+editor_options:
+  chunk_output_type: inline
+project:
+    execute-dir: file
+---
+
+# Office of HIV/AIDS
+
+Implement the U.S. President's Emergency Plan for AIDS Relief (PEPFAR)
+
+![](https://www.state.gov/wp-content/uploads/2023/01/PEPFAR-20-Logo-Social-Tagged.jpg){fig-alt="PEPFAR Logo" fig-align="center" width="250"}
+
+## About US
+
+The **Strategic Information Branch** **(GH/OHA/SIEI/SI)** provides technical expertise to support and promote data-informed decision making, through program monitoring, reporting and analysis in order to target resources appropriately to achieve HIV epidemic control. The Branch:
+
+-   Supports HQ and missions by building capacity for program monitoring and surveillance to improve HIV/AIDS programs and to provide accountability, oversight and management of programs and partners.
+
+-   Focuses on strengthening PEPFAR and USAID program data for use in inter-agency and intra-agency analyses.
+
+::: {style="color: #c43d4d;"}
+-   TL/DR: Branch is the data science hub of OHA
+:::
+
+# Guiding Principles {background-image="https://unsplash.com/photos/CJBCaMkLP_U/download?ixid"}
+
+## We organize around the principles of shared accountability and responsibility
+
+-   Analyses are well-documented, reproducible, and open to the office
+
+-   Code pushed to github repo following SI best practices
+
+-   Leverage SI infrastructure (R packages / OHA colors / etc)
+
+-   Continuous improvement / tweaks to processes
+
+## Why this works?
+
+-   Predictable data structure, refresh schedule, and required analyses
+
+-   Critical mass of analysts who code (or are learning)
+
+-   Support from leadership
+
+# Tools
+
+## Core Software
+
+::: columns
+::: {.column width="50%"}
+![](https://d33wubrfki0l68.cloudfront.net/1ac3f0e3753f18c7e2a8893957d1841fba1e3d08/48a33/wp-content/uploads/2018/10/rstudio-logo-flat.png){fig-align="center" width="500"}
+
+![](https://dev3lop.com/wp-content/uploads/2017/04/tableau-logo-tableau-software.jpg){fig-align="center" width="500"}
+:::
+
+::: {.column width="50%"}
+![](https://1000logos.net/wp-content/uploads/2021/05/GitHub-logo.png){fig-align="center" width="313"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_(2019%E2%80%93present).svg/2203px-Microsoft_Office_Excel_(2019%E2%80%93present).svg.png){fig-align="center" width="189"}
+:::
+:::
+
+## R + RStudio
+
+R + Rstudio is our primary analytic tool. Most of the SI infrastructure is based on `tidyverse` principles and workflows.
+
+[![](https://github.com/USAID-OHA-SI/glitr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/glitr/) [![](https://github.com/USAID-OHA-SI/glamr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/glamr) [![](https://github.com/USAID-OHA-SI/gophr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/gophr) [![](https://github.com/USAID-OHA-SI/gisr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/gisr/)
+
+[![](https://github.com/USAID-OHA-SI/gagglr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/gagglr) [![](https://github.com/USAID-OHA-SI/grabr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/grabr) [![](https://github.com/USAID-OHA-SI/Wavelength/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/Wavelength) [![](https://github.com/USAID-OHA-SI/tameDP/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/tameDP)
+
+[![](https://github.com/USAID-OHA-SI/mindthegap/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/mindthegap) [![](https://github.com/USAID-OHA-SI/COVIDutilities/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/COVIDutilities) [![](https://github.com/USAID-OHA-SI/selfdestructin5/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/selfdestructin5/) [![](https://github.com/USAID-OHA-SI/coRps/raw/main/figures/logo.png){width="175"}](https://github.com/USAID-OHA-SI/coRps)
+
+## GitHub
+
+Use Github to store packages and analytic code online. This allows for remote collaboration and serves as a default knowledge management platform.
+
+*No data are stored on GitHub -- only code.*
+
+![](https://user-images.githubusercontent.com/5873344/232575267-f395d8ae-859e-4443-a563-b5c4fe81d61e.PNG){fig-align="center"}
+
+## Tableau
+
+OHA maintains 30+ Tableau Dashboards. Most are linked to our quarterly data (MER) from DATIM. Tableau is a a powerful tool but can quickly create technical debt depending on product ownership.
+
+![](https://user-images.githubusercontent.com/5873344/232576576-5d7235ab-5d6a-43c6-8da0-95573e18181b.PNG)
+
+## Excel
+
+Most commonly used tool among implementing partners and mission staff. Many core PEPFAR products are built in Excel. Harder to create reproducible workflows that can scale.
+
+# Digging a Pit of Success
+
+## Reproducible Workflows
+
+```{r list-glamr-contents}
+library(gagglr)
+
+# View package in glamr
+ls('package:glamr')
+```
+
+## Setup Common Folders
+
+```{r show-setup}
+#| eval: false
+#| output: true
+  
+  glamr::si_setup()
+
+  
+```
+
+## Standardized Folders
+
+## Discoverable Content
+
+## Creating a Community of Practice
+
+When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
