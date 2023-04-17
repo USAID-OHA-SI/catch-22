@@ -40,7 +40,7 @@ The **Strategic Information Branch** **(GH/OHA/SIEI/SI)** provides technical exp
 -   TL/DR: Branch is the data science hub of OHA
 :::
 
-# Guiding Principles {background-image="https://unsplash.com/photos/CJBCaMkLP_U/download?ixid"}
+# Guiding Principles {#sec-guiding-principles background-image="https://unsplash.com/photos/CJBCaMkLP_U/download?ixid"}
 
 ## We organize around the principles of shared accountability and responsibility
 
@@ -110,32 +110,92 @@ Most commonly used tool among implementing partners and mission staff. Many core
 
 ## Reproducible Workflows
 
-```{r list-glamr-contents}
-library(gagglr)
+-   Create a repo on Github
 
-# View package in glamr
-ls('package:glamr')
-```
+-   Clone repo to local machine via Rstudio Project
+
+-   Run SI setup functions
+
+-   Start munging and push code to repo online when finished
 
 ## Setup Common Folders
 
+::: columns
+::: {.column width="60%"}
 ```{r show-setup}
 #| eval: false
-#| output: true
+#| output: false
   
-  glamr::si_setup()
+# glamr::setup_gitignore() # ignore certain file extensions
+# glamr::setup_readme() # readme with a standard disclaimer
+# glamr::folder_setup() # standardized set of folders
 
-  
+# All above functions are wrapped in another function
+glamr::si_setup()
+
+[1] "The following directories will be created:"
+Data
+Images
+Scripts
+AI
+Dataout
+Data_public
+GIS
+Documents
+Graphics
+markdown
+✔ Setting active project to
+'C:/Users/tessam/Documents/Github/demo_repo'
+✔ Writing 'README.md'
+• Modify 'README.md'
+```
+:::
+
+::: {.column width="40%"}
+![](https://user-images.githubusercontent.com/5873344/232597730-658b213b-9aa5-4899-aa87-121a5d5adcb7.PNG)
+
+After `si_setup`()![](https://user-images.githubusercontent.com/5873344/232597736-45384bb5-9875-4ce0-bd21-6cd9c994f48b.PNG)
+:::
+:::
+
+## Discoverable Content I
+
+With around 20 analysts on our team, covering over 50 countries, tracking analyses and visualizations can be difficult. To track visualizations we have started creating unique referenced ids that are embedded in graphics using the `glue` package.
+
+```{r track-viz}
+  # Generate a reference id for a visualization
+	(ref_id <- Sys.time() |> digest::sha1() |> substr(start = 1, stop = 8))
 ```
 
-## Standardized Folders
+## Discoverable Content II
 
-## Discoverable Content
-
-## Creating a Community of Practice
-
-When you click the **Render** button a presentation will be generated that includes both content and the output of embedded code. You can embed code like this:
+We use this unique id in the caption of all visuals, which allows us to search github for content.
 
 ```{r}
-1 + 1
+#| code-line-numbers: "|14"
+
+  # Required libraries
+  library(palmerpenguins) 
+  library(tidyverse)
+  library(glue)
+
+# Create a mock up plot
+  p <- penguins %>% 
+    summarise(ave_bill_length = mean(bill_length_mm, na.rm = T), .by = "species") %>% 
+    mutate(species_order = fct_reorder(species, ave_bill_length)) %>% 
+    ggplot(aes(y = ave_bill_length, x = species_order, fill = glitr::si_palettes$old_rose[1:3])) +
+    geom_col() +
+    glitr::si_style_ygrid() +
+    scale_fill_identity() +
+    labs(caption = glue::glue("SI graph | {ref_id}"),
+         title = "Chinstrap penguins have the longest bill length, on average", 
+         x = NULL, y = "Bill length (in mm)")
+```
+
+## Discoverable Content III
+```{r}
+#| column: screen
+#| out-width: 100%
+# Print the plot
+  p
 ```
