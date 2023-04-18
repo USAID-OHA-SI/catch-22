@@ -112,11 +112,13 @@ Style guide serves as a tool to define and enhance brand cohesion. Where possibl
 
 R + Rstudio is our primary analytic tool. Most of the SI infrastructure is based on `tidyverse` principles and workflows.
 
+::: {layout-nrow="3"}
 [![](https://github.com/USAID-OHA-SI/glitr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/glitr/) [![](https://github.com/USAID-OHA-SI/glamr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/glamr) [![](https://github.com/USAID-OHA-SI/gophr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/gophr) [![](https://github.com/USAID-OHA-SI/gisr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/gisr/)
 
 [![](https://github.com/USAID-OHA-SI/gagglr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/gagglr) [![](https://github.com/USAID-OHA-SI/grabr/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/grabr) [![](https://github.com/USAID-OHA-SI/Wavelength/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/Wavelength) [![](https://github.com/USAID-OHA-SI/tameDP/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/tameDP)
 
 [![](https://github.com/USAID-OHA-SI/mindthegap/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/mindthegap) [![](https://github.com/USAID-OHA-SI/COVIDutilities/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/COVIDutilities) [![](https://github.com/USAID-OHA-SI/selfdestructin5/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/selfdestructin5/) [![](https://github.com/USAID-OHA-SI/coRps/raw/main/figures/logo.png){width="175"}](https://github.com/USAID-OHA-SI/coRps)
+:::
 
 ## GitHub + Git
 
@@ -236,7 +238,8 @@ We use this unique id in the caption of all visuals, which allows us to search g
 
 ```{r}
 #| column: screen
-#| out-width: 90%
+#| out-width: 100%
+#| 
 # Print the plot
   p
 ```
@@ -254,3 +257,5 @@ Our mission is to create an inclusive learning/sharing collaborative withing USA
 # Credits
 
 Images from [Upslash](https://unsplash.com/)
+
+
