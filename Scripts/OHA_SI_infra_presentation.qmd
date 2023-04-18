@@ -2,15 +2,17 @@
 title: "Digging a Pit of Success"
 subtitle: "Data Science Infrastructure in the Office of HIV/AIDS"
 date: "2027-04-19"
-author: "Tim Essam & Karishma Srinkanth"
-institute: "OHA | Strategic Information Branch"
+author: 
+  - name: Tim Essam
+    email: tessam@usaid.gov
+  - name: Karishma Srikanth
+    email: ksrikanth@usaid.gov
 format:
   revealjs: 
     slide-number: c/t
     width: 1600
     height: 900
     logo: "https://usaid-oha-si.github.io/assets/img/si_logo_white.png"
-    footer: "[SI DS Infra](https://rstudio-conf-2022.github.io/get-started-quarto/)"
     css: ["theme/theme.css"]
     theme: simple
     echo: true
@@ -26,41 +28,65 @@ project:
 
 Implement the U.S. President's Emergency Plan for AIDS Relief (PEPFAR)
 
-![](https://www.state.gov/wp-content/uploads/2023/01/PEPFAR-20-Logo-Social-Tagged.jpg){fig-alt="PEPFAR Logo" fig-align="center" width="250"}
+![](https://www.state.gov/wp-content/uploads/2023/01/PEPFAR-20-Logo-Social-Tagged.jpg){fig-alt="PEPFAR Logo" width="250"}
 
-## About US
+## About Us
 
-The **Strategic Information Branch** **(GH/OHA/SIEI/SI)** provides technical expertise to support and promote data-informed decision making, through program monitoring, reporting and analysis in order to target resources appropriately to achieve HIV epidemic control. The Branch:
+The **Strategic Information Branch** **([GH/OHA/SIEI/SI](https://sites.google.com/a/usaid.gov/gh-oha/home/oha-divisions-branches/-strategic-information-evaluation-informatics-division/strategic-information-branch))** provides technical expertise to support and promote data-informed decision making, through program monitoring, reporting and analysis in order to target resources appropriately to achieve HIV epidemic control.
 
--   Supports HQ and missions by building capacity for program monitoring and surveillance to improve HIV/AIDS programs and to provide accountability, oversight and management of programs and partners.
+-   Support HQ and missions by building capacity for program monitoring and surveillance to improve HIV/AIDS programs and to provide accountability, oversight and management of programs and partners.
 
--   Focuses on strengthening PEPFAR and USAID program data for use in inter-agency and intra-agency analyses.
+-   Focus on strengthening PEPFAR and USAID program data for use in inter-agency and intra-agency analyses.
 
-::: {style="color: #c43d4d;"}
--   TL/DR: Branch is the data science hub of OHA
-:::
+-   [TL/DR: SI Branch is the data science hub of OHA]{style="color:#c43d4d; font-weight: bold;"}
 
-# Guiding Principles {#sec-guiding-principles background-image="https://unsplash.com/photos/CJBCaMkLP_U/download?ixid"}
+# [Guiding Principles]{style="color:white;"} {#sec-guiding-principles background-image="https://unsplash.com/photos/CJBCaMkLP_U/download?ixid"}
 
-## We organize around the principles of shared accountability and responsibility
+## Organize around shared responsibility and accountability
 
--   Analyses are well-documented, reproducible, and open to the office
+-   Analyses are **well-documented, reproducible**, and **open** to the office
 
 -   Code pushed to github repo following SI best practices
 
--   Leverage SI infrastructure (R packages / OHA colors / etc)
+-   Leverage SI infrastructure (R packages / OHA colors / Tableau Prep Flows)
 
--   Continuous improvement / tweaks to processes
+-   Continuous improvement / open feedback loops (GitHub issues, after action reviews, etc.)
 
-## Why this works?
+## Why this works
 
--   Predictable data structure, refresh schedule, and required analyses
+-   **Predictable** data structure, storage, and refresh schedule
 
 -   Critical mass of analysts who code (or are learning)
 
+-   **Space** for skill development and continuous learning
+
 -   Support from leadership
 
-# Tools
+# [Key Resources]{style="color:white;"} {#key-resources background-image="https://unsplash.com/photos/oyXis2kALVg/download?ixid=MnwxMjA3fDB8MXxzZWFyY2h8NHx8ZGF0YXxlbnwwfHx8fDE2ODE3NjYzNzQ&force=true&w=1920"}
+
+## DATIM
+
+DATIM ([DHIS2](https://dhis2.org/)) captures all PEPFAR's monitoring, evaluation and reporting (MER) indicators.
+
+Data intended for import into DATIM must satisfy strict requirements with respect to the [**format**](https://datim.zendesk.com/hc/en-us/articles/115002334246-DATIM-Data-Import-and-Exchange-Resources#format) of the data as well the relationship of the data to the current [metadata](https://datim.zendesk.com/hc/en-us/articles/115002334246-DATIM-Data-Import-and-Exchange-Resources#metadata) within of the system.
+
+MER ***structured data*** sets are available through the platform.
+
+![](https://datim.zendesk.com/hc/article_attachments/360077770971/logo_datim.png){.absolute top="450" left="0" width="505"}
+
+## Panorama
+
+Analytic platform built on top of DATIM that hosts dossiers, data tables, and custom applications built in [MicroStrategy](https://www.microstrategy.com/en).
+
+![](https://user-images.githubusercontent.com/5873344/232775618-ab3c1cb2-2af9-4741-ae1a-f3d07924b854.jpeg){width="1000"}
+
+## OHA Style Guide
+
+Style guide serves as a tool to define and enhance brand cohesion. Where possible, we preset defaults (font, color, titles, captions) to save colleagues time and cognitive load.
+
+[![](https://user-images.githubusercontent.com/5873344/232764503-ff2c980d-8de1-4572-993d-d111e43b54e9.png){fig-align="left" width="1000"}](https://drive.google.com/file/d/1WNTQ-tiGpR6k1ZxgN2BwXMRWnABgF45B/view?usp=share_link)
+
+# [Tools]{style="color:white;"} {#tools background-image="https://unsplash.com/photos/s8OO2-t-HmQ/download?ixid=MnwxMjA3fDB8MXxzZWFyY2h8Nnx8dG9vbHN8ZW58MHx8fHwxNjgxODIxNjY1&force=true&w=1920"}
 
 ## Core Software
 
@@ -69,12 +95,16 @@ The **Strategic Information Branch** **(GH/OHA/SIEI/SI)** provides technical exp
 ![](https://d33wubrfki0l68.cloudfront.net/1ac3f0e3753f18c7e2a8893957d1841fba1e3d08/48a33/wp-content/uploads/2018/10/rstudio-logo-flat.png){fig-align="center" width="500"}
 
 ![](https://dev3lop.com/wp-content/uploads/2017/04/tableau-logo-tableau-software.jpg){fig-align="center" width="500"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_(2019%E2%80%93present).svg/2203px-Microsoft_Office_Excel_(2019%E2%80%93present).svg.png){fig-align="center" width="189"}
 :::
 
 ::: {.column width="50%"}
+![](https://cdn.freebiesupply.com/logos/thumbs/2x/git-logo.png){fig-align="center" width="235"}
+
 ![](https://1000logos.net/wp-content/uploads/2021/05/GitHub-logo.png){fig-align="center" width="313"}
 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Microsoft_Office_Excel_(2019%E2%80%93present).svg/2203px-Microsoft_Office_Excel_(2019%E2%80%93present).svg.png){fig-align="center" width="189"}
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Adobe_Illustrator_CC_icon.svg/2101px-Adobe_Illustrator_CC_icon.svg.png){fig-align="center" width="181"}
 :::
 :::
 
@@ -88,13 +118,13 @@ R + Rstudio is our primary analytic tool. Most of the SI infrastructure is based
 
 [![](https://github.com/USAID-OHA-SI/mindthegap/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/mindthegap) [![](https://github.com/USAID-OHA-SI/COVIDutilities/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/COVIDutilities) [![](https://github.com/USAID-OHA-SI/selfdestructin5/raw/main/man/figures/logo.png){width="175"}](https://usaid-oha-si.github.io/selfdestructin5/) [![](https://github.com/USAID-OHA-SI/coRps/raw/main/figures/logo.png){width="175"}](https://github.com/USAID-OHA-SI/coRps)
 
-## GitHub
+## GitHub + Git
 
-Use Github to store packages and analytic code online. This allows for remote collaboration and serves as a default knowledge management platform.
+Use git locally for version control and Github to store packages and analytic code online. This allows for remote collaboration and serves as a default knowledge management platform.
 
 *No data are stored on GitHub -- only code.*
 
-![](https://user-images.githubusercontent.com/5873344/232575267-f395d8ae-859e-4443-a563-b5c4fe81d61e.PNG){fig-align="center"}
+![](https://user-images.githubusercontent.com/5873344/232575267-f395d8ae-859e-4443-a563-b5c4fe81d61e.PNG)
 
 ## Tableau
 
@@ -104,9 +134,19 @@ OHA maintains 30+ Tableau Dashboards. Most are linked to our quarterly data (MER
 
 ## Excel
 
-Most commonly used tool among implementing partners and mission staff. Many core PEPFAR products are built in Excel. Harder to create reproducible workflows that can scale.
+Cmmonly used tool among implementing partners and mission staff. Many core PEPFAR products are built in Excel.
 
-# Digging a Pit of Success
+[![](https://github.com/USAID-OHA-SI/Wavelength/raw/main/man/figures/logo.png){width="225"}](https://usaid-oha-si.github.io/Wavelength) [![](https://github.com/USAID-OHA-SI/tameDP/raw/main/man/figures/logo.png){width="225"}](https://usaid-oha-si.github.io/tameDP)
+
+*Can be challenging to create reproducible workflows that can scale.*
+
+## Adobe Illustrator
+
+Vector graphics editor and design program used for enhancing visualizations and communications products.
+
+![](https://user-images.githubusercontent.com/5873344/232761843-b3d561fe-3ff8-4888-ac7f-3637adac6e25.png){width="1000"}
+
+# [Digging a Pit of Success]{style="color:white;"} {#pit-digging background-image="https://unsplash.com/photos/KIuCioF4FYc/download?ixid=MnwxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNjgxODIyNTI4&force=true&w=1920"}
 
 ## Reproducible Workflows
 
@@ -118,7 +158,7 @@ Most commonly used tool among implementing partners and mission staff. Many core
 
 -   Start munging and push code to repo online when finished
 
-## Setup Common Folders
+## Common Folders
 
 ::: columns
 ::: {.column width="60%"}
@@ -160,7 +200,7 @@ After `si_setup`()![](https://user-images.githubusercontent.com/5873344/23259773
 
 ## Discoverable Content I
 
-With around 20 analysts on our team, covering over 50 countries, tracking analyses and visualizations can be difficult. To track visualizations we have started creating unique referenced ids that are embedded in graphics using the `glue` package.
+With around 20 analysts on our team, covering over 50 countries, tracking analyses and visualizations can be difficult. To track visualizations we use unique referenced ids that are embedded in graphics using the `glue` package.
 
 ```{r track-viz}
   # Generate a reference id for a visualization
@@ -184,7 +224,7 @@ We use this unique id in the caption of all visuals, which allows us to search g
     summarise(ave_bill_length = mean(bill_length_mm, na.rm = T), .by = "species") %>% 
     mutate(species_order = fct_reorder(species, ave_bill_length)) %>% 
     ggplot(aes(y = ave_bill_length, x = species_order, fill = glitr::si_palettes$old_rose[1:3])) +
-    geom_col() +
+    geom_col(width = 0.5) +
     glitr::si_style_ygrid() +
     scale_fill_identity() +
     labs(caption = glue::glue("SI graph | {ref_id}"),
@@ -193,9 +233,24 @@ We use this unique id in the caption of all visuals, which allows us to search g
 ```
 
 ## Discoverable Content III
+
 ```{r}
 #| column: screen
-#| out-width: 100%
+#| out-width: 90%
 # Print the plot
   p
 ```
+
+## coRps
+
+Our mission is to create an inclusive learning/sharing collaborative withing USAID's Office of HIV/AIDS (OHA) where analysts can gain from others' analytic experiences, primarily in and around R. The focus is on how improving our skills collectively so we can develop and foster principles of conducting analysis and viz that will bleed over to the rest of the office.
+
+[![](https://github.com/USAID-OHA-SI/coRps/raw/main/figures/logo.png){fig-align="left" width="225"}](https://github.com/USAID-OHA-SI/coRps)
+
+## 
+
+![](https://c.tenor.com/3EYd9ID79vcAAAAd/mic-drop-the-voice.gif)
+
+# Credits
+
+Images from [Upslash](https://unsplash.com/)
