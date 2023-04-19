@@ -1,7 +1,7 @@
 ---
 title: "Digging a Pit of Success"
 subtitle: "Data Science Infrastructure in the Office of HIV/AIDS"
-date: "2027-04-19"
+date: "2023-04-19"
 author: 
   - name: Tim Essam
     email: tessam@usaid.gov
@@ -200,6 +200,30 @@ After `si_setup`()![](https://user-images.githubusercontent.com/5873344/23259773
 :::
 :::
 
+## Code Reproducibility through Common Paths
+
+-   To improve reproducibility of our code and encourage collaboration, we created a function that accesses our central data folder paths stored locally in our `.Rprofile`.
+
+-   This way, when we are collaborating on code as a team, we don't need to change any paths manually to adjust for different folder paths from machine to machine.
+
+    ```{r si_path}
+    #| eval: false
+    #| output: false
+    set_paths(folderpath_msd = "~/Documents/Data",
+      folderpath_datim =  "~/Documents/DATIM",
+      folderpath_downloads =  "~/Downloads")
+    ```
+
+    ![](images/image-1702900836.png)
+
+    ```{r si_path example}
+    #| eval: false
+    #| output: false
+    df <- glamr::si_path() %>%
+      glamr::return_latest("OU_IM_FY22") %>% 
+      gophr::read_psd()
+    ```
+
 ## Discoverable Content I
 
 With around 20 analysts on our team, covering over 50 countries, tracking analyses and visualizations can be difficult. To track visualizations we use unique referenced ids that are embedded in graphics using the `glue` package.
@@ -246,7 +270,7 @@ We use this unique id in the caption of all visuals, which allows us to search g
 
 ## coRps
 
-Our mission is to create an inclusive learning/sharing collaborative withing USAID's Office of HIV/AIDS (OHA) where analysts can gain from others' analytic experiences, primarily in and around R. The focus is on how improving our skills collectively so we can develop and foster principles of conducting analysis and viz that will bleed over to the rest of the office.
+Our mission is to create an inclusive learning/sharing collaborative within USAID\'s Office of HIV/AIDS (OHA),  where analysts can gain from others\' analytic experiences, primarily in and around R. The coRps is focused on improving R skills and building a culture or R use for the benefit of OHA.
 
 [![](https://github.com/USAID-OHA-SI/coRps/raw/main/figures/logo.png){fig-align="left" width="225"}](https://github.com/USAID-OHA-SI/coRps)
 
@@ -257,5 +281,3 @@ Our mission is to create an inclusive learning/sharing collaborative withing USA
 # Credits
 
 Images from [Upslash](https://unsplash.com/)
-
-
