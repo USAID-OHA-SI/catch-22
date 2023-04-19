@@ -214,7 +214,7 @@ After `si_setup`()![](https://user-images.githubusercontent.com/5873344/23259773
       folderpath_downloads =  "~/Downloads")
     ```
 
-    ![](images/image-1702900836.png)
+    ![](https://user-images.githubusercontent.com/84093378/233116044-2c5caef7-d723-44cd-8e86-672d0fd8b85a.png)
 
     ```{r si_path example}
     #| eval: false
