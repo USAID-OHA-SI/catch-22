@@ -29,7 +29,7 @@
   authors <- c("Aaron Chafetz", "Tim Essam", "Karishma Srikanth")
   
   #UNAID GOAL - 90 or 95
-  goal <- 90
+  goal <- 95
 
   #non regional country list
   lts <- pepfar_country_list %>% 
@@ -42,15 +42,18 @@
 # IMPORT ------------------------------------------------------------------
   
   #HIV estimates
-  df_est <- pull_unaids("HIV Estimates", TRUE)
+  df_est <- pull_unaids(TRUE, "HIV Estimates", TRUE)
   
   #Test and Treat percent estimates
-  df_tt <- pull_unaids("HIV Test & Treat", TRUE)
+  df_tt <- pull_unaids(TRUE, "HIV Test & Treat", TRUE)
   
-  #pull Total PLHIV death data
-  g_id <- "1CSVOauu2gyq9Am0eCl7TgpAeB1Xd3dCtE_Oc_yk3cI4"
-  
-  df_deaths <- range_speedread(ss = g_id, sheet = "UNAIDS_epi_control") %>% 
+  # #pull Total PLHIV death data
+  # g_id <- "1CSVOauu2gyq9Am0eCl7TgpAeB1Xd3dCtE_Oc_yk3cI4"
+  # 
+  # df_deaths <- range_speedread(ss = g_id, sheet = "UNAIDS_epi_control") %>% 
+  #   filter(indicator == "Number Total Deaths HIV Pop")
+  # 
+  df_deaths <- pull_unaids(FALSE, "epicontrol", TRUE) %>% 
     filter(indicator == "Number Total Deaths HIV Pop")
   
 
@@ -112,7 +115,7 @@
   
 # MUNGE DATA --------------------------------------------------------------
 
-  #limit Test and Treat data
+  #limit Test and Treat data - PLHIV Base
   df_tt_lim <- df_tt %>% 
     filter(year == max(year),
            indicator %in% c("Percent Known Status of PLHIV",
@@ -137,6 +140,38 @@
            achv = value > goal_rate) %>% 
     group_by(country) %>% 
     mutate(gap = goal_rate - value,
+           grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
+                                max(gap, na.rm = TRUE) <= 0 ~ "Achieved",
+                                gap == max(gap, na.rm = TRUE) ~ str_replace(indicator, "\\n", " "),
+                                TRUE ~ NA_character_), 
+           gap = max(gap)) %>%
+    ungroup() 
+  
+  # OR choose relative base
+  df_tt_lim <- df_tt %>% 
+    filter(year == max(year),
+           indicator %in% c("Percent Known Status of PLHIV",
+                            "Percent on ART with Known Status",
+                            "Percent VLS on ART"),
+           age == "All",
+           sex == "All",
+           # stat == "est"
+    ) %>% 
+    select(year, country, indicator, estimate) %>% 
+    rename(value = estimate)
+  
+  df_tt_lim <- df_tt_lim %>% 
+    filter(!is.na(value)) %>% 
+    mutate(indicator = recode(indicator, "Percent Known Status of PLHIV" = "Known\nStatus",
+                              "Percent on ART with Known Status" = "On\nART",
+                              "Percent VLS on ART" = "VLS"),
+           set = recode(indicator, "Known\nStatus" = 1,
+                        "On\nART" = 2,
+                        "VLS" = 3),
+           #goal_rate = round((goal/100)^set*100),
+           achv = value > goal) %>% 
+    group_by(country) %>% 
+    mutate(gap = goal - value,
            grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
                                 max(gap, na.rm = TRUE) <= 0 ~ "Achieved",
                                 gap == max(gap, na.rm = TRUE) ~ str_replace(indicator, "\\n", " "),
@@ -222,6 +257,6 @@
           strip.text.y = element_blank(),
           panel.spacing.y = unit(.5, "lines"))
   
-  si_save("Graphics/ctip-ou-unaids_plus_epi-2022.svg", 
+  si_save("Graphics/ctip-ou-unaids_plus_epi-2022-relbase.svg", 
           width = 3.2, height = 12)
   
