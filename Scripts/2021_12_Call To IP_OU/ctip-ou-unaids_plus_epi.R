@@ -112,42 +112,56 @@
   
 # MUNGE DATA --------------------------------------------------------------
 
-  #limit Test and Treat data
-  df_tt_lim <- df_tt %>% 
-    filter(year == max(year),
-           indicator %in% c("Percent Known Status of PLHIV",
-                            "Percent on ART of PLHIV",
-                            "Percent VLS of PLHIV"),
-           age == "All",
-           sex == "All",
-          # stat == "est"
-           ) %>% 
-    select(year, country, indicator, estimate) %>% 
-    rename(value = estimate)
-  
-  df_tt_lim <- df_tt_lim %>% 
-    filter(!is.na(value)) %>% 
-    mutate(indicator = recode(indicator, "Percent Known Status of PLHIV" = "Known\nStatus",
-                              "Percent on ART of PLHIV" = "On\nART",
-                              "Percent VLS of PLHIV" = "VLS"),
-           set = recode(indicator, "Known\nStatus" = 1,
-                        "On\nART" = 2,
-                        "VLS" = 3),
-           goal_rate = round((goal/100)^set*100),
-           achv = value > goal_rate) %>% 
-    group_by(country) %>% 
-    mutate(gap = goal_rate - value,
-           grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
-                                max(gap, na.rm = TRUE) <= 0 ~ "Achieved",
-                                gap == max(gap, na.rm = TRUE) ~ str_replace(indicator, "\\n", " "),
-                                TRUE ~ NA_character_), 
-           gap = max(gap)) %>%
-    ungroup() 
+  munge_cascade <- function(df, denom) {
+    
+    if (denom == "PLHIV") {
+      indic <- c("Percent Known Status of PLHIV",
+                 "Percent on ART of PLHIV",
+                 "Percent VLS of PLHIV")
+    } else if (denom == "Relative") {
+      indic <- c("Percent Known Status of PLHIV",
+                 "Percent on ART with Known Status",
+                 "Percent VLS on ART")
+    }
+    
+    df_tt_lim <- df %>% 
+      filter(year == max(year),
+             indicator %in% indic,
+             age == "All",
+             sex == "All",
+             # stat == "est"
+      ) %>% 
+      select(year, country, indicator, estimate) %>% 
+      rename(value = estimate)
+    
+    df_tt_lim <- df_tt_lim %>% 
+      filter(!is.na(value)) %>% 
+      mutate(indicator = case_when(indicator == indic[1] ~ "Known\nStatus",
+                                   indicator == indic[2] ~ "On\nART",
+                                   indicator == indic[3] ~ "VLS"),
+             set = recode(indicator, "Known\nStatus" = 1,
+                          "On\nART" = 2,
+                          "VLS" = 3),
+             goal_rate = round((goal/100)^set*100),
+             achv = value > goal_rate) %>% 
+      group_by(country) %>% 
+      mutate(gap = goal_rate - value,
+             grouping = case_when(country %in% c("Guatemala", "Tajikistan") ~ "On ART",
+                                  max(gap, na.rm = TRUE) <= 0 ~ "Achieved",
+                                  gap == max(gap, na.rm = TRUE) ~ str_replace(indicator, "\\n", " "),
+                                  TRUE ~ NA_character_), 
+             gap = max(gap)) %>%
+      ungroup() 
+    
+    return(df_tt_lim)
+    
+  }
   
 # MERGE DATA --------------------------------------------------------------
 
   #merge
-  df_viz <- df_tt_lim %>% 
+  df_viz <- 
+    munge_cascade(df_tt, "PLHIV") %>% #decide what base
     bind_rows(df_est_lim) %>%
     left_join(df_plhiv, by = c("year", "country")) %>% 
     arrange(country) %>% 
