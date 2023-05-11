@@ -32,8 +32,8 @@
                  names_pattern = "(.)(.)") %>% 
     mutate(set = glue("Dataset {set}")) %>% 
     ggplot(aes(x, y)) +
-    geom_smooth(method = "lm", se = FALSE, color = golden_sand) + 
-    geom_point(color = scooter, size = 4, alpha = .8) +
+    geom_smooth(method = "lm", se = FALSE, color = "#a6bb57") + 
+    geom_point(color = "#6768ab", size = 4, alpha = .8) +
     facet_wrap(~set) +
     labs(x = NULL, y = NULL, caption = glue("Source: Tufte - Ancombe's Quartet | Ref ID: {ref_id}")) +
     si_style() +

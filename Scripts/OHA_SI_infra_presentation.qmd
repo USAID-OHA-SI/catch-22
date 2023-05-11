@@ -17,6 +17,7 @@ format:
     theme: simple
     echo: true
     incremental: true
+    preview-links: auto
 editor: visual
 editor_options:
   chunk_output_type: inline
@@ -82,9 +83,9 @@ Analytic platform built on top of DATIM that hosts dossiers, data tables, and cu
 
 ## OHA Style Guide
 
-Style guide serves as a tool to define and enhance brand cohesion. Where possible, we preset defaults (font, color, titles, captions) to save colleagues time and cognitive load.
+[Style guide](https://issuu.com/achafetz/docs/oha_styleguide) serves as a tool to define and enhance brand cohesion. Where possible, we preset defaults (font, color, titles, captions) to save colleagues time and cognitive load.
 
-[![](https://user-images.githubusercontent.com/5873344/232764503-ff2c980d-8de1-4572-993d-d111e43b54e9.png){fig-align="left" width="1000"}](https://drive.google.com/file/d/1WNTQ-tiGpR6k1ZxgN2BwXMRWnABgF45B/view?usp=share_link)
+[![](https://user-images.githubusercontent.com/5873344/232764503-ff2c980d-8de1-4572-993d-d111e43b54e9.png){fig-align="left"}](https://issuu.com/achafetz/docs/oha_styleguide)
 
 # [Tools]{style="color:white;"} {#tools background-image="https://unsplash.com/photos/s8OO2-t-HmQ/download?ixid=MnwxMjA3fDB8MXxzZWFyY2h8Nnx8dG9vbHN8ZW58MHx8fHwxNjgxODIxNjY1&force=true&w=1920"}
 
@@ -147,6 +148,26 @@ Cmmonly used tool among implementing partners and mission staff. Many core PEPFA
 Vector graphics editor and design program used for enhancing visualizations and communications products.
 
 ![](https://user-images.githubusercontent.com/5873344/232761843-b3d561fe-3ff8-4888-ac7f-3637adac6e25.png){width="1000"}
+
+## And the rest
+
+::: columns
+::: {.column width="50%"}
+![](https://www.python.org/static/community_logos/python-logo.png){fig-align="center" width="500"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/8/87/Sql_data_base_with_logo.png?20210130181641){fig-align="center" width="400"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_Apps_Script.svg/800px-Google_Apps_Script.svg.png){fig-align="center" width="189"}
+:::
+
+::: {.column width="50%"}
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/HTML5_logo_and_wordmark.svg/640px-HTML5_logo_and_wordmark.svg.png){fig-align="center" width="200"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/CSS3_logo_and_wordmark.svg/544px-CSS3_logo_and_wordmark.svg.png?20160530175649){fig-align="center" height="200"}
+
+![](https://upload.wikimedia.org/wikipedia/commons/d/d9/Logo_Stacked_Color.jpg){fig-align="center" width="181"}
+:::
+:::
 
 # [Digging a Pit of Success]{style="color:white;"} {#pit-digging background-image="https://unsplash.com/photos/KIuCioF4FYc/download?ixid=MnwxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNjgxODIyNTI4&force=true&w=1920"}
 
@@ -270,9 +291,17 @@ We use this unique id in the caption of all visuals, which allows us to search g
 
 ## coRps
 
-Our mission is to create an inclusive learning/sharing collaborative within USAID\'s Office of HIV/AIDS (OHA),  where analysts can gain from others\' analytic experiences, primarily in and around R. The coRps is focused on improving R skills and building a culture or R use for the benefit of OHA.
+Our mission is to create an inclusive learning/sharing collaborative within USAID's Office of HIV/AIDS (OHA),  where analysts can gain from others' analytic experiences, primarily in and around R. The coRps is focused on improving R skills and building a culture or R use for the benefit of OHA.
 
 [![](https://github.com/USAID-OHA-SI/coRps/raw/main/figures/logo.png){fig-align="left" width="225"}](https://github.com/USAID-OHA-SI/coRps)
+
+## Tableau Learning Collaborative (TLC)
+
+The Tableau Learning Collaborative is a space where staff across OHA can join to learn to use Tableau with PEPFAR data from OHA Tableau users through didactic training sessions and from each other from practical project examples.
+
+The goal of the TLC isto provide continuous learning environment and closer collaboration of OHA analyst to improve quality and standardization of OHA products
+
+![](https://pbs.twimg.com/profile_images/1268207088683020288/d9agkn4h_400x400.jpg){width="225"}
 
 ## 
 

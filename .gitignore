@@ -21,6 +21,7 @@ Images/*
 Graphics/*
 Data/*
 Dataout/*
+Documents/*
 
 #no data
 *.csv
@@ -46,14 +47,9 @@ Dataout/*
 *.twbx
 *.pptx
 
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-#no data
+# no data
 *.csv
-*.gz
+*.gz  
 *.txt
 *.rds
 *.xlsx
@@ -78,186 +74,3 @@ Graphics/*
 
 
 
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
-#no data
-*.csv
-*.gz
-*.txt
-*.rds
-*.xlsx
-*.xls
-*.zip
-*.png
-*.pptx
-*.tfl
-*.twb
-*.twbx
-*.tbs
-*.tbm
-*.hyper
-*.sql
-*.parquet
-*.svg
-*.dfx
-*.json
-*.dta
-*.shp
-*.dbf
-
-
-
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
-#no data
-*.csv
-*.gz
-*.txt
-*.rds
-*.xlsx
-*.xls
-*.zip
-*.png
-*.pptx
-*.tfl
-*.twb
-*.twbx
-*.tbs
-*.tbm
-*.hyper
-*.sql
-*.parquet
-*.svg
-*.dfx
-*.json
-*.dta
-*.shp
-*.dbf
-
-
-
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
-#no data
-*.csv
-*.gz
-*.txt
-*.rds
-*.xlsx
-*.xls
-*.zip
-*.png
-*.pptx
-*.tfl
-*.twb
-*.twbx
-*.tbs
-*.tbm
-*.hyper
-*.sql
-*.parquet
-*.svg
-*.dfx
-*.json
-*.dta
-*.shp
-*.dbf
-
-
-
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
-#no data
-*.csv
-*.gz
-*.txt
-*.rds
-*.xlsx
-*.xls
-*.zip
-*.png
-*.pptx
-*.tfl
-*.twb
-*.twbx
-*.tbs
-*.tbm
-*.hyper
-*.sql
-*.parquet
-*.svg
-*.dfx
-*.json
-*.dta
-*.shp
-*.dbf
-
-
-
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
-#no data
-*.csv
-*.gz
-*.txt
-*.rds
-*.xlsx
-*.xls
-*.zip
-*.png
-*.pptx
-*.tfl
-*.twb
-*.twbx
-*.tbs
-*.tbm
-*.hyper
-*.sql
-*.parquet
-*.svg
-*.dfx
-*.json
-*.dta
-*.shp
-*.dbf
-
-
-
-
-#nothing from these folders
-AI/*
-GIS/*
-Images/*
-Graphics/*
-Data/*
-Dataout/*
