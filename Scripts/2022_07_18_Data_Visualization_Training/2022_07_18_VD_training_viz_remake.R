@@ -90,7 +90,13 @@ df_long <-
     goal == 1 & type == "Local" ~ "#80475E",
     goal == 0 & type == "Local" ~ "#CC5A71",
     TRUE ~ grey20k
-  ))
+  ),
+  recolor2 = case_when(
+    facet_order == "" & type == "Local" ~ "#343456",
+    goal == 1 & type == "Local" ~ "#6768ab",
+    goal == 0 & type == "Local" ~ "#a4a4cd",
+    TRUE ~ grey20k)
+  )
 
 
 # VIZ ============================================================================
@@ -124,12 +130,14 @@ lp_plot <- function(df, yvar, ...) {
     ) +
     scale_x_continuous(labels = percent, breaks = seq(0, 1, .1)) +
     coord_cartesian(clip = "off", expand = F) +
-    plot_statics()
+    plot_statics() +
+    coord_flip() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 }
 
 lp_plot(df_long, orig)
 
-si_save("Images/lp_remake_base.png")
+si_save("Images/lp_remake_base_rotated.png")
 
 
 # sorted ------------------------------------------------------------------
@@ -147,9 +155,9 @@ lp_plot(df_long, ou_long) +
   scale_fill_manual(values = c("Local" = grey80k, "International" = grey20k))
 si_save("Images/lp_remake_base_recolor_2bw.png")
 
-# Add color
+# Add color -- was old_rose, using custom purple for talk
 lp_plot(df_long, ou_long) +
-  scale_fill_manual(values = c("Local" = old_rose, "International" = grey20k))
+  scale_fill_manual(values = c("Local" = "#6768ab", "International" = grey20k))
 
 si_save("Images/lp_remake_base_recolor_2.png")
 
@@ -161,7 +169,7 @@ lp_plot_dc <- function(df, yvar) {
     ggplot(aes(y = {{ yvar }}, x = share)) +
     geom_col(aes(fill = type), width = 0.85) +
     facet_grid(facet_order ~ ., scales = "free_y", drop = T, space = "free") +
-    scale_fill_manual(values = c("Local" = old_rose, "International" = grey10k)) +
+    scale_fill_manual(values = c("Local" = "#6768ab", "International" = grey10k)) +
     geom_text(
       data = . %>% filter(type == "Local"),
       aes(label = percent(share, 1)), size = 8 / .pt,
@@ -205,7 +213,7 @@ df_long_flt <-
 df_long_flt %>%
   ggplot(aes(y = ou, x = share)) +
   annotate("rect", xmin = 0.7, xmax = 0.71, fill = grey10k, alpha = 0.55, ymin = -Inf, ymax = Inf) +
-  geom_col(aes(fill = recolor), width = 0.85) +
+  geom_col(aes(fill = recolor2), width = 0.85) +
   geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
   geom_vline(xintercept = 0, size = 0.5, color = grey70k) +
   geom_vline(xintercept = 1, size = 0.25, color = grey70k, linetype = "dotted") +
@@ -257,7 +265,7 @@ achv_goal <-
 df_long_flt %>%
   ggplot(aes(y = ou, x = share)) +
   annotate("rect", xmin = 0.7, xmax = 0.71, fill = grey10k, alpha = 0.55, ymin = -Inf, ymax = Inf) +
-  geom_col(aes(fill = recolor), width = 0.85) +
+  geom_col(aes(fill = recolor2), width = 0.85) +
   geom_vline(xintercept = seq(0, 1, 0.25), size = 0.25, color = "white") +
   geom_vline(xintercept = 0, size = 0.5, color = grey70k) +
   geom_vline(xintercept = 1, size = 0.25, color = grey70k, linetype = "dotted") +
@@ -271,7 +279,7 @@ df_long_flt %>%
   ) +
   labs(
     x = NULL, y = NULL,
-    title = "IN FY21, FOUR OPERATING UNITS HAD ACHIEVED THE LOCAL PARTNER BUDGET SHARE GOAL OF 70%",
+    title = "IN FY21, FOUR OPERATING UNITS HAD ACHIEVED THE USAID LOCAL PARTNER BUDGET SHARE GOAL OF 70%",
     subtitle = "Twenty four operating units are still short of the goal.",
     fill = NULL,
     caption = glue("Source: Local Partner Team | Ref ID: {ref_id}")
