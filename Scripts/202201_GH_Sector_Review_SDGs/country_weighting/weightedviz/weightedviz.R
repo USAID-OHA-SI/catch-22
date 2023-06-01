@@ -1,11 +1,10 @@
 
 # PROJECT:  catch-22
-# AUTHOR:   J.Hoehner | USAID/PHI
+# AUTHOR:   J.Hoehner | USAID/GHTASC
 # PURPOSE:  To adjust estimates by population for comparison
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-08-18
 
 # dependencies -----------------------------------------------------------------
 
@@ -474,6 +473,9 @@ uhc_ssa_pepfar <- lic_ssa %>%
 
 uhc_ssa_pepfar %>%
   ggplot(aes()) +
+   geom_line(aes(x = year, y = weighted_avg, 
+                 alpha = 0.8, group = pepfar, 
+                 color = pepfar), linewidth = 1) +
   geom_area(aes(alpha = 0.7,
     x = year, y = weighted_avg,
     group = pepfar, fill = pepfar)) +
@@ -511,7 +513,7 @@ uhc_ssa_pepfar %>%
     color = NULL, 
     fill = NULL,
     group = NULL,
-    caption = glue::glue("Source: WHO | {ref_id} | Jessica Hoehner"))
+    caption = glue::glue("Source: WHO | {ref_id} | J. Hoehner, K. Srikanth"))
 
 # which countries were included in the above figure?
 countries_uhc_ssa_pepfar <- uhc_ssa_pepfar %>%
