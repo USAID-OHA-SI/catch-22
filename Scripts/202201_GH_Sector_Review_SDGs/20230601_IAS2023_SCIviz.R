@@ -221,7 +221,7 @@ sci_viz(df_overall_viz,
 si_save(glue("Graphics/sci_overall_{date}.svg"))
 
 # which countries were included in the above figure?
-countries_overall_viz <- df_overall_viz %>%
+countries_overall_viz <- df_overall %>%
   ungroup() %>%
   select(country, pepfar) %>%
   distinct()
@@ -245,7 +245,7 @@ df_viz_ca <- df_ca %>%
 
 sci_viz(df_viz_ca,
   ylims = c(0, 40),
-  ybreaks = c(0, 10, 30, 40),
+  ybreaks = c(0, 10, 20, 30),
   caption = "Figure 1.2: SCI sub-index on capacity and access")
 
 si_save(glue("Graphics/sciCA_{date}.svg"))
