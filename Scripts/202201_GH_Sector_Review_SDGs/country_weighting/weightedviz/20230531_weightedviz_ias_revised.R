@@ -154,6 +154,20 @@ uhc_ssa_pepfar <- lic_ssa %>%
   mutate(
     weighted_avg = weighted.mean(value, population))
 
+uhc_low_id_pepfar <- lic_ssa %>%
+  filter(
+    indicator == "uhc_subindex4_id") %>%
+  group_by(year, pepfar) %>%
+  mutate(
+    weighted_avg = weighted.mean(value, population))
+
+uhc_low_ca_pepfar <- lic_ssa %>%
+  filter(
+    indicator == "uhc_subindex1_capacity_access") %>%
+  group_by(year, pepfar) %>%
+  mutate(
+    weighted_avg = weighted.mean(value, population))
+
 uhc_ssa_pepfar %>%
   ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))+
   # geom_smooth(aes(
@@ -172,7 +186,7 @@ uhc_ssa_pepfar %>%
     limits = c(0, 60),
     breaks = c(0, 10, 20, 30, 40, 50, 60)) +
   scale_x_continuous(
-    breaks = c(2000, 2005, 2010, 2015, 2019)) +
+    breaks = c(2000, 2005, 2010, 2015, 2017, 2019)) +
   geom_text(data = . %>% filter(year ==  2019), 
             aes(label = pepfar), 
             vjust = -1,
@@ -214,3 +228,131 @@ uhc_ssa_pepfar %>%
     caption = glue::glue("Source: World Health Organization Health Service Coverage Index"))
 
 si_save("Graphics/ias_sci_overall_remake.svg")
+
+
+uhc_low_id_pepfar %>%
+  ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))+
+  # geom_smooth(aes(
+  #   x = year, y = weighted_avg,
+  #   group = pepfar, color = pepfar)) +
+  geom_point(aes(
+    x = year, y = value,
+    color = pepfar, fill = pepfar),
+    alpha = 0.4,
+    position = position_jitter(width = 0.2)) +
+  geom_point(size = 4, alpha = .7) +
+ geom_line(linewidth = 1) +
+  #geom_smooth() +
+  geom_vline(xintercept = c(2003), linetype = "dashed") +
+  si_style_ygrid() +
+  scale_y_continuous(
+    limits = c(0, 70),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70)) +
+  scale_x_continuous(
+    breaks = c(2000, 2005, 2010, 2015, 2019)) +
+  geom_text(data = . %>% filter(year ==  2019), 
+            aes(label = pepfar), 
+            vjust = -1,
+            # hjust = -0.7,
+            family = "Source Sans Pro") +
+  geom_label_repel(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 60, as.character(iso), "")),
+    segment.size = 0,
+    point.padding = 0,
+    nudge_y = 0,
+    size = 3,
+    family = "Source Sans Pro",
+    label.size = NA
+    # hjust = -0.4, vjust = 0.4,
+    # position = position_jitter(width = -0.4),
+    # family = "Source Sans Pro",
+    # size = 3
+  ) +
+  scale_color_manual(
+    values = c(
+      "PEPFAR" = usaid_medblue,
+      "Non-PEPFAR" = usaid_lightgrey),
+    labels = NULL) +
+  theme(
+    # axis.text = element_text(
+    #   family = "Source Sans Pro",
+    #   size = 18,
+    #   color = "#505050"),
+    legend.position = "none") +
+  labs(
+    title = "Within the infectious diease sub-index, there is a similar increase in PEPFAR-supported countries since 2003" %>% toupper(),
+    subtitle = "Analysis restricted to countries designated as 'Low Income' by the World Bank",
+    x = NULL,
+    y = NULL,
+    color = NULL, 
+    fill = NULL,
+    group = NULL,
+    caption = glue::glue("Source: World Health Organization Health Service Coverage Index"))
+
+si_save("Graphics/ias_sci_id_remake.svg")
+
+
+uhc_low_ca_pepfar %>%
+  ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))+
+  # geom_smooth(aes(
+  #   x = year, y = weighted_avg,
+  #   group = pepfar, color = pepfar)) +
+  geom_point(aes(
+    x = year, y = value,
+    color = pepfar, fill = pepfar),
+    alpha = 0.4,
+    position = position_jitter(width = 0.2)) +
+  geom_point(size = 4, alpha = .7) +
+  geom_line(linewidth = 1) +
+  #geom_smooth() +
+  geom_vline(xintercept = c(2003), linetype = "dashed") +
+  si_style_ygrid() +
+  scale_y_continuous(
+    limits = c(0, 70),
+    breaks = c(0, 10, 20, 30, 40, 50, 60, 70)) +
+  scale_x_continuous(
+    breaks = c(2000, 2005, 2010, 2015, 2019)) +
+  geom_text(data = . %>% filter(year ==  2019), 
+            aes(label = pepfar), 
+            vjust = -1,
+            # hjust = -0.7,
+            family = "Source Sans Pro") +
+  geom_label_repel(aes(
+    x = year, y = value, color = pepfar,
+    label = if_else(value > 50, as.character(iso), "")),
+    segment.size = 0,
+    point.padding = 0,
+    nudge_y = 0,
+    size = 3,
+    family = "Source Sans Pro",
+    label.size = NA
+    # hjust = -0.4, vjust = 0.4,
+    # position = position_jitter(width = -0.4),
+    # family = "Source Sans Pro",
+    # size = 3
+  ) +
+  scale_color_manual(
+    values = c(
+      "PEPFAR" = usaid_medblue,
+      "Non-PEPFAR" = usaid_lightgrey),
+    labels = NULL) +
+  theme(
+    # axis.text = element_text(
+    #   family = "Source Sans Pro",
+    #   size = 18,
+    #   color = "#505050"),
+    legend.position = "none") +
+  labs(
+    title = "Within the infectious diease sub-index, there is a similar increase in PEPFAR-supported countries since 2003" %>% toupper(),
+    subtitle = "Analysis restricted to countries designated as 'Low Income' by the World Bank",
+    x = NULL,
+    y = NULL,
+    color = NULL, 
+    fill = NULL,
+    group = NULL,
+    caption = glue::glue("Source: World Health Organization Health Service Coverage Index"))
+
+si_save("Graphics/ias_sci_id_remake.svg")
+
+
