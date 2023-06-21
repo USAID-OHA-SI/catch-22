@@ -39,7 +39,7 @@ pct_change <- function(current, starting, sig_dig) {
 
 # SCI figure function
 
-sci_viz <- function(ggobj, ylims, ybreaks, caption, ...) {
+sci_viz <- function(ggobj, ylims, ybreaks, ou_lbl, title, caption, ...) {
   ggobj <- ggobj +
     geom_point(
       aes(
@@ -60,6 +60,25 @@ sci_viz <- function(ggobj, ylims, ybreaks, caption, ...) {
     scale_x_continuous(
       breaks = c(2000, 2005, 2010, 2015, 2019)
     ) +
+    geom_text(data = . %>% filter(year ==  2019), 
+              aes(label = pepfar), 
+              vjust = -1,
+              # hjust = -0.7,
+              family = "Source Sans Pro") +
+    geom_label_repel(aes(
+      x = year, y = value, color = pepfar,
+      label = if_else(value > ou_lbl, as.character(iso), "")),
+      segment.size = 0,
+      point.padding = 0,
+      nudge_y = 5,
+      size = 3,
+      family = "Source Sans Pro",
+      label.size = NA
+      # hjust = -0.4, vjust = 0.4,
+      # position = position_jitter(width = -0.4),
+      # family = "Source Sans Pro",
+      # size = 3
+    ) +
     scale_color_manual(
       values = c(
         "PEPFAR" = usaid_medblue,
@@ -73,11 +92,11 @@ sci_viz <- function(ggobj, ylims, ybreaks, caption, ...) {
       )
     ) +
     theme(
-      axis.text = element_text(
-        family = "Source Sans Pro",
-        size = 18,
-        color = "#505050"
-      ),
+      #   axis.text = element_text(
+      #     family = "Source Sans Pro",
+      # #    size = 18,
+      #     color = "#505050"
+      #   ),
       legend.position = "none",
       strip.background = element_blank(),
       strip.text.x = element_blank()
@@ -88,10 +107,12 @@ sci_viz <- function(ggobj, ylims, ybreaks, caption, ...) {
       color = NULL,
       fill = NULL,
       group = NULL,
-      caption = glue::glue("{caption} |
-                            Source: WHO | {ref_id} | J. Hoehner, K. Srikanth")
+      title = title, 
+      subtitle = "Analysis restricted to countries designated as 'Low Income' by the World Bank",
+      caption = glue::glue("{caption}
+                            Source: WHO | {ref_id}")
     )
-
+  
   return(ggobj)
 }
 
@@ -100,7 +121,7 @@ sci_viz <- function(ggobj, ylims, ybreaks, caption, ...) {
 # produced by catch-22/Scripts/202201_GH_Sector_Review_SDGs/
 # country_weighting/src/clean.R
 figure_data <- read_sheet("17ZBOzPux0lgkmN48BtE3yzKpeEzDLVmx9B4Pei9nGbw",
-  sheet = "figure_data")
+                          sheet = "figure_data")
 
 # munge ------------------------------------------------------------------------
 
@@ -215,8 +236,12 @@ df_overall_viz <- df_overall %>%
   ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))
 
 sci_viz(df_overall_viz,
-  ylims = c(0, 50), ybreaks = c(0, 25, 45),
-  caption = "Figure 1: Overall SCI")
+        ylims = c(0, 100),
+        #ybreaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+        ybreaks = c(0,20,40, 60, 80,100),
+        ou_lbl = 50,
+        title = "Since PEPFAR’s inception, overall SCI (0-100) in PEPFAR-supported countries has exceeded that of countries without PEPFAR programs" %>% toupper(),
+        caption = "Figure 1: Overall SCI")
 
 si_save(glue("Graphics/sci_overall_{date}.svg"))
 
@@ -232,9 +257,12 @@ df_viz_id <- df_id %>%
   ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))
 
 sci_viz(df_viz_id,
-  ylims = c(0, 80),
-  ybreaks = c(0, 20, 40, 60),
-  caption = "Figure 1.1: SCI sub-index on infectious disease")
+        ylims = c(0, 100),
+        # ybreaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+        ybreaks = c(0,20,40, 60, 80,100),
+        ou_lbl = 60,
+        title = "Within the infectious diease sub-index, there is a similar increase among PEPFAR-supported countries since 2003" %>% toupper(),
+        caption = "Figure 1.1: SCI sub-index on infectious disease")
 
 si_save(glue("Graphics/sciID_{date}.svg"))
 
@@ -244,8 +272,11 @@ df_viz_ca <- df_ca %>%
   ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))
 
 sci_viz(df_viz_ca,
-  ylims = c(0, 40),
-  ybreaks = c(0, 10, 20, 30),
-  caption = "Figure 1.2: SCI sub-index on capacity and access")
+        ylims = c(0, 100),
+        #ybreaks = c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100),
+        ybreaks = c(0,20,40, 60, 80,100),
+        ou_lbl = 30,
+        title = "The gap in the Healthcare Capacity and Access sub-index between PEPFAR supported countries and non-PEPFAR supported countries has closed as of 2019" %>% toupper(),
+        caption = "Figure 1.2: SCI sub-index on capacity and access")
 
 si_save(glue("Graphics/sciCA_{date}.svg"))
