@@ -1,11 +1,10 @@
 
 # PROJECT:  catch-22
-# AUTHOR:   J.Hoehner | USAID/PHI
+# AUTHOR:   J.Hoehner | USAID/GHTASC
 # PURPOSE:  To adjust estimates by population for comparison
 # REF ID:   ae3887aa
 # LICENSE:  MIT
 # DATE CREATED: 2022-07-15
-# DATE UPDATED: 2022-08-18
 
 # dependencies -----------------------------------------------------------------
 
@@ -299,7 +298,7 @@ lexp_low_pepfar_fig <- lexp_settings(lexp_low_pepfar_fig)
 # increase over time?
 
 lexp_low_pct <- lexp_low_pepfar %>%
-  filter(year %in% c("2000", "2019")) %>%
+  filter(year %in% c("2003", "2019")) %>%
   select(pepfar, year, weighted_avg) %>%
   arrange(pepfar,year) %>%
   distinct()
@@ -464,23 +463,57 @@ lexp_comb_pepfar_fig <- lexp_settings(lexp_comb_pepfar_fig)
 lic_ssa <- low_income %>%
   filter(usaid_region == "Sub-Saharan Africa")
 
-uhc_ssa_pepfar_fig <-
-  ggplot(
-    uhc_ssa_pepfar <- lic_ssa %>%
-      filter(
-        indicator == "uhc_service_coverage_index") %>%
-      group_by(year, pepfar) %>%
-      mutate(
-        weighted_avg = weighted.mean(value, population)),
-    aes()) +
-  geom_text(aes(
-    x = year, y = value, color = pepfar,
-    label = if_else(value > 50, as.character(iso), "")),
-  hjust = -0.4, vjust = 0.4,
-  position = position_jitter(width = -0.4),
-  size = 2)
 
-uhc_ssa_pepfar_fig <- uhc_settings(uhc_ssa_pepfar_fig)
+uhc_ssa_pepfar <- lic_ssa %>%
+  filter(
+    indicator == "uhc_service_coverage_index") %>%
+  group_by(year, pepfar) %>%
+  mutate(
+    weighted_avg = weighted.mean(value, population))
+
+uhc_ssa_pepfar %>%
+  ggplot(aes()) +
+   geom_line(aes(x = year, y = weighted_avg, 
+                 alpha = 0.8, group = pepfar, 
+                 color = pepfar), linewidth = 1) +
+  geom_area(aes(alpha = 0.7,
+    x = year, y = weighted_avg,
+    group = pepfar, fill = pepfar)) +
+ facet_wrap(~fct_rev(pepfar), ncol = 1) +
+  annotate("rect", xmin = 2003, xmax = 2019, 
+           ymin = 0, ymax = 50, alpha = .1) +
+  si_style_ygrid() +
+  # uhc is an index from 0-100
+  scale_y_continuous(
+    limits = c(0, 50),
+    breaks = c(0, 25, 45)) +
+  scale_x_continuous(
+    breaks = c(2000, 2005, 2010, 2015, 2019)) +
+  scale_color_manual(
+    values = c(
+      "PEPFAR" = usaid_medblue,
+      "Non-PEPFAR" = usaid_medgrey),
+    labels = NULL) +
+  scale_fill_manual(
+    values = c(
+      "PEPFAR" = usaid_medblue,
+      "Non-PEPFAR" = usaid_medgrey),
+    labels = NULL) +
+  theme(
+    axis.text = element_text(
+      family = "Source Sans Pro",
+      size = 18,
+      color = "#505050"),
+    legend.position = "none",
+    strip.background = element_blank(),
+      strip.text.x = element_blank()) +
+  labs(
+    x = NULL,
+    y = NULL,
+    color = NULL, 
+    fill = NULL,
+    group = NULL,
+    caption = glue::glue("Source: WHO | {ref_id} | J. Hoehner, K. Srikanth"))
 
 # which countries were included in the above figure?
 countries_uhc_ssa_pepfar <- uhc_ssa_pepfar %>%
@@ -660,25 +693,46 @@ ggplot() +
 # What has been the change in Life Expectancy at Birth in 
 # PEPFAR vs non-PEPFAR countries over time?
 # low income countries
-lexp_ssa_pepfar_fig <-
-  ggplot(
+
     lexp_ssa_pepfar <- lic_ssa %>%
       filter(
         indicator == "life_expectancy_at_birth_both_sexes_years") %>%
       group_by(year, pepfar) %>%
       mutate(
-        weighted_avg = weighted.mean(value, population)),
-    aes()) +
-  geom_text(aes(
-    x = year, y = value, color = pepfar,
-    label = if_else(value < 20, as.character(iso), "")),
-  hjust = -0.4, vjust = 0.3,
-  position = position_jitter(width = -0.3),
-  size = 2) 
-
-lexp_ssa_pepfar_fig <- lexp_settings(lexp_ssa_pepfar_fig)
-
+        weighted_avg = weighted.mean(value, population))
+    
+  lexp_ssa_pepfar %>%
+    ggplot(aes(year, weighted_avg, group = pepfar, color = pepfar))+
+    geom_point(size = 4, alpha = .7) +
+    annotate("rect", xmin = 2003, xmax = 2020, 
+             ymin = 45, ymax = 65, alpha = .1) +
+    si_style_ygrid() +
+    scale_y_continuous(
+      limits = c(45, 65),
+      breaks = c(45, 55, 65)) +
+    scale_x_continuous(
+      breaks = c(1990, 2000, 2010, 2020)) +
+    scale_color_manual(
+      values = c(
+        "PEPFAR" = usaid_medblue,
+        "Non-PEPFAR" = usaid_lightgrey),
+      labels = NULL) +
+    theme(
+      axis.text = element_text(
+        family = "Source Sans Pro",
+        size = 18,
+        color = "#505050"),
+      legend.position = "none") +
+    labs(
+      x = NULL,
+      y = NULL,
+      color = NULL, 
+      fill = NULL,
+      group = NULL,
+      caption = glue::glue("Source: WHO | {ref_id} | Jessica Hoehner"))
+  
 # save images ------------------------------------------------------------------
+
 
 # LI countries by PEPFAR
 # UHC LI countries by PEPFAR
