@@ -1,0 +1,186 @@
+---
+project: fo_organization
+layout: "post"
+title: "Intro to Visualization - 1 Visualizing Targets vs. Results"
+date: "2023-06-26"
+author: "Prasann Ranade"
+categories: [viz, tools, targets]
+tags: [r]
+output: word_document
+---
+
+# Intro to Visualization - 1 Visualizing Targets vs. Results
+
+## Agenda:
+[ 1. Overview ]
+[ 2. Data Cleaning: how do I get a relevant subset of the dataframe? ]
+[ 3. Additional data filtering prior to visualization ]
+[ 4. Visualizing your data ]
+
+``` {r warnings = FALSE, include = FALSE, message = FALSE}
+library(tidyverse)
+library(magrittr)
+library(dplyr)
+library(glitr)
+library(glamr)
+library(gophr)
+library(extrafont)
+library(scales)
+library(tidytext)
+library(patchwork)
+library(ggtext)
+library(glue)
+```
+
+# 1. Overview
+
+Building on the general script structure laid out in the intro script, these next few scripts will involve demo code to generate a particular style of plot or work with specific indicators or disaggregates. In this document, we'll walk through creating a simple bar graph plot to visualize the differences between targets and results (known as achievement) for a given set of indicators. We'll first import and clean our dataset, perform some additional filtering by indicators and groups, and then visualize and adorn our plot. 
+
+# 2. Data Cleaning: how do I get a relevant subset of the dataset?
+
+As the intro script already went over consistency in variable names and data importing, we can go straight to filtering by indicators, disaggregates, and groups. Namely, we want to answer a question about the dataset by using a subset dataset that's more suited to other data manipulation and plotting, without modifying the main dataset. Of note, when using snapshot or cumulative indicators like TX_NEW, you will also need to choose a standardized disaggregate, key population, and other qualifying items. 
+
+Key functions:
+- filter: filters to a set of values in the columns of a dataframe
+- select: chooses which columns to copy over to a new dataset
+- group_by: organize a dataframe by columns in a progressive order
+- summarize: perform an arithmetic function across values in a column (in this case, a sum)
+- mutate: add new columns to a dataframe or modify existing ones
+- ungroup: prevent future data errors by ungrouping the dataframe after performing any filtering
+ 
+``` {r warnings = FALSE}
+# import training dataset
+df <- si_path() %>% 
+  return_latest("FY48-49") %>% 
+  read_csv() 
+
+df_tx <- df %>% 
+  # filter to these values
+  filter(indicator %in% c("TX_CURR", "TX_NEW", "HTS_TST_POS"),
+         disaggregate %in% "Total Numerator") %>% 
+  
+  # choose which columns to copy over to your new dataset
+  select(planet,fiscal_year, indicator, cumulative, targets) %>% 
+  
+  # choose the order to group rows by (ex. by planet first then indicator)
+  group_by(planet,indicator, fiscal_year) %>% 
+  
+  # sum up values for each indicator across all regions
+  summarize(across(everything(), sum, na.rm = TRUE)) %>% 
+  #summarize(across(targets, sum, na.rm = TRUE)) %>% 
+  
+  # rename the fiscal_year column
+  rename(period = fiscal_year) %>%
+  mutate(period = str_replace(period, "20", "FY")) %>%
+  
+  # ungroup columns after doing any data manipulation
+  ungroup()
+
+# show new dataframe
+View(df_tx)
+```
+ 
+# 3. Additional data filtering prior to visualization
+
+Differentiating results and achievement by fill or outline colors allows users to easily understand our plots. As the SI style guide and si_palettes function already contains a list of graded colors, we will include those via the adorn_achievement function to differentiate between our achievement values.
+
+Key functions: 
+- adorn_achievement: add an achievement, achv_label, and achv_color column to your dataframe via SI standard colors/percentage ranges 
+
+``` {r}
+df_tx <- df_tx %>% 
+  # calculate achievement and add SI standard ranges and colors
+  adorn_achievement() %>% 
+
+  # change achievement to percentage
+  mutate(achievement = achievement * 100) 
+
+# add percentage sign to achievement value
+#df_tx$achievement <- paste0(as.matrix(df_tx$achievement), '%')
+```
+      
+# 4. Visualizing your data
+
+Here, we will create our first visual, a set of small multiple plots with targets and results as clustered columns side-by-side. The achievement for each indicator is presented in a box at the bottom with the fill color dependent on the percentage. 
+
+Key functions:
+- ggplot: the ggplot function within the "ggplot2" package helps us create visuals in R
+- geom_col: add a bar (column) plot as a component to the visual
+- facet_grid: create small multiple plots via a relationship of y ~ x 
+ 
+``` {r warning = FALSE}
+df_viz <- df_tx %>% 
+  # we use the ggplot function to create a visual and its background
+  ggplot(aes(x = period, y = achievement, fill = achv_color)) +
+  
+  # add a bar (column) graph
+  geom_col() +
+  
+  # organize the plots in a grid with indicator x planet
+  facet_grid(indicator ~ planet) 
+plot(df_viz)
+```
+This first visual uses colors to display which indicators belong to which achievement thresholds during a certain year with green => 110%, 90% <= red <= 110%, and blue < 90%. But the legends looks messy, and the actual achievement percentages would be helpful in distinguishing among these small margins.
+
+``` {r warning = FALSE}
+df_viz <- df_tx %>% 
+  ggplot(aes(x = period, y = achievement, fill = achv_color)) +
+  geom_col() + 
+  geom_text(aes(label = achievement, vjust = 1.5, colour = "#ffffff")) +
+  
+  # add a manual color scaling (white) for the achievement text
+  scale_color_manual(values = "#ffffff") +
+  
+  facet_grid(indicator ~ planet) +
+  
+  # remove the theme
+  theme(legend.position = "none") +
+  
+  # add title and caption labels
+  labs(x = NULL, y = NULL, fill = NULL,
+       title = glue("Targets vs. Results for Sample Indicators"), 
+       caption = c(glue("Data: FY48-49\ 
+                        Created by: USAID OHA SI Team | 000000"))) 
+
+plot(df_viz)
+```
+The numbers seem useful, if a little misplaced, and the title and caption also look to be in the right place. 
+
+
+``` {r}
+nudge_space <- 0.125 # spacing within the plot
+ref_id <- 012345
+
+df_viz <- df_tx %>% 
+  # clearly provide the x, y, and fill arguments to the aesthetic component of your ggplot 
+  ggplot(aes(x = period, y = achievement, fill = achv_color)) +
+  
+  # add two geom_col components for the targets and results bars and color them properly
+  geom_col(aes(y = targets), fill = "#E6E7E8", width = 0.5, position = position_nudge(x = -nudge_space)) +
+  geom_col(aes(y = cumulative, fill = achv_color), width = 0.5, position = position_nudge(x = nudge_space)) +
+  
+  #geom_text(aes(y = cumulative, label = achievement, vjust = 1.0, hjust = 0, size = 1)) +
+  
+  # "free" scales on a facet grid provides a set of scales for each row, 
+  # which is useful here as each indicator exists on a different scale
+  facet_grid(indicator ~ planet, scales = "free") +
+  si_style_ygrid() + 
+  
+  # the label_number_si function easily adds a "K" or "M" to axis values
+  scale_y_continuous(labels = label_number_si(), position = "left") +
+  theme(legend.position = "none") +
+  labs(x = NULL, y = NULL, fill = NULL,
+       title = glue("Targets vs. Results for Sample Indicators"), 
+       caption = c(glue("Data: FY48-49
+                         Created by: USAID OHA SI Team | 000000"))) 
+plot(df_viz)
+```
+Great, we have a good title and useful scales for each set of indicators, along with a pair of targets and results bars slightly offset for better comparison.
+
+```{r eval = FALSE}
+# save plots to directory with the glue function
+si_save(glue("Graphics/FO_Viz_Achv.svg"), height = 4, width = 10, scale = 1.3)
+si_save(glue("Images/FO_Viz_Achv.png"), height = 4, width = 10, scale = 1.3)  
+```
+
+
