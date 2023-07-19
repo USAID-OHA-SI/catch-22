@@ -210,8 +210,7 @@ df_viz_clin %>%
   scale_color_identity() +
   labs(x = NULL, y = NULL,
        title = glue("USAID CONTRIBUTIONS TO PEPFAR RESULTS {metadata$curr_pd}"),
-       caption = glue("Source: {msd_source}
-                        SI analytics: {paste(authors, collapse = '/')}")) +
+       caption = glue("{metadata$caption}")) +
   si_style_nolines() +
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
@@ -245,9 +244,7 @@ df_viz_prev %>%
   scale_color_identity() +
   labs(x = NULL, y = NULL,
        title = glue("USAID CONTRIBUTIONS TO PEPFAR RESULTS {metadata$curr_pd}"),
-       caption = glue("Source: {msd_source}
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
+       caption = glue("{metadata$caption}")) +
   si_style_nolines() +
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
