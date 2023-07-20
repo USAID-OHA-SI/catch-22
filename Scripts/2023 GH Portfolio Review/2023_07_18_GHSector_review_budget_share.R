@@ -64,6 +64,23 @@ df_target_viz <- df_target %>%
          share = value/total,
          fill_color = ifelse(agency == "USAID", scooter, scooter_light)) %>% 
    filter(agency != "Dedup")
+
+ind_sel <- c("HTS_TST", "TX_NEW", "TX_CURR", "TX_PVLS_D", "VMMC_CIRC", "PrEP_NEW", "OVC_SERV")
+
+df_targes_lim <- df_target %>% 
+  pivot_longer(-starts_with("data"), 
+               names_to = "funding_agency",
+               values_drop_na = TRUE) %>% 
+  mutate(indicator = str_extract(dataname, "(?<=Targets ).*(?= \\()"),
+         indicator = ifelse(str_detect(dataname, "\\(D\\)"), paste0(indicator, "_D"), indicator),
+         fiscal_year = 2024) %>% 
+  filter(indicator %in% ind_sel)
+
+df_targes_lim <- df_targes_lim %>% 
+  bind_rows(df_targes_lim %>% mutate(funding_agency = "PEPFAR")) %>% 
+  filter(funding_agency %in% c("USAID", "PEPFAR")) %>% 
+  count(fiscal_year, funding_agency, indicator, wt = value) 
+  
   
 # VIZ -----------------------------------------------------------------------
 
@@ -122,3 +139,33 @@ df_target_viz %>%
 
 si_save("Graphics/COP23_GHPortfolio_TargetShare.svg")
 si_save("Images/COP23_GHPortfolio_TargetShare.png")
+
+df_targes_lim %>% 
+  pivot_wider(names_from = "funding_agency", values_from = "n") %>% 
+  mutate(usaid_share = USAID/PEPFAR) %>% 
+  ggplot(aes(y = fct_reorder(indicator, PEPFAR))) + 
+  geom_col(aes(PEPFAR, alpha = 0.8), fill = trolley_grey_light) +
+  geom_errorbar(aes(y = indicator, xmin = PEPFAR, xmax =PEPFAR),
+                color = trolley_grey) +
+  geom_col(aes(USAID, alpha = 0.8),  fill = scooter) +
+  scale_x_continuous(label = scales::label_number(scale_cut = cut_short_scale()))+
+  geom_text(aes(x = USAID + 3000000,
+                label = label_number(0.1, scale_cut = cut_short_scale())(USAID)),
+            family = "Source Sans Pro", color = nero, vjust = -0.5) +
+  geom_text(aes(x = PEPFAR,
+                label = label_number(0.1, scale_cut = cut_short_scale())(PEPFAR)),
+            family = "Source Sans Pro", color = nero, vjust = -0.5) +
+  geom_text(aes(x = USAID + 3000000,
+                label = percent(usaid_share, 0.1),
+                family = "Source Sans Pro", color = trolley_grey, vjust = 1),
+            size = 3.5) +
+  scale_fill_identity() +
+  scale_color_identity()+
+  scale_alpha_identity() +
+  si_style_xgrid() +
+  labs(x = NULL, y = NULL,
+       title = "USAID covers up to 48% of COP/ROP23 Targets across the clinical cascade" %>% toupper(),
+       caption = glue("Source: COP/ROP23 Targets, DATIM | Ref id: {ref_id}"))
+
+si_save("Graphics/COP23_GHPortfolio_TargetShare_Cascade.svg")
+
