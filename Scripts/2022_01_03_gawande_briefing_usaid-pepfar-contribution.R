@@ -1,5 +1,6 @@
 # PROJECT:  catch-22
 # AUTHOR:   K.Srikanth | USAID
+# REF ID:   ae2d15c7 
 # PURPOSE:  USAID contribution to pepfar results (Dr. Gawande Briefing)
 # LICENSE:  MIT
 # DATE:     2022-01-03
@@ -25,8 +26,8 @@ library(lubridate)
 
 #Current MSD
 df <- si_path() %>% 
-  return_latest("OU_IM_FY20") %>% 
-  read_msd() %>% 
+  return_latest("OU_IM_FY21") %>% 
+  read_psd() %>% 
   resolve_knownissues()
 
 # GLOBALS -------------------------------------------------------------------------
@@ -34,6 +35,8 @@ df <- si_path() %>%
 data_in <- "Data"
 data_out <- "Dataout"
 viz_out <- "Images"
+
+ref_id <- "ae2d15c7"
 
 authors <- c("USAID OHA SI Team")
 
@@ -44,6 +47,8 @@ msd_source <- source_info()
 curr_pd <- source_info(return = "period")
 curr_qtr <- source_info(return = "quarter")
 curr_fy <- source_info(return = "fiscal_year")
+
+get_metadata()
 
 sum_indic <- function(df1) {
   df1 %>% 
@@ -88,7 +93,7 @@ agency_result <- function(indicator_type, usaid_param) {
     df %>%
     filter(indicator %in% ind_list,
            disaggregate == "Total Numerator",
-           fiscal_year == curr_fy) %>% 
+           fiscal_year == metadata$curr_fy) %>% 
     sum_indic() %>% 
     rename(PEPFAR = val)
   
@@ -96,7 +101,7 @@ agency_result <- function(indicator_type, usaid_param) {
   df_pepfar_mmd <-
     df %>%
     filter(indicator == "TX_CURR",
-           fiscal_year == curr_fy,
+           fiscal_year == metadata$curr_fy,
            disaggregate == "Age/Sex/ARVDispense/HIVStatus",
            otherdisaggregate %in% c("ARV Dispensing Quantity - 3 to 5 months", "ARV Dispensing Quantity - 6 or more months")) %>%
     sum_indic() %>%
@@ -110,7 +115,7 @@ agency_result <- function(indicator_type, usaid_param) {
            indicator %in% c("OVC_SERV"),
            standardizeddisaggregate %in% c("Total Numerator"),
            # trendscoarse == "<18",
-           fiscal_year == curr_fy) %>%
+           fiscal_year == metadata$curr_fy) %>%
     #  left_join(df_partner, by = c("mech_code")) %>%
     group_by(fiscal_year, indicator) %>%
     summarise(cumulative = sum(cumulative, na.rm = TRUE)) %>%
@@ -173,12 +178,12 @@ df_viz_clin <- reshape_agency_result("clinical") #or prevention
 df_viz_prev <- reshape_agency_result("prevention")
 
 df_viz_clin <- df_viz_clin %>% 
-  filter(fiscal_year == curr_fy) %>% 
+  filter(fiscal_year == metadata$curr_fy) %>% 
   mutate(indicator = fct_relevel(indicator, c("TX_CURR", "TX_MMD3", "TX_NEW", "TB_PREV", "HTS_TST_POS")),
          text_color = ifelse(funding_agency == "USAID", scooter, trolley_grey)) 
 
 df_viz_prev <- df_viz_prev %>% 
-  filter(fiscal_year == curr_fy) %>% 
+  filter(fiscal_year == metadata$curr_fy) %>% 
   mutate(
     #indicator = fct_relevel(indicator, c("KP_PREV", "TX_MMD3", "TX_NEW", "TB_PREV", "HTS_TST_POS")),
          text_color = ifelse(funding_agency == "USAID", denim, trolley_grey)) 
@@ -204,10 +209,8 @@ df_viz_clin %>%
   facet_grid(~indicator) +
   scale_color_identity() +
   labs(x = NULL, y = NULL,
-       title = "USAID CONTRIBUTIONS TO PEPFAR RESULTS FY21",
-       caption = glue("Source: {msd_source}
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
+       title = glue("USAID CONTRIBUTIONS TO PEPFAR RESULTS {metadata$curr_pd}"),
+       caption = glue("{metadata$caption}")) +
   si_style_nolines() +
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
@@ -240,10 +243,8 @@ df_viz_prev %>%
   facet_grid(~indicator) +
   scale_color_identity() +
   labs(x = NULL, y = NULL,
-       title = "USAID CONTRIBUTIONS TO PEPFAR RESULTS FY21",
-       caption = glue("Source: {msd_source}
-                        SI analytics: {paste(authors, collapse = '/')}
-                     US Agency for International Development")) +
+       title = glue("USAID CONTRIBUTIONS TO PEPFAR RESULTS {metadata$curr_pd}"),
+       caption = glue("{metadata$caption}")) +
   si_style_nolines() +
   theme(axis.text.x = element_blank(),
         axis.text.y = element_blank(),
