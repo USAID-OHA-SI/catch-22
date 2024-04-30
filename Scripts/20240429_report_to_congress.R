@@ -92,7 +92,8 @@
       suffixing = TRUE
     ) %>% 
     tab_header(
-      title = glue("Method 1: TX_CURR" %>% toupper()))
+      title = glue("Method 1: TX_CURR" %>% toupper()),
+      subtitle = "Normal PEPFAR TX_CURR totals - exclude UKR")
     
   #method 2
   #filter out Military SNUs
@@ -109,37 +110,47 @@
     gt() %>% 
     fmt_number(
       columns = c(3,4),
-      decimals = 1,
+      decimals = 2,
       suffixing = TRUE
     ) %>% 
     tab_header(
-      title = glue("Method 2: TX_CURR" %>% toupper()))
+      title = glue("Method 2: TX_CURR" %>% toupper()),
+      subtitle = "Excludes Military SNUs and Ukraine")
 
 # HRH -------------------------------------------------------------------
   
   #difficult to replicate the 129k figure from report
   df_hrh %>% 
-    filter(fiscal_year == 2021) %>% 
+    filter(operating_unit != "Ukraine",
+           program == "C&T") %>% 
     group_by(fiscal_year, program) %>% 
-    summarise(annual_fte  = sum(annual_fte , na.rm = TRUE), .groups = "drop") %>% 
+    summarise( individual_count  = sum( individual_count , na.rm = TRUE), .groups = "drop") %>% 
     gt() %>% 
     fmt_number(
       columns = c(3),
       decimals = 0
     ) %>% 
     tab_header(
-      title = glue("Annual FTE by Program Area (2021)" %>% toupper()))
+      title = glue("HRH Individual Count by Program Area" %>% toupper()))
   
 # BUDGET/ER ----------------------------------------------------------------
   
   #difficulty replicating figure here too
   df_fsd %>% 
-    filter(sub_program == "C&T: HIV Drugs",
+    filter(program == "C&T",
+     # sub_program == "C&T: HIV Drugs",
            fiscal_year == 2021) %>% 
-    summarise(expenditure_amt  = sum(expenditure_amt , na.rm = TRUE), .groups = "drop")
+    group_by(fiscal_year, program, sub_program) %>% 
+    summarise(expenditure_amt  = sum(expenditure_amt , na.rm = TRUE), .groups = "drop") %>% 
+    gt() %>% 
+    fmt_currency(
+      columns = c(4),
+      decimals = 0
+    ) %>% 
+    tab_header(
+      title = glue("HIV Procurements" %>% toupper()),
+      subtitle = "Filtered to sub_program C&T: HIV Drugs")
     
-    count(cost_category)
-    str()
   
   
   
