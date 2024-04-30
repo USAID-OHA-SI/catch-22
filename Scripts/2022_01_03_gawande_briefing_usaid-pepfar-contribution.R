@@ -4,7 +4,7 @@
 # PURPOSE:  USAID contribution to pepfar results (Dr. Gawande Briefing)
 # LICENSE:  MIT
 # DATE:     2022-01-03
-# UPDATED:  2022-05-31
+# UPDATED:  2024-03-08 [OHA outreach slides]
 # NOTE:     adapted from groundhog_day/Scripts/FY20Q2_Review_bar_sparks.R
 
 # DEPENDENCIES ------------------------------------------------------------
@@ -24,11 +24,26 @@ library(lubridate)
 
 # IMPORT ------------------------------------------------------------------
 
+filepath <- si_path() %>% 
+  return_latest("OU_IM_FY22")
+
 #Current MSD
 df <- si_path() %>% 
-  return_latest("OU_IM_FY21") %>% 
+  return_latest("OU_IM_FY22") %>% 
   read_psd() %>% 
-  resolve_knownissues()
+  filter(fiscal_year == 2023,
+         indicatortype != "CS",
+         operatingunit %ni% c("Ukraine", "Nigeria")) 
+
+
+#Current MSD
+df_tza<- si_path() %>% 
+  return_latest("OU_IM_FY22") %>% 
+  read_psd() %>% 
+  filter(fiscal_year == 2023,
+         operatingunit %in% c("Tanzania"))
+
+df <- rbind(df, df_tza)
 
 # GLOBALS -------------------------------------------------------------------------
 
@@ -40,15 +55,15 @@ ref_id <- "ae2d15c7"
 
 authors <- c("USAID OHA SI Team")
 
-#source info
-msd_source <- source_info()
 
-#identify periods for plot
-curr_pd <- source_info(return = "period")
-curr_qtr <- source_info(return = "quarter")
-curr_fy <- source_info(return = "fiscal_year")
+get_metadata(filepath)
 
-get_metadata()
+metadata$curr_pd <- "FY23Q4"
+metadata$curr_fy <- 2023
+metadata$curr_fy_lab <- "FY23"
+metadata$curr_qtr <- 4
+metadata$source <- "FY23Q4c MSD"
+metadata$caption <- "Source: FY23Q4c MSD | Ref id: ae2d15c7"
 
 sum_indic <- function(df1) {
   df1 %>% 
@@ -92,7 +107,7 @@ agency_result <- function(indicator_type, usaid_param) {
   df_pepfar <- 
     df %>%
     filter(indicator %in% ind_list,
-           disaggregate == "Total Numerator",
+           standardizeddisaggregate == "Total Numerator",
            fiscal_year == metadata$curr_fy) %>% 
     sum_indic() %>% 
     rename(PEPFAR = val)
@@ -102,7 +117,7 @@ agency_result <- function(indicator_type, usaid_param) {
     df %>%
     filter(indicator == "TX_CURR",
            fiscal_year == metadata$curr_fy,
-           disaggregate == "Age/Sex/ARVDispense/HIVStatus",
+           standardizeddisaggregate == "Age/Sex/ARVDispense/HIVStatus",
            otherdisaggregate %in% c("ARV Dispensing Quantity - 3 to 5 months", "ARV Dispensing Quantity - 6 or more months")) %>%
     sum_indic() %>%
     mutate(indicator = "TX_MMD3") %>%
