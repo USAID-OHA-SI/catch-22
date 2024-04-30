@@ -41,6 +41,8 @@
   # get files
   filepath_msd <- si_path() %>% return_latest("OU_IM_FY22")
   filepath_arch_msd <- si_path() %>% return_latest("OU_IM_FY15")
+  filepath_hrh <- si_path() %>% return_latest("HRH")
+  filepath_fsd <- si_path() %>% return_latest("Financial")
   
   genie_path <- si_path() %>% 
     return_latest("Genie")
@@ -55,6 +57,8 @@
   #tx curr method 1
   df_msd <- read_psd(filepath_msd)
   df_arch <- read_psd(filepath_arch_msd)
+  df_hrh <- read_psd(filepath_hrh)
+  df_fsd <- read_psd(filepath_fsd)
   
   #tx curr method 2
   df_genie <- read_psd(genie_path)  
@@ -70,14 +74,25 @@
  df_msd_total <- df_msd %>% 
     rbind(df_arch)
   
-  df_msd_total %>% 
+  df_method1 <- df_msd_total %>% 
     filter(fiscal_year %in% c(2020, 2021, 2022),
            operatingunit != "Ukraine",
            indicator %in% c("TX_CURR"),
            standardizeddisaggregate == "Total Numerator") %>% 
     group_by(fiscal_year, indicator) %>% 
     summarise(cumulative = sum(cumulative, na.rm = TRUE), .groups = "drop") %>% 
-    mutate(tx_diff = (cumulative - lag(cumulative)))
+    mutate(tx_diff = (cumulative - lag(cumulative))) 
+  
+  df_method1 %>% 
+   # filter(fiscal_year == 2022) %>% 
+    gt() %>% 
+    fmt_number(
+      columns = c(3,4),
+      decimals = 2,
+      suffixing = TRUE
+    ) %>% 
+    tab_header(
+      title = glue("Method 1: TX_CURR" %>% toupper()))
     
   #method 2
   #filter out Military SNUs
@@ -87,10 +102,45 @@
   
   #verify TX numbers
   df_agg %>% 
-    pivot_wider(names_from = fiscal_year, values_from = n) %>%
+   # pivot_wider(names_from = fiscal_year, values_from = n) %>%
+    filter(indicator == "TX_CURR") %>% 
+    mutate(tx_diff = (n - lag(n))) %>% 
+    #filter(fiscal_year == 2022) %>% 
     gt() %>% 
     fmt_number(
-      columns = -indicator,
-      decimals = 2,
+      columns = c(3,4),
+      decimals = 1,
       suffixing = TRUE
-    )
+    ) %>% 
+    tab_header(
+      title = glue("Method 2: TX_CURR" %>% toupper()))
+
+# HRH -------------------------------------------------------------------
+  
+  #difficult to replicate the 129k figure from report
+  df_hrh %>% 
+    filter(fiscal_year == 2021) %>% 
+    group_by(fiscal_year, program) %>% 
+    summarise(annual_fte  = sum(annual_fte , na.rm = TRUE), .groups = "drop") %>% 
+    gt() %>% 
+    fmt_number(
+      columns = c(3),
+      decimals = 0
+    ) %>% 
+    tab_header(
+      title = glue("Annual FTE by Program Area (2021)" %>% toupper()))
+  
+# BUDGET/ER ----------------------------------------------------------------
+  
+  #difficulty replicating figure here too
+  df_fsd %>% 
+    filter(sub_program == "C&T: HIV Drugs",
+           fiscal_year == 2021) %>% 
+    summarise(expenditure_amt  = sum(expenditure_amt , na.rm = TRUE), .groups = "drop")
+    
+    count(cost_category)
+    str()
+  
+  
+  
+    
