@@ -65,7 +65,7 @@ execute:
   
 ```
 
-Thanks all for your help in submitting feedback about your access to installing packages from CRAN on AIDNet. We wanted to provide quick summary of result that we will be passing on to M/CIO.
+Thanks all for your help in submitting feedback about your access to installing packages from CRAN on AIDNet. We wanted to provide a quick summary of the results that we will be passing on to M/CIO.
 
 ```{r}
 #| label: results
@@ -99,7 +99,7 @@ df_multi <- df_resp %>%
 ```
 
 
-Across the `r nrow(df_resp)` users who responded to the survey, **the overwhelming majority of users were blocked** from install/updating packages from CRAN. **Only `r nrow(df_ok)` users could install packages** from CRAN while connected to AIDNet wired. Those users were located in `r {ok_loc_str}`. (Note that `r unique(df_multi$location)` had `r nrow(df_multi)` users respond with different outcomes).
+Across the `r nrow(df_resp)` users who responded to the survey, **the overwhelming majority of users were blocked** from installing/updating packages from CRAN. **Only `r nrow(df_ok)` users could install packages** from CRAN while connected to AIDNet wired. Those users were located in `r {ok_loc_str}`. (Note that `r unique(df_multi$location)` had `r nrow(df_multi)` users respond with different outcomes).
 
 ```{r}
 #| label: location_tally
@@ -130,6 +130,6 @@ loc_w_n_str <- paste(loc_w_n, collapse = ", ")
 # )
 ```
 
-For some additional context, we collected feedback from the Agency R User group to see if they were able to install or update a package while in the office and connected to AIDNet wired. We received `r nrow(df_resp)` responses from `r length(loc_n)` locations units - `r loc_n_str`. From Washington, where we had most of the responses, we had `r length(loc_w_n)` different locations represented - `r {loc_w_n_str}`.
+For some additional context, we collected feedback from the Agency R User group to see if they were able to install or update a package while in the office and connected to AIDNet wired. We received `r nrow(df_resp)` responses from `r length(loc_n)` locations - `r loc_n_str`. From Washington, where we had most of the responses, we had `r length(loc_w_n)` different locations represented - `r {loc_w_n_str}`.
 
 We continue to seek a solution from M/CIO addressing the inconsistent policy that is largely blocking data scientists and analysts from installing and/or updating packages from CRAN to conduct their work. 
