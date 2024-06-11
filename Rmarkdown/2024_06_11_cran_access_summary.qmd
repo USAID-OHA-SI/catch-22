@@ -1,0 +1,135 @@
+---
+title: "CRAN Access Summary"
+format: html
+execute: 
+  echo: false
+---
+
+```{r}
+#| label: dependencies
+#| message: false
+#| warning: false
+
+  #general
+  library(tidyverse)
+  library(glue)
+  library(cli)
+  library(here)
+  library(googlesheets4)
+  library(janitor, warn.conflicts = FALSE)
+  #oha
+  library(gagglr) ##install.packages('gagglr', repos = c('https://usaid-oha-si.r-universe.dev', 'https://cloud.r-project.org'))
+  #viz extensions
+  # library(scales, warn.conflicts = FALSE)
+  # library(systemfonts)
+  # library(tidytext)
+  # library(patchwork)
+  # library(ggtext)
+```
+
+```{r}
+#| label: store_locally
+#| eval: false
+#| message: false
+#| warning: false
+
+  gs_id <- as_sheets_id("19cJDFr8bd2YL5YkL3DlHNtcgg8iza3553hGbldTHZ-o")
+  
+  df_resp <- read_sheet(gs_id, .name_repair = make_clean_names)
+  
+  write_csv(df_resp, here("Data/cran_responses.csv"), na = "")
+
+```
+
+```{r}
+#| label: import
+#| message: false
+#| warning: false
+
+  df_resp <- read_csv(here("Data/cran_responses.csv"))
+
+```
+
+```{r}
+#| label: initial_munge
+
+ names(df_resp) <- c("time", "email", "location", "is_blocked", "is_connected", "received_msg", "feedback")
+
+  df_resp <- df_resp %>% 
+    mutate(is_blocked = is_blocked == "No",
+           across(c(is_connected, received_msg), ~. == "Yes"),
+           location = paste0("USAID/", location) %>% str_remove_all("ashington|USAID Annex \\(|\\)")) %>%
+    separate_wider_delim(location, delim = " - ", names = c("location_ou", "location_sub"), 
+                         too_few = "align_start",
+                         cols_remove = FALSE)
+  
+```
+
+Thanks all for your help in submitting feedback about your access to installing packages from CRAN on AIDNet. We wanted to provide quick summary of result that we will be passing on to M/CIO.
+
+```{r}
+#| label: results
+
+  # df_resp %>% 
+  #   count(is_blocked, received_msg)
+
+  df_ok <- df_resp %>%
+    filter(received_msg == FALSE)
+  
+  df_ok_loc <- df_ok %>% 
+    distinct(location) %>% 
+    pull()
+  
+   ok_loc_str <- paste(df_ok_loc, collapse = " and ")
+   
+  # suppressMessages(
+  #   ok_loc_str <- cli_text("{df_ok_loc}") %>% as.character()
+  # )
+
+```
+```{r}
+#| label: note
+
+df_multi <- df_resp %>% 
+  group_by(location) %>% 
+  mutate(received_msg = min(received_msg)) %>% 
+  filter(received_msg == 0,
+         n() > 1)
+
+```
+
+
+Across the `r nrow(df_resp)` users who responded to the survey, **the overwhelming majority of users were blocked** from install/updating packages from CRAN. **Only `r nrow(df_ok)` users could install packages** from CRAN while connected to AIDNet wired. Those users were located in `r {ok_loc_str}`. (Note that `r unique(df_multi$location)` had `r nrow(df_multi)` users respond with different outcomes).
+
+```{r}
+#| label: location_tally
+
+#overall
+loc_n <- df_resp %>% 
+  count(location_ou, sort = TRUE) %>% 
+  mutate(loc_n = glue("{location_ou} ({n})")) %>% 
+  pull() 
+
+ loc_n_str <- paste(loc_n, collapse = ", ")
+ 
+# suppressMessages(
+#   loc_n_str <- cli_text("{loc_n}") %>% as.character()
+# )
+ 
+#Washington
+loc_w_n <- df_resp %>% 
+  filter(!is.na(location_sub)) %>% 
+  count(location_sub, sort = TRUE) %>% 
+  mutate(loc_n = glue("{location_sub} ({n})")) %>% 
+  pull()
+
+loc_w_n_str <- paste(loc_w_n, collapse = ", ")
+
+# suppressMessages(
+#   loc_w_n_str <- cli_text("{loc_w_n}") %>% as.character()
+# )
+```
+
+For some additional context, we collected feedback from the Agency R User group to see if they were able to install or update a package while in the office and connected to AIDNet wired. We received `r nrow(df_resp)` responses from `r length(loc_n)` locations units - `r loc_n_str`. From Washington, where we had most of the responses, we had `r length(loc_w_n)` different locations represented - `r {loc_w_n_str}`.
+
+We continue to seek a solution from M/CIO addressing the inconsistent policy that is largely blocking data scientists and analysts from installing and/or updating packages from CRAN to conduct their work. 
