@@ -101,10 +101,10 @@ curve_viz <-epi_sub %>%
   coord_cartesian(expand = T, clip = "off") +
   theme(plot.title = element_markdown())
 
-ggsave("Images/02_epi_ann_global_epi_control_v1.png", scale = 1.2, width = 10, height = 7)
+#ggsave("Images/02_epi_ann_global_epi_control_v1.png", scale = 1.2, width = 10, height = 7)
 
 
-
+# add bar chart
 epi_bar <- epi_sub %>% 
   filter(year == 2022) %>% 
   pivot_longer(cols = c(number_new_hiv_infections:goal_infections), names_to = "indicator") %>% 
@@ -137,32 +137,32 @@ curve_viz / bar_viz +
   plot_layout(heights = c(2,1))
   
 si_save("Graphics/20240618_recent_inf_curve.svg")
-
-#Additional annotation (optional)
-viz +
-  geom_richtext(data = note_df, aes(x = year, y = value, label = label),
-                fill = NA, label.color = NA, # remove background and outline
-                label.padding = grid::unit(rep(0, 4), "pt"), hjust = 0, vjust = 0.7,
-                size = 12/.pt, color = grey90k) +
-  #annotate("curve",
-  #        x = 2017, y = epi_gap_end + 0.5e6, xend = 2020, yend = epi_gap_end,
-  #       arrow = arrow(length = unit(0.03, "inches"),
-  #                    type = "closed"),
-  #     curvature = -.4,
-  #    color = suva_grey) +
-  annotate(geom = "text", x = 2014, y = epi_gap_end + 0.5e6, label = c("Epidemic control gap"),
-           family = "Source Sans Pro", color = suva_grey, size = 14/.pt) +
-  annotate(geom = "text", x = 1995, y = 2.7e6, label = c("New HIV Infections"), hjust = 0,
-           family = "Source Sans Pro SemiBold", color = denim, size = 14/.pt) +
-  annotate(geom = "text", x = 1997, y = -1.5e6, label = c("Total Deaths to PLHIV"), hjust = 0,
-           vjust = -1, family = "Source Sans Pro SemiBold", color = old_rose, size = 14/.pt) +
-  labs(x = NULL, y = NULL,
-       title = plot_title,
-       caption = glue("Source: {source_note} [{date_pulled}]
-                        SI analytics | Ref id: {ref_id}")) +
-  coord_cartesian(expand = T, clip = "off") +
-  theme(plot.title = element_markdown())
-
-ggsave("Images/02_epi_ann_global_epi_control_v1.png", scale = 1.2, width = 10, height = 7)
+# 
+# #Additional annotation (optional)
+# viz +
+#   geom_richtext(data = note_df, aes(x = year, y = value, label = label),
+#                 fill = NA, label.color = NA, # remove background and outline
+#                 label.padding = grid::unit(rep(0, 4), "pt"), hjust = 0, vjust = 0.7,
+#                 size = 12/.pt, color = grey90k) +
+#   #annotate("curve",
+#   #        x = 2017, y = epi_gap_end + 0.5e6, xend = 2020, yend = epi_gap_end,
+#   #       arrow = arrow(length = unit(0.03, "inches"),
+#   #                    type = "closed"),
+#   #     curvature = -.4,
+#   #    color = suva_grey) +
+#   annotate(geom = "text", x = 2014, y = epi_gap_end + 0.5e6, label = c("Epidemic control gap"),
+#            family = "Source Sans Pro", color = suva_grey, size = 14/.pt) +
+#   annotate(geom = "text", x = 1995, y = 2.7e6, label = c("New HIV Infections"), hjust = 0,
+#            family = "Source Sans Pro SemiBold", color = denim, size = 14/.pt) +
+#   annotate(geom = "text", x = 1997, y = -1.5e6, label = c("Total Deaths to PLHIV"), hjust = 0,
+#            vjust = -1, family = "Source Sans Pro SemiBold", color = old_rose, size = 14/.pt) +
+#   labs(x = NULL, y = NULL,
+#        title = plot_title,
+#        caption = glue("Source: {source_note} [{date_pulled}]
+#                         SI analytics | Ref id: {ref_id}")) +
+#   coord_cartesian(expand = T, clip = "off") +
+#   theme(plot.title = element_markdown())
+# 
+# ggsave("Images/02_epi_ann_global_epi_control_v1.png", scale = 1.2, width = 10, height = 7)
 
 # SPINDOWN ============================================================================
