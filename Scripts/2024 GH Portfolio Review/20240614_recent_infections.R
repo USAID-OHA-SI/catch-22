@@ -32,7 +32,13 @@ metadata <- get_metadata(file_path)
 ref_id <- "26ee292d"
 
 # Functions  
-
+#clean number
+clean_number <- function(x, digits = 0){
+  dplyr::case_when(x >= 1e9 ~ glue("{round(x/1e9, digits)}B"),
+                   x >= 1e6 ~ glue("{round(x/1e6, digits)}M"),
+                   x >= 1e3 ~ glue("{round(x/1e3, digits)}K"),
+                   TRUE ~ glue("{x}"))
+}
 
 # LOAD DATA ============================================================================  
 #Recent Infections
@@ -50,13 +56,12 @@ df_epi <-
 epi_sub <- df_epi %>% 
   filter(age == "All", sex == "All",
          country == "Global",
-         indicator %in% c("Number New HIV Infections",
-                          #"Total Deaths to HIV Population"
-         )) %>% 
+         indicator %in% c("Number New HIV Infections")) %>% 
   #select(-c(estimate_flag)) %>% 
   select(year, country, indicator, estimate, lower_bound, upper_bound) %>% 
   spread(indicator, estimate) %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(goal_infections = 200000)
 
 #Notes
 plot_title <- "STEADY DECLINE IN THE GLOBAL NUMBER OF <span style= 'color:#2057a7;'> 
@@ -72,48 +77,66 @@ note_df <- tibble(
 
 #Global recent infections through 2022
 
-epi_sub %>% 
+curve_viz <-epi_sub %>% 
   ggplot(aes(x = year)) +
   geom_line(aes(y = number_new_hiv_infections), color = denim, size = 1) +
   geom_ribbon(aes(ymin = lower_bound, ymax = upper_bound),linetype = 2, alpha = 0.1) + 
-  #geom_area(aes(y = number_new_hiv_infections), fill = "#C6D5E9", alpha = 0.95) +
-  
-  #geom_line(aes(y = -total_deaths_to_hiv_population), color = old_rose, linewidth = 1) +
-  #geom_area(aes(y = -total_deaths_to_hiv_population), fill = "#F1CED2",  alpha = 0.95) +
-  #geom_line(aes(y = epi_gap), color = "white", size = 0.25) +
-  
   geom_point(data = . %>% filter(year == max(year)), 
              aes(y = number_new_hiv_infections, fill = denim), shape = 21, color = "white", size = 3)+
-  #geom_point(data = . %>% filter(year == max(year)), 
-  #         aes(y = -total_deaths_to_hiv_population, fill = old_rose), shape = 21, color = "white", size = 3) + 
-  
   geom_text(data = . %>% filter(year == max(year)), 
             aes(y = number_new_hiv_infections, color = denim, 
                 label = paste0(round(number_new_hiv_infections/1000000, digits = 3), "M")),
             hjust = -0.3, size = 12/.pt,
             family = "Source Sans Pro SemiBold") +
-  #geom_text(data = . %>% filter(year == max(year)), 
-  #         aes(y = -total_deaths_to_hiv_population, color = old_rose, 
-  #            label = paste0(abs(total_deaths_to_hiv_population/1000) %>% comma(1.0), "K")),
-  #       hjust = -0.3, size = 12/.pt,
-  #      family = "Source Sans Pro SemiBold") +
   scale_fill_identity() +
   scale_color_identity() +
-  #scale_y_continuous(label = ~ label_number_si()(abs(.))) +
   scale_y_continuous(labels = ~((scales::label_number(scale_cut = scales::cut_short_scale()))(abs(.))), 
                      expand = c(0, 0)) + 
-  scale_x_continuous(breaks = seq(1990, 2024, 5)) +
+    scale_x_continuous(limits = c(1990, 2030), breaks = seq(1990, 2030, 5)) +
   geom_hline(yintercept = 0, color = grey80k) +
+  geom_hline(yintercept = 200000, color = orchid_bloom, linetype = "dashed") +
   si_style_ygrid(text_scale = 1.15) +
   labs(x = NULL, y = NULL,
-       title = plot_title,
-       caption =  glue("\n{metadata$caption}
-                     SI analytics | US Agency for International Development")) + #{paste(authors, collapse = '/')}
+       title = plot_title) + #{paste(authors, collapse = '/')}
   coord_cartesian(expand = T, clip = "off") +
   theme(plot.title = element_markdown())
 
 ggsave("Images/02_epi_ann_global_epi_control_v1.png", scale = 1.2, width = 10, height = 7)
 
+
+
+epi_bar <- epi_sub %>% 
+  filter(year == 2022) %>% 
+  pivot_longer(cols = c(number_new_hiv_infections:goal_infections), names_to = "indicator") %>% 
+  mutate(year = case_when(indicator == "goal_infections"~ 2030,
+                          TRUE ~ year)) %>% 
+  mutate(fill_color = ifelse(year == 2022, denim, orchid_bloom))
+
+bar_viz <- epi_bar %>% 
+  mutate(year = as.factor(year)) %>% 
+  ggplot(aes(x = fct_reorder(year, value), y = value, fill = fill_color)) +
+  geom_col(width = 0.6) +
+  # geom_errorbar(aes(ymin = lower_bound, ymax = upper_bound), 
+  #               linetype = "dashed", width = 0.1, na.rm = TRUE) +
+  si_style_xgrid()  +
+  scale_y_continuous(labels = ~((scales::label_number(scale_cut = scales::cut_short_scale()))(abs(.))), 
+                     expand = c(0, 0), limits = c(0, 1500000)) + 
+  coord_flip() +
+  scale_fill_identity() +
+  geom_text(aes(label = clean_number(value, 1)),
+            family = "Source Sans Pro",
+            hjust = -0.3) + 
+  labs(x = NULL, y = NULL,
+       subtitle = "However, this reduction in new infections is not sufficient to reach our goal of <span style= 'color:#E14BA1;'>200k new infections in 2025</span>",
+       caption =  glue("\nSource: {source_note}
+                     Ref id: {ref_id}")) +
+  theme(plot.subtitle = element_markdown())
+
+
+curve_viz / bar_viz +
+  plot_layout(heights = c(2,1))
+  
+si_save("Graphics/20240618_recent_inf_curve.svg")
 
 #Additional annotation (optional)
 viz +
