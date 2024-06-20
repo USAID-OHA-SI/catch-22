@@ -44,60 +44,25 @@
   
 # IMPORT ------------------------------------------------------------------
   
-#bugdet_id <- "1c13egLNssTFmTqGZnYiUJrsBpUJPFvLH7kmaHembTR8"
 
-#target_id <- "1qfdjuRc3k0XbKjDJqTzhCk3GH5gH74YnE5oUemwituM"
-df_genie <- read_psd(genie_path)
+#Targets 
+  #target_id <- "1qfdjuRc3k0XbKjDJqTzhCk3GH5gH74YnE5oUemwituM"
+  #df_target <- read_sheet(as_sheets_id(target_id)) 
+  df_genie <- read_psd(genie_path)
   
+#Budget 
+#bugdet_id <- "1c13egLNssTFmTqGZnYiUJrsBpUJPFvLH7kmaHembTR8"
 #df_budget <- read_sheet(as_sheets_id(bugdet_id), sheet = "COP ROP by Agency", skip =2) %>% 
  # janitor::clean_names()
 
-#df_target <- read_sheet(as_sheets_id(target_id)) 
+
 
 # MUNGE -------------------------------------------------------------------
-
-#df_budget_viz <- df_budget %>% 
- # mutate(agency = ifelse(agency == "USAID/WCF", "USAID", agency)) %>% 
-  #group_by(agency) %>% 
-  #summarise(val = sum(sum_of_total_planned_funding, na.rm = TRUE)) %>%
-  #ungroup() %>% 
-  #filter(!is.na(agency)) %>% 
-  #mutate(total = sum(val),
-   #      share = val/total,
-    #     fill_color = ifelse(agency == "USAID", denim, denim_light))
-
-#df_target_viz <- df_genie %>% 
- # mutate(val_type = "COP24 Targets") %>% 
- # filter(str_detect(dataname, "TX_CURR")) %>% 
-  #group_by(val_type) %>% 
-  #summarise_if(is.numeric, sum, na.rm = TRUE) %>% 
-  #pivot_longer(cols = -c(1),
-   #            names_to = "agency") %>% 
-  #mutate(total = sum(value),
-   #      share = value/total,
-    #     fill_color = ifelse(agency == "USAID", scooter, scooter_light)) %>% 
-   #filter(agency != "Dedup")
 
 ind_sel <- c("HTS_TST", "TX_NEW", "TX_CURR",
              "TX_PVLS_D", #Total Denom
              "VMMC_CIRC", "PrEP_NEW", "OVC_SERV")
 
-#df_targes_lim <- df_genie %>% 
- # pivot_longer(-starts_with("data"), 
-  #             names_to = "funding_agency",
-   #            values_drop_na = TRUE) %>% 
-  #mutate(indicator = str_extract(dataname, "(?<=Targets ).*(?= \\()"),
-   #      indicator = ifelse(str_detect(dataname, "\\(D\\)"), paste0(indicator, "_D"), indicator),
-    #     fiscal_year = 2024) %>% 
-  #filter(indicator %in% ind_sel)
-
-#df_targes_lim <- df_targes_lim %>% 
- # bind_rows(df_targes_lim %>% mutate(funding_agency = "PEPFAR")) %>% 
-  #filter(funding_agency %in% c("USAID", "PEPFAR")) %>% 
-  #count(fiscal_year, funding_agency, indicator, wt = value) 
-
-#Update: y-axis (indicators), x-axis(values)
-  #since using Genie, need to include  denominator disagg for TX_PVLS
   
 df_targets <- df_genie %>% 
   filter(#funding_agency == "USAID",
@@ -116,87 +81,38 @@ df_targets_lim <- df_targets %>%
   
 # VIZ -----------------------------------------------------------------------
 
-#AGENCY BUDGET SHARE
-#df_budget_viz %>% 
- # ggplot(aes(y = fct_reorder(agency, val))) + 
-  #geom_col(aes(x = total), fill = trolley_grey_light) + 
-#geom_col(aes(total, alpha = 0.8), fill = trolley_grey_light) +
- # geom_errorbar(aes(y = agency, xmin = total, xmax =total),
-  #              color = trolley_grey) +
-  #geom_col(aes(val, fill = fill_color, alpha = 0.8)) +
-  #geom_text(aes(x = val + 400000000, 
-   #             label = label_number(0.1, scale_cut = cut_short_scale())(val)),
-    #        family = "Source Sans Pro", color = nero, vjust = -0.5) +
-  #geom_text(aes(x = val + 400000000,
-   #             label = percent(share, 0.1),
-    #        family = "Source Sans Pro", color = trolley_grey, vjust = 1),
-     #       size = 3.5) +
-  #scale_fill_identity() +
-  #scale_color_identity()+
-  #scale_alpha_identity() +
-  #si_style_xgrid() +
-  #scale_x_continuous(label = scales::label_number(scale_cut = cut_short_scale())) +
-  #labs(x = NULL,
-   #    y = NULL,
-    #   title = "USAID's share of total COP/ROP23 planned funding is 52.3%" %>% toupper(),
-     #  caption = glue("Source: COP23 COP Matrix Report | Ref id: {ref_id}"))
-
-#si_save("Graphics/COP23_GHPortfolio_BudgetShare.svg")
-#si_save("Images/COP23_GHPortfolio_BudgetShare.png")
-
-#AGENCY TARGET SHARE
-#df_target_viz %>% 
- # ggplot(aes(y = fct_reorder(agency, value))) + 
-  #geom_col(aes(x = total), fill = trolley_grey_light) + 
-  #geom_col(aes(total, alpha = 0.8), fill = trolley_grey_light) +
-  #geom_errorbar(aes(y = agency, xmin = total, xmax =total),
-   #             color = trolley_grey) +
-  #geom_col(aes(value, fill = fill_color, alpha = 0.8)) +
-  #geom_text(aes(x = value + 18000000, 
-   #             label = label_number(0.1, scale_cut = cut_short_scale())(value)),
-    #        family = "Source Sans Pro", color = nero, vjust = -0.5) +
-  #geom_text(aes(x = value + 18000000,
-   #             label = percent(share, 0.1),
-    #            family = "Source Sans Pro", color = trolley_grey, vjust = 1),
-     #       size = 3.5) +
-  #scale_fill_identity() +
-  #scale_color_identity()+
-  #scale_alpha_identity() +
-  #si_style_xgrid() +
-  #scale_x_continuous(label = scales::label_number(scale_cut = cut_short_scale())) +
-  #labs(x = NULL,
-   #    y = NULL,
-    #   title = "USAID accounts for almost 42% of total COP/ROP23 Targets" %>% toupper(),
-     #  caption = glue("Source: COP23 COP Matrix Report | Ref id: {ref_id}"))
-
-#si_save("Graphics/COP23_GHPortfolio_TargetShare.svg")
-#si_save("Images/COP23_GHPortfolio_TargetShare.png")
-
 
 #AGENCY SHARE vs PEPFAR 
 df_targets_lim %>% 
   pivot_wider(names_from = "funding_agency", values_from = "n") %>% 
   mutate(usaid_share = USAID/PEPFAR) %>% 
-  ggplot(aes(y = fct_reorder(indicator, PEPFAR))) + 
-  geom_col(aes(PEPFAR, alpha = 0.8), fill = trolley_grey_light) +
+  ggplot(aes(y = fct_reorder(indicator, PEPFAR)
+             )) + 
+  geom_col(aes(PEPFAR, alpha = 0.8), fill = trolley_grey_light) + #PEPFAR is the grey bar
   geom_errorbar(aes(y = indicator, xmin = PEPFAR, xmax =PEPFAR),
                 color = trolley_grey) +
   geom_col(aes(USAID, alpha = 0.8),  fill = scooter) +
   scale_x_continuous(label = scales::label_number(scale_cut = cut_short_scale()))+#scales::label_number(scale_cut = cut_short_scale()))+
- geom_text(aes(x = USAID + 2750000, #3000000,
+  #facet_wrap(~indicator) + 
+ geom_text(aes(x = USAID, #+ 2500000, #3000000,
                label = clean_number(USAID)),
                 #label = label_number(0.1, scale_cut = cut_short_scale())(USAID)), #USAID Share 
             family = "Source Sans Pro", color = glitr::scooter,
+           hjust = -1.5,
            vjust = -0.5) +
-  geom_text(aes(x = PEPFAR,
+  
+  geom_text(aes(x = PEPFAR, #+ 3000000,
                 label = clean_number(PEPFAR)),
                 #label = label_number(0.1, scale_cut = cut_short_scale())(PEPFAR)), #PEPFAR Share 
            family = "Source Sans Pro", color = nero,
-           vjust = -0.5) +
+           fontface = "bold",
+           hjust = -1.5,
+           vjust = -0.95) +
+  
   geom_text(aes(x = USAID + 2750000, #3000000,
-                label = percent(usaid_share, 0.1), #Percentage 
+                label = percent(usaid_share, 0.1), #USAID Percentage 
                 family = "Source Sans Pro", color = trolley_grey, vjust = 1),
-            #vjust = 2.5,
+            vjust = 2.5,
             size = 3.5) +
   scale_fill_identity() +
   scale_color_identity()+
@@ -208,6 +124,37 @@ df_targets_lim %>%
          #toupper(),
        caption = glue("Source: COP/ROP24 Targets, DATIM | Ref id: {ref_id}"))
 
-si_save("Graphics/COP23_GHPortfolio_TargetShare_Cascade.svg")
-si_save("Graphics/COP23_GHPortfolio_TargetShare_Cascade.png")
+si_save("Graphics/COP24_GHPortfolio_TargetShare_Cascade.svg")
+si_save("Graphics/COP24_GHPortfolio_TargetShare_Cascade.png")
+#si_save("Graphics/COP24_GHPortfolio_TargetShare_Cascade.png", scale = 1.2, width = 10, height = 7)
 
+#ggsave("Images/02_epi_ann_global_epi_control_v2.png", scale = 1.5, width = 10, height = 7)
+
+
+#AGENCY TARGET SHARE
+#df_target_viz %>% 
+# ggplot(aes(y = fct_reorder(agency, value))) + 
+#geom_col(aes(x = total), fill = trolley_grey_light) + 
+#geom_col(aes(total, alpha = 0.8), fill = trolley_grey_light) +
+#geom_errorbar(aes(y = agency, xmin = total, xmax =total),
+#             color = trolley_grey) +
+#geom_col(aes(value, fill = fill_color, alpha = 0.8)) +
+#geom_text(aes(x = value + 18000000, 
+#             label = label_number(0.1, scale_cut = cut_short_scale())(value)),
+#        family = "Source Sans Pro", color = nero, vjust = -0.5) +
+#geom_text(aes(x = value + 18000000,
+#             label = percent(share, 0.1),
+#            family = "Source Sans Pro", color = trolley_grey, vjust = 1),
+#       size = 3.5) +
+#scale_fill_identity() +
+#scale_color_identity()+
+#scale_alpha_identity() +
+#si_style_xgrid() +
+#scale_x_continuous(label = scales::label_number(scale_cut = cut_short_scale())) +
+#labs(x = NULL,
+#    y = NULL,
+#   title = "USAID accounts for almost 42% of total COP/ROP23 Targets" %>% toupper(),
+#  caption = glue("Source: COP23 COP Matrix Report | Ref id: {ref_id}"))
+
+#si_save("Graphics/COP23_GHPortfolio_TargetShare.svg")
+#si_save("Images/COP23_GHPortfolio_TargetShare.png")
