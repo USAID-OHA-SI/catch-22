@@ -135,7 +135,7 @@ prep_pop_pyramid_dreams <- function(df_prep_psnu, df_mer){
 viz_pop_pyramid <- function(df, type = NULL){
   
   q <- ifelse(is.null(type), 
-              glue::glue("Is there a youth bulge the country needs to plan for?") %>% toupper,
+              glue::glue("Population dynamics present an additional risk to ending HIV as a pandemic threat by 2030") %>% toupper,
               glue::glue("Is there a youth bulge the country needs to plan for in DREAMS PSNUs?") %>% toupper
   )
   
@@ -149,7 +149,7 @@ viz_pop_pyramid <- function(df, type = NULL){
   vrsn <- 2
   
   subt <-  ifelse(is.null(type),
-                  glue::glue("Comparison between <span style='color:{genoa}'>Males</span> & <span style='color:{moody_blue}'>Females</span> by age band in {max(df$fiscal_year)}"),
+                  glue::glue("Comparison between <span style='color:{genoa}'>Males</span> & <span style='color:{moody_blue}'>Females</span> by age band in {unique(df$country)},{max(df$fiscal_year)}"),
                   glue::glue("Comparison between <span style='color:{genoa}'>Males</span> & <span style='color:{moody_blue}'>Females</span> Population (Est) by age band")
   )
   
