@@ -104,8 +104,8 @@ df_viz %>%
   filter(!is.na(achievement)) %>% 
   # pivot_wider(names_from = "funding_agency", values_from = "n") %>% 
   # mutate(usaid_share = USAID/PEPFAR) %>% 
-  mutate(indicator = fct_relevel(indicator, c("OVC_SERV", "TX_CURR", "TX_NEW", "HTS_TST_POS","HTS_TST", "VMMC_CIRC", "PrEP_NEW"
-    #"PrEP_NEW", "VMMC_CIRC", "HTS_TST", "HTS_TST_POS","TX_NEW", "TX_CURR", "OVC_SERV"
+  mutate(indicator = fct_relevel(indicator, c("OVC_SERV", "TX_CURR", "TX_NEW",
+                                              "HTS_TST_POS","HTS_TST", "VMMC_CIRC", "PrEP_NEW"
     ))) %>% 
   ggplot(aes(y = indicator #fct_reorder(indicator, value)
              )) + 
@@ -118,7 +118,14 @@ df_viz %>%
                 label = val_lab,
                 hjust = 1.5,
                 family = "Source Sans Pro",
-                color = nero #nero
+                color = nero 
+  )) +
+  geom_text(data = . %>% filter(indicator == "PrEP_NEW"),
+            aes(x = value,
+                label = val_lab,
+                hjust = 1.5,
+                family = "Source Sans Pro",
+                color = "white" 
   )) +
   geom_text(aes(x = value, #value or total ?
                 label = glue("{value}%"),
@@ -126,7 +133,6 @@ df_viz %>%
                 hjust = -.45,
                 family = "Source Sans Pro", #color = trolley_grey
                 fontface = "bold"
-                #color = "white"
   )) +
   # geom_text(aes(x = PEPFAR,
   #               label = label_number(0.1, scale_cut = cut_short_scale())(PEPFAR)),
@@ -144,9 +150,8 @@ df_viz %>%
        title = "USAID % achievement towards FY24 targets, as of Q2" %>% toupper(),
        caption = metadata$caption) 
 
-si_save("Graphics/target_achv.svg")
+#si_save("Graphics/target_achv.svg")
 si_save("Graphics/target_achv.png")
-#si_save("Graphics/target_achv_v2.png")
 
 # SPINDOWN ============================================================================
 
