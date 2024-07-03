@@ -39,15 +39,35 @@
   #identify all schedules in the drive folder
   schedules <- drive_ls(gs_folder_id)
   
+  schedules %>% glamr::gdrive_metadata(show_details = T)
+  
   #get the source GS ID for each file (targetId for shortcuts, id for source)
   schedules <- schedules %>%
-    mutate(target_id = map_chr(drive_resource, extract_targetid),
+    mutate(meta = names(drive_resource)) %>% 
+    #mutate(meta = as_tibble(drive_resource))
+    unnest(drive_resource)
+    #unlist(.$drive_resource) %>% as_tibble()
+    mutate(#target_id = map_chr(drive_resource, extract_targetid),
+           target_id = case_when(
+             str_detect(drive_resource$mimeType, "shortcut") ~ drive_resource$shortcutDetails$targetId,
+             TRUE ~ NA_character_
+           ),
            target_id = ifelse(is.na(target_id), id, target_id),
            target_id = as_id(target_id)) 
   
   #identify the sheets to read in (should be Schedule; excludes README and Dropdown)
   schedules_shts <- schedules %>% 
     mutate(sheets = map_chr(target_id, \(x) gs4_get(x)$sheets$name %>% paste(collapse = ","))) %>% 
+    separate_longer_delim(sheets, ",") %>% 
+    filter(str_detect(sheets, "README|Dropdown", negate = TRUE))
+  
+  schedules %>% 
+    mutate(sheets = map_chr(target_id, function(x) {
+      #print(x)
+      #print(drive_get(x))
+      print(gs4_get(x))
+      gs4_get(x)$sheets$name %>% paste(collapse = ",")
+    })) %>% 
     separate_longer_delim(sheets, ",") %>% 
     filter(str_detect(sheets, "README|Dropdown", negate = TRUE))
   
