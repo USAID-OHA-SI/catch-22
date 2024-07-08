@@ -1,10 +1,10 @@
 # PROJECT:  catch22
 # PURPOSE:  combine OKR schedules into a unified source document
-# AUTHOR:   A.Chafetz | USAID
+# AUTHOR:   A.Chafetz + B.Kagniniwa | USAID
 # REF ID:   c2592afc 
 # LICENSE:  MIT
 # DATE:     2024-06-26
-# UPDATED: 
+# UPDATED:  2024-07-08
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -21,17 +21,6 @@
   #OKR 2024 folder
   gs_folder_id <- as_id("1alhiHrDBJzRftcyJRW-THohz9LbJezzJ")
   # drive_browse(gs_folder_id)
-  
-# FUNCTION - EXTRACT TARGET ID --------------------------------------------
-
-  #function to extract the targetID for shortcut files
-  extract_targetid <- function(x){
-    if (is.null(x$shortcutDetails$targetId)) {
-      NA_character_
-    } else {
-      x$shortcutDetails$targetId
-    }
-  }
   
 
 # IDENTIFY FILES ----------------------------------------------------------
@@ -51,7 +40,6 @@
         mime_type != "shortcut" & target_id == "NULL" ~ id, 
         TRUE ~ target_id
       )
-      #,target_id = as_id(target_id)
     ) 
   
   #identify the sheets to read in (should be Schedule; excludes README and Dropdown)
@@ -81,13 +69,6 @@
   
 # IMPORT ------------------------------------------------------------------
 
-  #read in all the files (with the Schedule sheet name) and combine
-  # schedules %>% 
-  #   filter(str_detect(name, "Maddy", negate = TRUE)) %>% 
-  #   pull() %>% 
-  #   map(read_sheet, sheet = "Schedule", .name_repair = make_clean_names) %>% 
-  #   list_rbind()
-  
   #read in all the files/sheets and combine
   df_sch <- schedules_shts %>% 
     filter(str_detect(sheets, "^ERROR.*\\[.*\\]", negate = TRUE),
