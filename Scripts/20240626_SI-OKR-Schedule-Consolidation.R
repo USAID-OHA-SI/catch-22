@@ -12,6 +12,7 @@
   library(googledrive)
   library(googlesheets4)
   library(janitor)
+  library(glamr)
 
 # GLOBAL VARIABLES --------------------------------------------------------
   
@@ -39,34 +40,41 @@
   #identify all schedules in the drive folder
   schedules <- drive_ls(gs_folder_id)
   
-  schedules %>% glamr::gdrive_metadata(show_details = T)
-  
   #get the source GS ID for each file (targetId for shortcuts, id for source)
   schedules <- schedules %>%
-    mutate(meta = names(drive_resource)) %>% 
-    #mutate(meta = as_tibble(drive_resource))
-    unnest(drive_resource)
-    #unlist(.$drive_resource) %>% as_tibble()
-    mutate(#target_id = map_chr(drive_resource, extract_targetid),
-           target_id = case_when(
-             str_detect(drive_resource$mimeType, "shortcut") ~ drive_resource$shortcutDetails$targetId,
-             TRUE ~ NA_character_
-           ),
-           target_id = ifelse(is.na(target_id), id, target_id),
-           target_id = as_id(target_id)) 
+    gdrive_metadata(show_details = T) %>% 
+    mutate(mime_type = str_extract(mime_type, "[^\\.]*$")) %>% 
+    distinct(kind, mime_type, id, name, shortcut_details_target_id) %>% 
+    rename(target_id = shortcut_details_target_id) %>% 
+    mutate(
+      target_id = case_when(
+        mime_type != "shortcut" & target_id == "NULL" ~ id, 
+        TRUE ~ target_id
+      )
+      #,target_id = as_id(target_id)
+    ) 
   
   #identify the sheets to read in (should be Schedule; excludes README and Dropdown)
   schedules_shts <- schedules %>% 
-    mutate(sheets = map_chr(target_id, \(x) gs4_get(x)$sheets$name %>% paste(collapse = ","))) %>% 
-    separate_longer_delim(sheets, ",") %>% 
-    filter(str_detect(sheets, "README|Dropdown", negate = TRUE))
-  
-  schedules %>% 
+    mutate(across(everything(), unlist)) %>% 
     mutate(sheets = map_chr(target_id, function(x) {
-      #print(x)
-      #print(drive_get(x))
-      print(gs4_get(x))
-      gs4_get(x)$sheets$name %>% paste(collapse = ",")
+      
+      gs<- schedules %>% filter(target_id == x) 
+      gs_name <- glue::glue("{gs %>% pull(mime_type)}: {gs %>% pull(name)}")
+      
+      print(gs_name)
+        
+      tryCatch({
+          gsheet <- gs4_get(x)
+          gsheet$sheets$name %>% paste(collapse = ",")
+        },
+        error = function(e) {
+          message("ERROR")
+          message(conditionMessage(e))
+          glue::glue("ERROR ACCESSING [{gs_name}]")
+        }
+      )
+      
     })) %>% 
     separate_longer_delim(sheets, ",") %>% 
     filter(str_detect(sheets, "README|Dropdown", negate = TRUE))
@@ -80,8 +88,10 @@
   #   map(read_sheet, sheet = "Schedule", .name_repair = make_clean_names) %>% 
   #   list_rbind()
   
-  #read in al the files/sheets and combine
+  #read in all the files/sheets and combine
   df_sch <- schedules_shts %>% 
+    filter(str_detect(sheets, "^ERROR.*\\[.*\\]", negate = TRUE),
+           str_to_lower(sheets) == "schedule") %>% 
     select(target_id, sheets) %>% 
     pmap(~read_sheet(ss = ..1, 
                      sheet = ..2, 
