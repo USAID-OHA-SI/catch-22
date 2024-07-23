@@ -4,7 +4,7 @@
 # REF ID:   caeb7159 
 # LICENSE:  MIT
 # DATE:     2024-06-04
-# UPDATED:  2024-06-05
+# UPDATED:  2024-07-23
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -31,7 +31,7 @@
 
   gs_id <- as_sheets_id("1O4-c1lXeL21PzmaiuLqHxPapnoktsIykmln6cs1P70E") 
   
-  gs_sht <- "Data Revised"
+  gs_sht <- "7.22 revised data"
   
 # IMPORT ------------------------------------------------------------------
   
@@ -54,6 +54,9 @@
            count_rf = sum(count) %>% as.character(),
            count_lab = ifelse(rf_num == "Objective 1", glue("Indicators = {count_rf}"), count_rf)) %>% 
     ungroup() %>% 
+    group_by(status_alt) %>% 
+    mutate(count_status = sum(count, na.rm = TRUE) %>% as.character()) %>% 
+    ungroup() %>% 
     mutate(rf_name = case_match(rf_name,
                                 "Priority Health Areas Improved" ~ "Priority Health Areas\nImproved",
                                 "Access to Services through Health Systems Enhanced" ~ "Access to Services\nthrough Health\nSystems Enhanced",
@@ -61,6 +64,7 @@
                                 "Knowledge and Innovative Solutions" ~ "Knowledge and\nInnovative Solutions"
     )) %>% 
     mutate(rf_desc = glue("{rf_num}:\n{rf_name}\n{count_lab}"),
+           status_alt = glue("{status_alt}\n{count_status}"),
            border_color = case_when(rf_ind_cat == "PPR" ~ hw_electric_indigo,
                                     rf_ind_cat == "SDG" ~ hw_orchid_bloom,
                                     TRUE ~ hw_slate),
@@ -88,7 +92,7 @@
                    color = border_color),
                shape = 21,
                position = position_jitter(width = .3, height = .3, seed = 42),
-               size = 4, alpha = .6) +
+               size = 3, alpha = .6) +
     scale_x_discrete(position = "top") +
     scale_fill_identity() +
     scale_color_identity() +
