@@ -162,6 +162,7 @@
 
   si_preview()
   
+  si_save("Images/utrams_gh.png")
   
   ## OHA
   
@@ -211,4 +212,6 @@
   
   
   si_preview()
+  
+  si_save("Images/utrams_oha.png")
   
